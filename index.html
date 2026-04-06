@@ -939,6 +939,30 @@ async function loadBookings() {
   }
 }
 
+function populateMonthFilter() {
+  const sel = document.getElementById('fMonth');
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">ทั้งหมด</option>';
+  const months = new Set();
+  allBookings.forEach(r => {
+    const d = r['วันที่จอง'];
+    if (!d) return;
+    const p = String(d).split('/');
+    if (p.length >= 3) months.add(p[2] + '-' + p[1].padStart(2,'0'));
+  });
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  [...months].sort().reverse().forEach(ym => {
+    const [y, m] = ym.split('-');
+    const o = document.createElement('option');
+    o.value = ym;
+    o.textContent = TH[parseInt(m)] + ' ' + y;
+    sel.appendChild(o);
+  });
+  if (prev) sel.value = prev;
+}
+
 function filterBooking() {
   const q      = document.getElementById('fSearch').value.toLowerCase();
   const sc     = document.getElementById('fSC').value;
