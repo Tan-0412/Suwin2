@@ -210,27 +210,29 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .pivot-table tr.total-row td{background:#f0e8d0;font-weight:700;font-size:13px;border-top:2px solid var(--accent);}
 .pivot-table td.zero{color:#ccc;}
 .dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
-.dsc-table th{background:var(--primary);color:#fff;padding:7px 8px;text-align:center;
-  font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;}
-.dsc-table th.left{text-align:left;}
-.dsc-table td{padding:8px 10px;border:1px solid var(--gray2);text-align:center;vertical-align:middle;font-size:13px;}
-.dsc-table td.name{text-align:left;font-weight:600;background:#fafcff;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
+.dsc-table th{padding:8px 9px;text-align:center;
+  font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
+.dsc-table th.left{text-align:left;background:#6b7fa8;}
+.dsc-table td{padding:8px 10px;border:1px solid #e8edf5;text-align:center;vertical-align:middle;font-size:13px;}
+.dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;color:#1a2d45;}
 .dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;}
-.dsc-table td.bk{color:var(--primary2);}
-.dsc-table td.rs{color:var(--green);}
-.dsc-table td.ebk{color:var(--orange);}
-.dsc-table td.cl{color:var(--red);}
-.dsc-table td.zero{color:#ccc;}
-.dsc-table tr.team-total td{background:#EEF4FF;font-weight:700;border-top:1.5px solid var(--primary3);}
-.dsc-table tr.grand-total td{background:#f0e8d0;font-weight:700;font-size:12px;border-top:2px solid var(--accent);}
-.dsc-table tr.team-sep td{background:rgba(26,58,107,0.06);font-size:10px;font-weight:700;
-  color:var(--primary);padding:4px 8px;border-top:2px solid var(--primary3);}
-.dsc-table th.carry{background:#7b5ea7;}
-.dsc-table th.ebk-hdr{background:#e06010;}
-.dsc-table th.bk-hdr{background:var(--primary2);}
-.dsc-table th.online-hdr{background:#c2185b;}
-.dsc-table th.rs-hdr{background:var(--green);}
-.dsc-table th.cl-hdr{background:var(--red);}
+.dsc-table td.bk{color:#3b6fd4;}
+.dsc-table td.rs{color:#1a8a55;}
+.dsc-table td.ebk{color:#d4720a;}
+.dsc-table td.cl{color:#c0392b;}
+.dsc-table td.zero{color:#c8d0dc;}
+.dsc-table tr.team-total td{background:#eef3ff;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:12px;border-top:2px solid #f0c060;color:#5a3e00;}
+.dsc-table tr.team-sep td{background:#e8edf8;font-size:10px;font-weight:700;
+  color:#3b5080;padding:5px 10px;border-top:2px solid #a0b4e0;letter-spacing:.5px;}
+/* header สีโทนอ่อนหวาน */
+.dsc-table th.carry{background:#8b6bb1;}
+.dsc-table th.ebk-hdr{background:#e07820;}
+.dsc-table th.bk-hdr{background:#4a7fd4;}
+.dsc-table th.online-hdr{background:#c44d8a;}
+.dsc-table th.rs-hdr{background:#2e9e6a;}
+.dsc-table th.cl-hdr{background:#d45050;}
 .pivot-table td.has-val{color:var(--primary);font-weight:700;}
 .pivot-table th.out-hdr{background:var(--green);}
 .pivot-table th.in-hdr{background:var(--primary2);}
@@ -1365,8 +1367,16 @@ function renderSCChart() {
       }
       const bkH = d.bk > 0 ? Math.max(8, Math.round((d.bk / maxVal) * 100)) : 0;
       const rsH = d.rs > 0 ? Math.max(8, Math.round((d.rs / maxVal) * 100)) : 0;
-      const teamColor = d.ทีม==='A' ? '#3568c8' : d.ทีม==='B' ? '#6c3fc8' : '#3568c8';
-      const teamColorLight = d.ทีม==='A' ? '#25a866' : d.ทีม==='B' ? '#2ecc71' : '#25a866';
+      // รถเล็ก: ทีม A=น้ำเงิน, ทีม B=ม่วง | รถใหญ่: ทีม สุวิน=ส้ม, อื่น=เขียวเข้ม
+      const isBigDept = (d.ฝ่าย||'').includes('ใหญ่');
+      let teamColor, teamColorLight;
+      if (isBigDept) {
+        teamColor      = d.ทีม==='สุวิน' ? '#e05c00' : d.ทีม==='A' ? '#c0392b' : '#d35400';
+        teamColorLight = d.ทีม==='สุวิน' ? '#f39c12' : d.ทีม==='A' ? '#e74c3c' : '#e67e22';
+      } else {
+        teamColor      = d.ทีม==='A' ? '#2471c8' : d.ทีม==='B' ? '#7c3aed' : '#2471c8';
+        teamColorLight = d.ทีม==='A' ? '#16a34a' : d.ทีม==='B' ? '#059669' : '#16a34a';
+      }
       // ใช้ชื่อ SC เป็น key — เก็บใน window._chartData
       const safeKey = sc.replace(/"/g,'&quot;');
 
@@ -1839,10 +1849,10 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
 
   // headers
   const modelBkHeaders = models.map(m =>
-    `<th style="background:#1565C0;color:#fff;font-size:9px;white-space:nowrap;">${m}</th>`
+    `<th style="background:#5b8dd9;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;">${m}</th>`
   ).join('');
   const modelRsHeaders = models.map(m =>
-    `<th style="background:#1a7a4a;color:#fff;font-size:9px;white-space:nowrap;">${m}</th>`
+    `<th style="background:#3aaa74;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;">${m}</th>`
   ).join('');
 
   // group by team
@@ -1903,10 +1913,10 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       tbody += `<tr style="${idx%2===1?'background:#fafcff;':''}">
         <td style="text-align:left;font-weight:600;padding:7px 10px;">${nickname}</td>
         ${bkCells}
-        <td style="text-align:center;font-weight:700;color:var(--primary2);background:#EEF4FF;cursor:pointer;"
+        <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;"
           onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
         ${rsCells}
-        <td style="text-align:center;font-weight:700;color:var(--green);background:#EFF9F4;cursor:pointer;"
+        <td style="text-align:center;font-weight:700;color:#1a8a55;background:#e6f5ee;cursor:pointer;"
           onmouseenter="showModelTip(event,'${name}','rs')" onmouseleave="hideDscTip()">${p.rsTotal||0}</td>
       </tr>`;
     });
@@ -1914,8 +1924,8 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
     // team total
     const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tBkCols[m]||0}</td>`).join('');
     const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tRsCols[m]||0}</td>`).join('');
-    tbody += `<tr style="background:#EEF4FF;">
-      <td style="text-align:left;font-weight:700;padding:7px 10px;color:var(--primary);">รวม ทีม ${team}</td>
+    tbody += `<tr style="background:#eef3ff;border-top:1.5px solid #a0b4e0;">
+      <td style="text-align:left;font-weight:700;padding:7px 10px;color:#2a4080;">รวม ทีม ${team}</td>
       ${tBkColCells}
       <td style="text-align:center;font-weight:700;color:var(--primary2);">${tBkTotal}</td>
       ${tRsColCells}
@@ -1935,9 +1945,9 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
         <tr>
           <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
             min-width:100px;">รายชื่อ SC</th>
-          <th colspan="${models.length+1}" style="background:#1565C0;color:#fff;padding:7px;text-align:center;">
+          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:7px;text-align:center;border-radius:4px 0 0 0;">
             ยอดจอง</th>
-          <th colspan="${models.length+1}" style="background:#1a7a4a;color:#fff;padding:7px;text-align:center;">
+          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:7px;text-align:center;border-radius:0 4px 0 0;">
             ยอดปล่อย</th>
         </tr>
         <tr>
@@ -1949,13 +1959,13 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       </thead>
       <tbody>${tbody}</tbody>
       <tfoot>
-        <tr style="background:#f0e8d0;">
-          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid var(--accent);">ยอดรวม</td>
+        <tr style="background:#fef6e4;">
+          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;">ยอดรวม</td>
           ${gBkColCells}
-          <td style="text-align:center;font-weight:700;color:var(--primary2);border-top:2px solid var(--accent);
+          <td style="text-align:center;font-weight:700;color:#3b6fd4;border-top:2px solid #f0c060;
             font-size:13px;">${gBkTotal}</td>
           ${gRsColCells}
-          <td style="text-align:center;font-weight:700;color:var(--green);border-top:2px solid var(--accent);
+          <td style="text-align:center;font-weight:700;color:#1a8a55;border-top:2px solid #f0c060;
             font-size:13px;">${gRsTotal}</td>
         </tr>
       </tfoot>
