@@ -2121,8 +2121,8 @@ async function runReport3() {
     const onlineSources = ['เพจส่วนตัว', 'เพจบริษัท', 'อื่นๆ'];
 
     // render แต่ละฝ่าย
-    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal);
-    renderDSC('big',   scBig,   curRows, prevRows, allRows, onlineSources, monthLabel, today, 0);
+    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal, curYM);
+    renderDSC('big',   scBig,   curRows, prevRows, allRows, onlineSources, monthLabel, today, 0, curYM);
 
   } catch(e) {
     ['r3BodySmall','r3BodyBig'].forEach(id => {
@@ -2131,7 +2131,7 @@ async function runReport3() {
   }
 }
 
-function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal) {
+function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal, curYM) {
   const suffix = type === 'small' ? 'Small' : 'Big';
   const bodyEl = document.getElementById('r3Body' + suffix);
   const titleEl = document.getElementById('r3Title' + suffix);
@@ -2167,70 +2167,87 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   const calc = (sc) => {
     const name = sc['ที่ปรึกษาการขาย'];
 
-    // ยกมา = BK ที่วันจองก่อนเดือนนี้ และยังไม่ปล่อย ไม่ยกเลิก
+    // ── จองยกมา ──
+    // สถานะ "จอง" หรือ "คาดปล่อย" ที่วันจองก่อนเดือนนี้ และยังไม่ยกเลิก
     const carryRows = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
-      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ']) && !isCL(r['สถานะ']));
+      (isBK(r['สถานะ']) || isERS(r['สถานะ'])) && !isCL(r['สถานะ']));
     const carry = carryRows.length;
 
-    // EBK เดือนนี้ (คาดจอง)
-    const ebk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ'])).length;
+    // ── คาดว่าจะจอง (EBK) ──
+    // สถานะ "คาดจอง" จากทุกเดือน (allRows) — ยอดยกมาไม่กระทบ
+    const ebkRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ']));
+    const ebk = ebkRows2.length;
 
-    // BK เดือนนี้
+    // ── จองเดือนนี้ (BK) ──
+    // สถานะ "จอง" ที่วันที่จองอยู่ในเดือนนี้
     const bkThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
     const bk = bkThisRows.length;
 
-    // Online — นับ BK ทั้งหมดใน allRows (ไม่กรองเดือน)
-    const allBkRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
+    // ── ONLINE ──
+    // นับจาก allRows ทุกสถานะ (ยกเว้นยกเลิก) ทุกเดือน แยกตามที่มาลูกค้า
+    const allOnlineRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
     const fixedSources = ['เพจส่วนตัว', 'เพจบริษัท'];
     const onlineBySource = {};
     fixedSources.forEach(src => {
-      onlineBySource[src] = allBkRows.filter(r => r['ที่มาลูกค้า']===src).length;
+      onlineBySource[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า']===src).length;
     });
-    onlineBySource['อื่นๆ'] = allBkRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า'])).length;
+    onlineBySource['อื่นๆ'] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า'])).length;
 
-    // จองปล่อยเดือนนี้ = BK + RS ที่เกิดในเดือนปัจจุบัน
-    const rsMonthRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ']));
+    // ── จองและปล่อยเดือนนี้ ──
+    // รายการที่วันที่จองอยู่ในเดือนนี้ + รายการที่วันที่ปล่อยอยู่ในเดือนนี้
+    const bkInMonthRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name);
+    const rsInMonthRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
+    // รวมโดยไม่นับซ้ำ (ใช้ _row เป็น key)
+    const rsMonthMap = new Map();
+    [...bkInMonthRows, ...rsInMonthRows].forEach(r => rsMonthMap.set(r._row, r));
+    const rsMonthRows = [...rsMonthMap.values()];
     const rsMonth = rsMonthRows.length;
 
-    // รวมจองปัจจุบัน = carry + bk - rsMonth
-    const total = carry + bk - rsMonth;
+    // ── รวมจองปัจจุบัน ──
+    // carry + bk (เดือนนี้) - รายการที่ปล่อยแล้วในเดือนนี้
+    const releasedThisMonth = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM)).length;
+    const total = carry + bk - releasedThisMonth;
 
-    // คาดปล่อย = ERS หรือ RS ที่ยังไม่มีวันที่ปล่อย
-    const ersRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
-      isRS(r['สถานะ']) && !r['วันที่ปล่อย']);
+    // ── คาดว่าจะปล่อย (ERS) ──
+    // สถานะ "คาดปล่อย" จากทุกเดือน (allRows)
+    const ersRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isERS(r['สถานะ']));
     const ers = ersRows.length;
 
-    // ยอดปล่อย = RS ที่มีวันที่ปล่อยแล้ว
+    // ── ยอดปล่อย ──
+    // รายการที่มีวันที่ปล่อยอยู่ในเดือนนี้
     const rsTotalRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
-      isRS(r['สถานะ']) && r['วันที่ปล่อย']);
+      r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
     const rsTotal = rsTotalRows.length;
 
-    // ถอนจอง
-    const cl = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ'])).length;
+    // ── ถอนจอง (CL) ──
+    // สถานะ "ยกเลิกจอง" จากทุกเดือน (allRows)
+    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ']));
+    const cl = clRows2.length;
 
     // เก็บ detail สำหรับ tooltip
     const fmt = r => `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
-    const ebkRows2 = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ']));
-    const ersRows2 = ersRows;
-    const rsTotalRows2 = rsTotalRows;
-    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ']));
+    const fmtRel = r => `${fmtDate(r['วันที่ปล่อย'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
+
     // Online แยก source
     const srcRowsMap = {};
     sources.forEach(src => {
       if (src === 'อื่นๆ') {
-        srcRowsMap[src] = allBkRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']));
+        srcRowsMap[src] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']));
       } else {
-        srcRowsMap[src] = allBkRows.filter(r => r['ที่มาลูกค้า'] === src);
+        srcRowsMap[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า'] === src);
       }
     });
+
     window._dscData[name] = {
       carry:   carryRows.map(fmt),
       ebk:     ebkRows2.map(fmt),
       bk:      bkThisRows.map(fmt),
       rs:      rsMonthRows.map(fmt),
       total:   [...carryRows, ...bkThisRows].map(fmt),
-      ers:     ersRows2.map(fmt),
-      rsTotal: rsTotalRows2.map(fmt),
+      ers:     ersRows.map(fmt),
+      rsTotal: rsTotalRows.map(fmtRel),
       cl:      clRows2.map(fmt),
       ...Object.fromEntries(sources.map(s => [`src_${s}`, srcRowsMap[s].map(fmt)])),
     };
@@ -2260,7 +2277,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
         <th class="online-hdr" colspan="${sources.length}">Online</th>
-        <th class="rs-hdr" rowspan="2">จองปล่อย<br>เดือนนี้</th>
+        <th class="rs-hdr" rowspan="2">จองและปล่อย<br>เดือนนี้</th>
         <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
         <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
