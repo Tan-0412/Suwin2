@@ -326,6 +326,9 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         <div class="frow"><label>ค้นหา</label>
           <input type="text" id="fSearch" placeholder="ชื่อ / เบอร์ / รายละเอียด..." oninput="filterBooking()">
         </div>
+        <div class="frow"><label>ฝ่าย</label>
+          <select id="fDept" onchange="onDeptChange('fDept','fSC');filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
         <div class="frow"><label>ที่ปรึกษา</label>
           <select id="fSC" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
         </div>
@@ -372,6 +375,9 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     <div class="card-hdr"><h2>🔍 ตัวกรองรายงานรายละเอียดการจอง</h2></div>
     <div class="card-body">
       <div class="filter-row">
+        <div class="frow"><label>ฝ่าย</label>
+          <select id="r1Dept" onchange="onDeptChange('r1Dept','r1SC')"><option value="">ทั้งหมด</option></select>
+        </div>
         <div class="frow"><label>ที่ปรึกษา</label>
           <select id="r1SC"><option value="">ทั้งหมด</option></select>
         </div>
@@ -601,6 +607,7 @@ function getBookings(p) {
     return o;
   }).filter(r => r['ชื่อลูกค้า'] || r['วันที่จอง']);
 
+  if (p.dept)   data = data.filter(r => r['ที่ปรึกษาการขาย'] && scDeptMap()[r['ที่ปรึกษาการขาย']] === p.dept);
   if (p.sc)     data = data.filter(r => r['ที่ปรึกษาการขาย'] === p.sc);
   if (p.status) data = data.filter(r => r['สถานะ'] === p.status);
   if (p.month) {
@@ -634,6 +641,21 @@ function getBookings(p) {
     return db - da;
   });
   return data;
+}
+
+function scDeptMap() {
+  const map = {};
+  const sh = getSheet(SHEETS.sc);
+  if (!sh) return map;
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return map;
+  const hdrs = rows[0].map(h => String(h).trim());
+  const ni = hdrs.indexOf('ที่ปรึกษาการขาย');
+  const di = hdrs.indexOf('ฝ่าย');
+  rows.slice(1).forEach(r => {
+    if (ni>=0 && di>=0) map[String(r[ni]).trim()] = String(r[di]).trim();
+  });
+  return map;
 }
 
 function parseDate(s) {
@@ -984,13 +1006,62 @@ async function loadBookings() {
     '<tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
   try {
     const d = await callGS({ action: 'getBookings' });
-    allBookings = (d.data || []).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
+    // normalize วันที่จอง → dd/MM/yyyy เสมอ ก่อน sort
+    allBookings = (d.data || []).map(r => {
+      ['วันที่จอง','วันที่ปล่อย'].forEach(col => {
+        if (r[col]) {
+          const t = parseThDate(String(r[col]));
+          if (t) {
+            const dt = new Date(t);
+            const dd = String(dt.getDate()).padStart(2,'0');
+            const mm = String(dt.getMonth()+1).padStart(2,'0');
+            const yyyy = dt.getFullYear();
+            r[col] = `${dd}/${mm}/${yyyy}`;
+          }
+        }
+      });
+      return r;
+    }).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
     populateMonthFilter();
     filterBooking();
   } catch(e) {
     document.getElementById('bookingBody').innerHTML =
       `<tr><td colspan="11"><div class="empty">❌ ${e.message}</div></td></tr>`;
   }
+}
+
+function populateDeptFilter() {
+  // รวบรวมฝ่ายทั้งหมดจาก meta.sc
+  const depts = [...new Set(meta.sc.map(s => s['ฝ่าย']).filter(Boolean))].sort();
+  ['fDept','r1Dept'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">ทั้งหมด</option>';
+    depts.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = d; sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  });
+}
+
+function onDeptChange(deptId, scId) {
+  const dept = document.getElementById(deptId)?.value || '';
+  const scSel = document.getElementById(scId);
+  if (!scSel) return;
+  const prev = scSel.value;
+  scSel.innerHTML = '<option value="">ทั้งหมด</option>';
+  const filtered = dept
+    ? meta.sc.filter(s => s['ฝ่าย'] === dept)
+    : meta.sc;
+  filtered.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    if (!name) return;
+    const o = document.createElement('option');
+    o.value = name; o.textContent = name; scSel.appendChild(o);
+  });
+  if (prev && [...scSel.options].some(o => o.value === prev)) scSel.value = prev;
 }
 
 function populateMonthFilter() {
@@ -1027,12 +1098,14 @@ function populateMonthFilter() {
 
 function filterBooking() {
   const q      = document.getElementById('fSearch').value.toLowerCase();
+  const dept   = document.getElementById('fDept').value;
   const sc     = document.getElementById('fSC').value;
   const model  = document.getElementById('fModel').value;
   const status = document.getElementById('fStatus').value;
   const month  = document.getElementById('fMonth').value;
 
   filteredBookings = allBookings.filter(r => {
+    if (dept   && (meta.sc.find(s=>s['ที่ปรึกษาการขาย']===r['ที่ปรึกษาการขาย'])||{})['ฝ่าย'] !== dept) return false;
     if (sc     && r['ที่ปรึกษาการขาย'] !== sc)    return false;
     if (model  && r['รุ่นรถ'] !== model)          return false;
     if (status && r['สถานะ'] !== status && !(meta.status.find(s=>s['STATUS']===status && s['สถานะ']===r['สถานะ']))) return false;
@@ -1046,6 +1119,8 @@ function filterBooking() {
 
 function resetFilter() {
   document.getElementById('fSearch').value = '';
+  document.getElementById('fDept').value = '';
+  onDeptChange('fDept','fSC');
   document.getElementById('fSC').value = '';
   document.getElementById('fModel').value = '';
   document.getElementById('fStatus').value = '';
@@ -1527,6 +1602,7 @@ function confirmDeleteTarget(i) {
 //  REPORT 1 — รายละเอียด
 // ════════════════════════════════════════
 async function runReport1() {
+  const dept1    = document.getElementById('r1Dept').value;
   const sc       = document.getElementById('r1SC').value;
   const month    = document.getElementById('r1Month').value;
   const dateFrom = document.getElementById('r1DateFrom').value;
@@ -1534,6 +1610,7 @@ async function runReport1() {
   const status   = document.getElementById('r1Status').value;
 
   const params = { action:'getBookings' };
+  if (dept1)    params.dept = dept1;
   if (sc)       params.sc = sc;
   if (month)    params.month = month;
   if (dateFrom) params.dateFrom = dateFrom;
@@ -2235,27 +2312,32 @@ function thMonth(ym) {
 
 function dateMatchMonth(dateStr, ym) {
   if (!dateStr || !ym) return true;
-  // รองรับ d/M/yyyy, dd/MM/yyyy, yyyy-MM-dd
-  const s = String(dateStr).trim();
-  if (s.includes('-')) return s.startsWith(ym);
-  const p = s.split('/');
-  if (p.length < 3) return false;
-  const y = p[2].length === 4 ? p[2] : (p[2].length === 2 ? '20'+p[2] : p[2]);
-  return `${y}-${p[1].padStart(2,'0')}` === ym;
+  const t = parseThDate(String(dateStr).trim());
+  if (!t) return false;
+  const d = new Date(t);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  return `${y}-${m}` === ym;
 }
 
 function parseThDate(s) {
   if (!s) return 0;
   const str = String(s).trim();
-  if (str.includes('-') && str.length >= 8) {
+  // dd/MM/yyyy หรือ d/M/yyyy
+  const slashParts = str.split('/');
+  if (slashParts.length >= 3) {
+    const y = slashParts[2].substring(0,4);
+    const m = slashParts[1].padStart(2,'0');
+    const d = slashParts[0].padStart(2,'0');
+    return new Date(`${y}-${m}-${d}T00:00:00`).getTime() || 0;
+  }
+  // yyyy-MM-dd
+  if (str.includes('-') && str.length >= 8 && str.indexOf('-') === 4) {
     return new Date(str).getTime() || 0;
   }
-  const p = str.split('/');
-  if (p.length < 3) return 0;
-  const y = p[2].length === 4 ? p[2] : '20'+p[2];
-  const m = p[1].padStart(2,'0');
-  const d = p[0].padStart(2,'0');
-  return new Date(`${y}-${m}-${d}T00:00:00`).getTime() || 0;
+  // "Mon Mar 02 2026 00:00:00 GMT+0700" หรือ Date string ทั่วไป
+  const t = new Date(str).getTime();
+  return isNaN(t) ? 0 : t;
 }
 
 function compareDates(a, b) {
