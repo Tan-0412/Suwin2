@@ -209,6 +209,28 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .pivot-table tr:nth-child(even) td{background:#fafcff;}
 .pivot-table tr.total-row td{background:#f0e8d0;font-weight:700;font-size:13px;border-top:2px solid var(--accent);}
 .pivot-table td.zero{color:#ccc;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:11px;}
+.dsc-table th{background:var(--primary);color:#fff;padding:7px 8px;text-align:center;
+  font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,0.15);white-space:nowrap;}
+.dsc-table th.left{text-align:left;}
+.dsc-table td{padding:7px 9px;border:1px solid var(--gray2);text-align:center;vertical-align:middle;}
+.dsc-table td.name{text-align:left;font-weight:600;background:#fafcff;}
+.dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.dsc-table td.bk{color:var(--primary2);}
+.dsc-table td.rs{color:var(--green);}
+.dsc-table td.ebk{color:var(--orange);}
+.dsc-table td.cl{color:var(--red);}
+.dsc-table td.zero{color:#ccc;}
+.dsc-table tr.team-total td{background:#EEF4FF;font-weight:700;border-top:1.5px solid var(--primary3);}
+.dsc-table tr.grand-total td{background:#f0e8d0;font-weight:700;font-size:12px;border-top:2px solid var(--accent);}
+.dsc-table tr.team-sep td{background:rgba(26,58,107,0.06);font-size:10px;font-weight:700;
+  color:var(--primary);padding:4px 8px;border-top:2px solid var(--primary3);}
+.dsc-table th.carry{background:#7b5ea7;}
+.dsc-table th.ebk-hdr{background:#e06010;}
+.dsc-table th.bk-hdr{background:var(--primary2);}
+.dsc-table th.online-hdr{background:#c2185b;}
+.dsc-table th.rs-hdr{background:var(--green);}
+.dsc-table th.cl-hdr{background:var(--red);}
 .pivot-table td.has-val{color:var(--primary);font-weight:700;}
 .pivot-table th.out-hdr{background:var(--green);}
 .pivot-table th.in-hdr{background:var(--primary2);}
@@ -242,8 +264,8 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 <div class="tabs">
   <div class="tab active" onclick="switchTab('booking')"  id="tab-booking">📋 รายการจอง</div>
   <div class="tab" onclick="switchTab('report1')"  id="tab-report1">📄 รายงานจอง</div>
-  <div class="tab" onclick="switchTab('report2')"  id="tab-report2">📊 สรุปตามรุ่น</div>
-  <div class="tab" onclick="switchTab('report3')"  id="tab-report3">👤 สรุปตาม SC</div>
+  <div class="tab" onclick="switchTab('report2')"  id="tab-report2">🚗 จอง-ปล่อยรายวัน</div>
+  <div class="tab" onclick="switchTab('report3')"  id="tab-report3">👤 Daily SC</div>
   <div class="tab" onclick="switchTab('target')"   id="tab-target">🎯 เป้าจำหน่าย</div>
   <div class="tab" onclick="switchTab('setup')"    id="tab-setup">⚙️ ตั้งค่า</div>
 </div>
@@ -393,58 +415,93 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 </div>
 
 <!-- ════════════════════════════════════
-  PAGE: REPORT 2 — สรุปตามรุ่นรถ
+  PAGE: REPORT 2 — แยกประเภทรถ จอง-ปล่อย รายวัน
 ════════════════════════════════════ -->
 <div class="page" id="page-report2">
-  <div class="report-filter card">
-    <div class="card-hdr"><h2>🔍 ตัวกรองรายงานสรุปตามรุ่นรถ</h2></div>
-    <div class="card-body">
-      <div class="filter-row">
-        <div class="frow"><label>เดือนจอง</label><select id="r2Month"><option value="">ทั้งหมด</option></select></div>
-        <div class="frow"><label>วันที่เริ่มต้น</label><input type="date" id="r2DateFrom"></div>
-        <div class="frow"><label>วันที่สิ้นสุด</label><input type="date" id="r2DateTo"></div>
-        <div class="frow"><label>ที่ปรึกษา</label>
-          <select id="r2SC"><option value="">ทั้งหมด</option></select>
-        </div>
-        <div style="display:flex;gap:6px;align-self:flex-end;">
-          <button class="btn btn-primary btn-sm" onclick="runReport2()">🔍 ค้นหา</button>
-          <button class="btn btn-accent btn-sm" onclick="printReport2()">🖨️ พิมพ์</button>
-        </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2>🚗 แยกประเภทรถ จอง-ปล่อย</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="r2Month" style="font-size:12px;padding:6px 10px;border:1.5px solid rgba(255,255,255,0.3);
+          border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-family:'Sarabun',sans-serif;">
+          <option value="">ทั้งหมด</option>
+        </select>
+        <button class="btn btn-accent btn-sm" onclick="runReport2()">🔍 ดูรายงาน</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
       </div>
     </div>
   </div>
+
+  <!-- รถเล็ก -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr">
+      <div><h2 id="r2TitleSmall">📊 ฝ่ายขายรถเล็ก — แยกประเภทรถ จอง-ปล่อย</h2>
+        <p id="r2SubSmall">—</p>
+      </div>
+    </div>
+    <div class="tbl-wrap" id="r2BodySmall">
+      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+    </div>
+  </div>
+
+  <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr"><h2 id="r2Title">รายงานสรุปยอดจองและปล่อย (แยกตามรุ่นรถ)</h2></div>
-    <div class="pivot-wrap" id="r2Body">
-      <div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div>
+    <div class="card-hdr">
+      <div><h2 id="r2TitleBig">📊 ฝ่ายขายรถใหญ่ — แยกประเภทรถ จอง-ปล่อย</h2>
+        <p id="r2SubBig">—</p>
+      </div>
+    </div>
+    <div class="tbl-wrap" id="r2BodyBig">
+      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
     </div>
   </div>
 </div>
 
 <!-- ════════════════════════════════════
-  PAGE: REPORT 3 — สรุปตาม SC
+  PAGE: REPORT 3 — Daily SC Performance
 ════════════════════════════════════ -->
 <div class="page" id="page-report3">
-  <div class="report-filter card">
-    <div class="card-hdr"><h2>🔍 ตัวกรองรายงานสรุปตามที่ปรึกษาการขาย</h2></div>
-    <div class="card-body">
-      <div class="filter-row">
-        <div class="frow"><label>เดือนจอง</label><select id="r3Month"><option value="">ทั้งหมด</option></select></div>
-        <div class="frow"><label>วันที่เริ่มต้น</label><input type="date" id="r3DateFrom"></div>
-        <div class="frow"><label>วันที่สิ้นสุด</label><input type="date" id="r3DateTo"></div>
-        <div style="display:flex;gap:6px;align-self:flex-end;">
-          <button class="btn btn-primary btn-sm" onclick="runReport3()">🔍 ค้นหา</button>
-          <button class="btn btn-accent btn-sm" onclick="printReport3()">🖨️ พิมพ์</button>
-        </div>
+  <!-- Filter: เดือน + ปุ่ม -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2>👤 Daily SC Performance</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="r3Month" style="font-size:12px;padding:6px 10px;border:1.5px solid rgba(255,255,255,0.3);
+          border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-family:'Sarabun',sans-serif;">
+          <option value="">ทั้งหมด</option>
+        </select>
+        <button class="btn btn-accent btn-sm" onclick="runReport3()">🔍 ดูรายงาน</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport3()">🖨️ พิมพ์</button>
       </div>
     </div>
   </div>
+
+  <!-- รถเล็ก -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr">
+      <div>
+        <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
+        <p id="r3SubSmall">—</p>
+      </div>
+      <span id="r3TargetSmall" style="font-family:'IBM Plex Mono',monospace;font-size:11px;
+        color:rgba(245,200,66,0.9);background:rgba(232,160,32,0.15);
+        padding:3px 10px;border-radius:12px;border:1px solid rgba(232,160,32,0.3);display:none;"></span>
+    </div>
+    <div class="tbl-wrap" id="r3BodySmall">
+      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+    </div>
+  </div>
+
+  <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr"><h2 id="r3Title">รายงานสรุปยอดจองและปล่อย (แยกตามที่ปรึกษาการขาย)</h2></div>
-    <div id="r3Target" style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--primary);
-      border-bottom:1px solid var(--gray2);display:none;"></div>
-    <div class="pivot-wrap" id="r3Body">
-      <div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div>
+    <div class="card-hdr">
+      <div>
+        <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
+        <p id="r3SubBig">—</p>
+      </div>
+    </div>
+    <div class="tbl-wrap" id="r3BodyBig">
+      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
     </div>
   </div>
 </div>
@@ -1437,202 +1494,424 @@ async function runReport1() {
 }
 
 // ════════════════════════════════════════
-//  REPORT 2 — สรุปตามรุ่นรถ (Pivot)
+//  REPORT 2 — แยกประเภทรถ จอง-ปล่อย (SC × รุ่น)
 // ════════════════════════════════════════
 async function runReport2() {
-  const month    = document.getElementById('r2Month').value;
-  const dateFrom = document.getElementById('r2DateFrom').value;
-  const dateTo   = document.getElementById('r2DateTo').value;
-  const sc       = document.getElementById('r2SC').value;
-
+  const month = document.getElementById('r2Month').value;
   const params = { action:'getBookings' };
-  if (month)    params.month = month;
-  if (dateFrom) params.dateFrom = dateFrom;
-  if (dateTo)   params.dateTo = dateTo;
-  if (sc)       params.sc = sc;
+  if (month) params.month = month;
 
-  document.getElementById('r2Body').innerHTML = '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  ['r2BodySmall','r2BodyBig'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  });
+
   try {
     const d = await callGS(params);
     const rows = d.data || [];
-    if (month) document.getElementById('r2Title').textContent = `รายงานสรุปยอดจองและปล่อย (แยกตามรุ่นรถ) — ${thMonth(month)}`;
+    const monthLabel = month ? thMonth(month) : 'ทั้งหมด';
+    const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
 
-    // models sorted by order
-    const models = meta.isuzu.map(m => m['รุ่นรถ']).filter(Boolean);
+    // แยก SC ตามฝ่าย
+    const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
+    const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
 
-    // Build pivot: model → {bk, rs}
-    const pivot = {};
-    models.forEach(m => { pivot[m] = { bk:0, rs:0 }; });
-    rows.forEach(r => {
-      const model = r['รุ่นรถ'];
-      if (!pivot[model]) pivot[model] = { bk:0, rs:0 };
-      if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) pivot[model].bk++;
-      if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) pivot[model].rs++;
+    renderModelReport('small', scSmall, rows, monthLabel, today);
+    renderModelReport('big',   scBig,   rows, monthLabel, today);
+
+  } catch(e) {
+    ['r2BodySmall','r2BodyBig'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    });
+  }
+}
+
+function renderModelReport(type, scList, rows, monthLabel, today) {
+  const suffix = type === 'small' ? 'Small' : 'Big';
+  const bodyEl  = document.getElementById('r2Body' + suffix);
+  const titleEl = document.getElementById('r2Title' + suffix);
+  const subEl   = document.getElementById('r2Sub' + suffix);
+  const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
+
+  titleEl.textContent = `📊 ${deptName} — แยกประเภทรถ จอง-ปล่อย`;
+  subEl.textContent   = monthLabel + ' · พิมพ์ ' + today;
+
+  if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
+
+  // รุ่นรถที่ตรงกับฝ่าย (รถเล็ก/ใหญ่ ตาม กลุ่มรถ)
+  const groupFilter = type === 'small' ? 'รถเล็ก' : 'รถใหญ่';
+  const models = meta.isuzu
+    .filter(m => m['กลุ่มรถ'] === groupFilter)
+    .sort((a,b) => parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99))
+    .map(m => m['รุ่นรถ']).filter(Boolean);
+
+  // sort SC: ทีม → ลำดับ
+  const sorted = [...scList].sort((a,b) => {
+    const ta = a['ทีม']||''; const tb = b['ทีม']||'';
+    if (ta !== tb) return ta.localeCompare(tb);
+    return parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99);
+  });
+
+  // คำนวณ SC × model
+  const pivot = {};
+  sorted.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    pivot[name] = { bkTotal:0, rsTotal:0 };
+    models.forEach(m => { pivot[name][m] = { bk:0, rs:0 }; });
+  });
+
+  rows.forEach(r => {
+    const sc = r['ที่ปรึกษาการขาย'];
+    const model = r['รุ่นรถ'];
+    if (!pivot[sc]) return;
+    if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
+    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { pivot[sc][model].bk++; pivot[sc].bkTotal++; }
+    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) { pivot[sc][model].rs++; pivot[sc].rsTotal++; }
+  });
+
+  // headers
+  const modelBkHeaders = models.map(m =>
+    `<th style="background:#1565C0;color:#fff;font-size:9px;white-space:nowrap;">${m}</th>`
+  ).join('');
+  const modelRsHeaders = models.map(m =>
+    `<th style="background:#1a7a4a;color:#fff;font-size:9px;white-space:nowrap;">${m}</th>`
+  ).join('');
+
+  // group by team
+  const teams = {};
+  sorted.forEach(sc => {
+    const t = sc['ทีม']||'(ไม่ระบุทีม)';
+    if (!teams[t]) teams[t] = [];
+    teams[t].push(sc);
+  });
+
+  let tbody = '';
+  let gBkCols = {}; let gRsCols = {};
+  let gBkTotal = 0, gRsTotal = 0;
+  models.forEach(m => { gBkCols[m]=0; gRsCols[m]=0; });
+
+  Object.entries(teams).forEach(([team, members]) => {
+    let tBkCols = {}; let tRsCols = {};
+    let tBkTotal = 0, tRsTotal = 0;
+    models.forEach(m => { tBkCols[m]=0; tRsCols[m]=0; });
+
+    // team header row
+    tbody += `<tr style="background:rgba(26,58,107,0.06);">
+      <td colspan="${2 + models.length*2 + 2}" style="font-size:10px;font-weight:700;
+        color:var(--primary);padding:5px 10px;border-top:2px solid var(--primary3);">
+        ทีม ${team}
+      </td>
+    </tr>`;
+
+    members.forEach((sc, idx) => {
+      const name = sc['ที่ปรึกษาการขาย'];
+      const nickname = sc['ชื่อเล่น']||name;
+      const p = pivot[name] || { bkTotal:0, rsTotal:0 };
+
+      const bkCells = models.map(m => {
+        const v = p[m]?.bk||0;
+        tBkCols[m]+=v; gBkCols[m]+=v;
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
+          color:${v?'var(--primary2)':'#ccc'};">${v||0}</td>`;
+      }).join('');
+
+      const rsCells = models.map(m => {
+        const v = p[m]?.rs||0;
+        tRsCols[m]+=v; gRsCols[m]+=v;
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
+          color:${v?'var(--green)':'#ccc'};">${v||0}</td>`;
+      }).join('');
+
+      tBkTotal += p.bkTotal||0;
+      tRsTotal += p.rsTotal||0;
+
+      tbody += `<tr style="${idx%2===1?'background:#fafcff;':''}">
+        <td style="text-align:left;font-weight:600;padding:7px 10px;">${nickname}</td>
+        ${bkCells}
+        <td style="text-align:center;font-weight:700;color:var(--primary2);background:#EEF4FF;">${p.bkTotal||0}</td>
+        ${rsCells}
+        <td style="text-align:center;font-weight:700;color:var(--green);background:#EFF9F4;">${p.rsTotal||0}</td>
+      </tr>`;
     });
 
-    let totalBk = 0, totalRs = 0;
-    const tableRows = models.map(m => {
-      const bk = pivot[m]?.bk || 0;
-      const rs = pivot[m]?.rs || 0;
-      totalBk += bk; totalRs += rs;
-      return `<tr>
-        <td class="name">${m}</td>
-        <td class="${bk?'has-val':'zero'}">${bk||0}</td>
-        <td class="${rs?'has-val':'zero'}">${rs||0}</td>
-      </tr>`;
-    }).join('');
+    // team total
+    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tBkCols[m]||0}</td>`).join('');
+    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tRsCols[m]||0}</td>`).join('');
+    tbody += `<tr style="background:#EEF4FF;">
+      <td style="text-align:left;font-weight:700;padding:7px 10px;color:var(--primary);">รวม ทีม ${team}</td>
+      ${tBkColCells}
+      <td style="text-align:center;font-weight:700;color:var(--primary2);">${tBkTotal}</td>
+      ${tRsColCells}
+      <td style="text-align:center;font-weight:700;color:var(--green);">${tRsTotal}</td>
+    </tr>`;
 
-    document.getElementById('r2Body').innerHTML = `
-      <div class="pivot-wrap">
-        <table class="pivot-table">
-          <thead>
-            <tr>
-              <th class="left" rowspan="2">รุ่นรถ</th>
-              <th class="in-hdr" colspan="1">ยอดจอง</th>
-              <th class="out-hdr" colspan="1">ยอดปล่อย</th>
-            </tr>
-            <tr>
-              <th class="in-hdr">จำนวน</th>
-              <th class="out-hdr">จำนวน</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td class="name">รวมทั้งหมด</td>
-              <td>${totalBk}</td>
-              <td>${totalRs}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>`;
-  } catch(e) {
-    document.getElementById('r2Body').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
-  }
+    gBkTotal += tBkTotal; gRsTotal += tRsTotal;
+  });
+
+  // grand total
+  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${gBkCols[m]||0}</td>`).join('');
+  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${gRsCols[m]||0}</td>`).join('');
+
+  bodyEl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:600px;">
+      <thead>
+        <tr>
+          <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
+            min-width:100px;">รายชื่อ SC</th>
+          <th colspan="${models.length+1}" style="background:#1565C0;color:#fff;padding:7px;text-align:center;">
+            ยอดจอง</th>
+          <th colspan="${models.length+1}" style="background:#1a7a4a;color:#fff;padding:7px;text-align:center;">
+            ยอดปล่อย</th>
+        </tr>
+        <tr>
+          ${modelBkHeaders}
+          <th style="background:#1565C0;color:#fff;font-size:9px;white-space:nowrap;font-weight:700;">รวม</th>
+          ${modelRsHeaders}
+          <th style="background:#1a7a4a;color:#fff;font-size:9px;white-space:nowrap;font-weight:700;">รวม</th>
+        </tr>
+      </thead>
+      <tbody>${tbody}</tbody>
+      <tfoot>
+        <tr style="background:#f0e8d0;">
+          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid var(--accent);">ยอดรวม</td>
+          ${gBkColCells}
+          <td style="text-align:center;font-weight:700;color:var(--primary2);border-top:2px solid var(--accent);
+            font-size:13px;">${gBkTotal}</td>
+          ${gRsColCells}
+          <td style="text-align:center;font-weight:700;color:var(--green);border-top:2px solid var(--accent);
+            font-size:13px;">${gRsTotal}</td>
+        </tr>
+      </tfoot>
+    </table>`;
 }
 
 // ════════════════════════════════════════
 //  REPORT 3 — สรุปตาม SC (Pivot)
 // ════════════════════════════════════════
 async function runReport3() {
-  const month    = document.getElementById('r3Month').value;
-  const dateFrom = document.getElementById('r3DateFrom').value;
-  const dateTo   = document.getElementById('r3DateTo').value;
-
+  const month = document.getElementById('r3Month').value;
   const params = { action:'getBookings' };
-  if (month)    params.month = month;
-  if (dateFrom) params.dateFrom = dateFrom;
-  if (dateTo)   params.dateTo = dateTo;
+  if (month) params.month = month;
 
-  document.getElementById('r3Body').innerHTML = '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  ['r3BodySmall','r3BodyBig'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  });
+
   try {
-    const d = await callGS(params);
-    const rows = d.data || [];
-    if (month) document.getElementById('r3Title').textContent = `รายงานสรุปยอดจองและปล่อย (แยกตาม SC) — ${thMonth(month)}`;
+    // โหลดข้อมูลทั้งหมด (ไม่กรองเดือนสำหรับ "ยกมา")
+    const dAll = await callGS({ action:'getBookings' });
+    const allRows = dAll.data || [];
 
-    // SC list sorted by order
-    const scList = meta.sc.map(s => s['ที่ปรึกษาการขาย']).filter(Boolean);
-    // Models
-    const models = meta.isuzu.map(m => m['รุ่นรถ']).filter(Boolean);
+    // ข้อมูลเดือนที่เลือก
+    const dCur = month ? await callGS(params) : { data: allRows };
+    const curRows = dCur.data || [];
 
-    // Target for this month
+    // เดือนก่อนหน้า
+    let prevRows = [];
+    if (month) {
+      const [y, m] = month.split('-').map(Number);
+      const prevDate = new Date(y, m-2, 1);
+      const prevYM = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+      const dPrev = await callGS({ action:'getBookings', month: prevYM });
+      prevRows = dPrev.data || [];
+    }
+
+    // เป้า
     let targetVal = 0;
     if (month) {
       const [y, m] = month.split('-');
-      const TH_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+      const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
         'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-      const label = `${TH_MONTHS[parseInt(m)]} ${parseInt(y)}`;
+      const label = TH[parseInt(m)] + ' ' + parseInt(y);
       const tgt = allTargets.find(t => t['เดือน'] === label);
       if (tgt) targetVal = parseInt(tgt['เป้าการจำหน่าย'])||0;
     }
 
-    // Show target
-    const tgtEl = document.getElementById('r3Target');
-    if (targetVal > 0) {
-      tgtEl.style.display = '';
-      tgtEl.textContent = `🎯 เป้าการจำหน่ายเดือนนี้: ${targetVal.toLocaleString()} คัน`;
-    } else {
-      tgtEl.style.display = 'none';
-    }
+    const monthLabel = month ? thMonth(month) : 'ทั้งหมด';
+    const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
 
-    // Build pivot: SC → model → {bk, rs}
-    const pivot = {};
-    scList.forEach(sc => {
-      pivot[sc] = {};
-      models.forEach(m => { pivot[sc][m] = { bk:0, rs:0 }; });
-      pivot[sc]._total = { bk:0, rs:0 };
-    });
+    // แยก SC ตามฝ่าย
+    const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
+    const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
 
-    rows.forEach(r => {
-      const sc = r['ที่ปรึกษาการขาย'];
-      const model = r['รุ่นรถ'];
-      if (!pivot[sc]) { pivot[sc] = { _total:{bk:0,rs:0} }; models.forEach(m => pivot[sc][m]={bk:0,rs:0}); }
-      if (!pivot[sc][model]) pivot[sc][model] = {bk:0,rs:0};
-      if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) { pivot[sc][model].bk++; pivot[sc]._total.bk++; }
-      if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) { pivot[sc][model].rs++; pivot[sc]._total.rs++; }
-    });
+    // sources จาก SOURCE sheet
+    const onlineSources = meta.source.map(s => s['ที่มาลูกค้า']).filter(Boolean);
 
-    // Grand totals
-    let grandBk = 0, grandRs = 0;
-    const modelTotals = {};
-    models.forEach(m => { modelTotals[m] = {bk:0,rs:0}; });
+    // render แต่ละฝ่าย
+    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal);
+    renderDSC('big',   scBig,   curRows, prevRows, allRows, onlineSources, monthLabel, today, 0);
 
-    const tableRows = scList.map((sc, idx) => {
-      const p = pivot[sc] || { _total:{bk:0,rs:0} };
-      grandBk += p._total.bk; grandRs += p._total.rs;
-      const cells = models.map(m => {
-        const bk = p[m]?.bk||0, rs = p[m]?.rs||0;
-        modelTotals[m].bk += bk; modelTotals[m].rs += rs;
-        return `<td class="${bk?'has-val':'zero'}">${bk||0}</td><td class="${rs?'has-val':'zero'}">${rs||0}</td>`;
-      }).join('');
-      return `<tr class="${idx%2===1?'alt':''}">
-        <td class="name">${sc}</td>
-        ${cells}
-        <td style="font-weight:700;color:var(--primary2);">${p._total.bk||0}</td>
-        <td style="font-weight:700;color:var(--green);">${p._total.rs||0}</td>
-      </tr>`;
-    }).join('');
-
-    const totalCells = models.map(m =>
-      `<td>${modelTotals[m].bk||0}</td><td>${modelTotals[m].rs||0}</td>`
-    ).join('');
-
-    const modelHeaders = models.map(m =>
-      `<th colspan="2" style="font-size:10px;">${m}</th>`
-    ).join('');
-    const subHeaders = models.map(() =>
-      `<th class="in-hdr">จอง</th><th class="out-hdr">ปล่อย</th>`
-    ).join('');
-
-    document.getElementById('r3Body').innerHTML = `
-      <div class="pivot-wrap">
-        <table class="pivot-table">
-          <thead>
-            <tr>
-              <th class="left" rowspan="2">SC</th>
-              ${modelHeaders}
-              <th colspan="2">รวม</th>
-            </tr>
-            <tr>
-              ${subHeaders}
-              <th class="in-hdr">จอง</th>
-              <th class="out-hdr">ปล่อย</th>
-            </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td class="name">รวม</td>
-              ${totalCells}
-              <td>${grandBk}</td>
-              <td>${grandRs}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>`;
   } catch(e) {
-    document.getElementById('r3Body').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    ['r3BodySmall','r3BodyBig'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    });
   }
+}
+
+function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal) {
+  const suffix = type === 'small' ? 'Small' : 'Big';
+  const bodyEl = document.getElementById('r3Body' + suffix);
+  const titleEl = document.getElementById('r3Title' + suffix);
+  const subEl  = document.getElementById('r3Sub' + suffix);
+  const tgtEl  = document.getElementById('r3Target' + suffix);
+
+  const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
+  titleEl.textContent = `📊 ${deptName}`;
+  subEl.textContent   = monthLabel + ' · พิมพ์ ' + today;
+
+  if (targetVal > 0 && tgtEl) {
+    tgtEl.style.display = '';
+    tgtEl.textContent = `🎯 เป้า: ${targetVal.toLocaleString()} คัน`;
+  } else if (tgtEl) {
+    tgtEl.style.display = 'none';
+  }
+
+  if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
+
+  // sort: ทีม → ลำดับ
+  const sorted = [...scList].sort((a,b) => {
+    const ta = a['ทีม']||''; const tb = b['ทีม']||'';
+    if (ta !== tb) return ta.localeCompare(tb);
+    return parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99);
+  });
+
+  // คำนวณข้อมูลแต่ละ SC
+  const calc = (sc) => {
+    const name = sc['ที่ปรึกษาการขาย'];
+    // ยกมา = BK ที่ค้างจากเดือนก่อน (BK/EBK ที่ไม่มี RS)
+    const carry = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ'])).length;
+    // EBK เดือนนี้
+    const ebk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ'])).length;
+    // BK เดือนนี้
+    const bk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ'])).length;
+    // Online แยก source
+    const onlineBySource = {};
+    sources.forEach(src => {
+      onlineBySource[src] = curRows.filter(r =>
+        r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']) && r['ที่มาลูกค้า']===src
+      ).length;
+    });
+    // RS ในเดือน
+    const rsMonth = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ'])).length;
+    // รวมจองปัจจุบัน = carry + bk - rsMonth
+    const total = carry + bk - rsMonth;
+    // ERS
+    const ers = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isERS(r['สถานะ'])).length;
+    // ยอดปล่อย (RS ทั้งหมดใน allRows ของ SC นี้)
+    const rsTotal = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ'])).length;
+    // ถอนจอง
+    const cl = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ'])).length;
+    return { name, carry, ebk, bk, onlineBySource, rsMonth, total, ers, rsTotal, cl,
+      ทีม: sc['ทีม']||'', ชื่อเล่น: sc['ชื่อเล่น']||name };
+  };
+
+  // กลุ่มตามทีม
+  const teams = {};
+  sorted.forEach(sc => {
+    const t = sc['ทีม']||'(ไม่ระบุทีม)';
+    if (!teams[t]) teams[t] = [];
+    teams[t].push(calc(sc));
+  });
+
+  // สร้าง header
+  const srcHeaders = sources.map(s =>
+    `<th class="online-hdr" style="font-size:9px;">${s}</th>`
+  ).join('');
+
+  let html = `<table class="dsc-table">
+    <thead>
+      <tr>
+        <th class="left" rowspan="2" style="min-width:120px;">SC</th>
+        <th class="carry" rowspan="2">จอง<br>ยกมา</th>
+        <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
+        <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
+        <th class="online-hdr" colspan="${sources.length}">Online</th>
+        <th class="rs-hdr" rowspan="2">จอง<br>ปล่อย</th>
+        <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
+        <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
+        <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
+        <th class="cl-hdr" rowspan="2">ถอน<br>จอง</th>
+      </tr>
+      <tr>${srcHeaders}</tr>
+    </thead>
+    <tbody>`;
+
+  // grand total
+  let gCarry=0,gEbk=0,gBk=0,gRsM=0,gTotal=0,gErs=0,gRsT=0,gCl=0;
+  const gSrc = {}; sources.forEach(s=>gSrc[s]=0);
+
+  Object.entries(teams).forEach(([team, members]) => {
+    // team separator
+    html += `<tr class="team-sep"><td colspan="${5+sources.length}">ทีม ${team}</td></tr>`;
+
+    // team totals
+    let tCarry=0,tEbk=0,tBk=0,tRsM=0,tTotal=0,tErs=0,tRsT=0,tCl=0;
+    const tSrc = {}; sources.forEach(s=>tSrc[s]=0);
+
+    members.forEach((d, idx) => {
+      const srcCells = sources.map(s => {
+        const v = d.onlineBySource[s]||0;
+        tSrc[s]+=v; gSrc[s]+=v;
+        return `<td class="num ${v?'bk':'zero'}">${v||0}</td>`;
+      }).join('');
+      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk; tRsM+=d.rsMonth;
+      tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
+
+      html += `<tr>
+        <td class="name">${d.ชื่อเล่น}</td>
+        <td class="num carry">${d.carry||0}</td>
+        <td class="num ebk ${d.ebk?'':'zero'}">${d.ebk||0}</td>
+        <td class="num bk ${d.bk?'':'zero'}">${d.bk||0}</td>
+        ${srcCells}
+        <td class="num rs ${d.rsMonth?'':'zero'}">${d.rsMonth||0}</td>
+        <td class="num bk" style="background:#EEF4FF;">${d.total||0}</td>
+        <td class="num ebk ${d.ers?'':'zero'}">${d.ers||0}</td>
+        <td class="num rs ${d.rsTotal?'':'zero'}">${d.rsTotal||0}</td>
+        <td class="num cl ${d.cl?'':'zero'}">${d.cl||0}</td>
+      </tr>`;
+    });
+
+    // team total row
+    const tSrcCells = sources.map(s => `<td class="num">${tSrc[s]||0}</td>`).join('');
+    html += `<tr class="team-total">
+      <td class="name">รวม ทีม ${team}</td>
+      <td class="num">${tCarry}</td>
+      <td class="num">${tEbk}</td>
+      <td class="num">${tBk}</td>
+      ${tSrcCells}
+      <td class="num">${tRsM}</td>
+      <td class="num">${tTotal}</td>
+      <td class="num">${tErs}</td>
+      <td class="num">${tRsT}</td>
+      <td class="num">${tCl}</td>
+    </tr>`;
+
+    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk; gRsM+=tRsM;
+    gTotal+=tTotal; gErs+=tErs; gRsT+=tRsT; gCl+=tCl;
+  });
+
+  // grand total
+  const gSrcCells = sources.map(s => `<td class="num">${gSrc[s]||0}</td>`).join('');
+  html += `</tbody>
+    <tfoot>
+      <tr class="grand-total">
+        <td class="name">รวมทั้งหมด</td>
+        <td class="num">${gCarry}</td>
+        <td class="num">${gEbk}</td>
+        <td class="num">${gBk}</td>
+        ${gSrcCells}
+        <td class="num">${gRsM}</td>
+        <td class="num">${gTotal}</td>
+        <td class="num">${gErs}</td>
+        <td class="num">${gRsT}</td>
+        <td class="num">${gCl}</td>
+      </tr>
+    </tfoot>
+  </table>`;
+
+  bodyEl.innerHTML = html;
 }
 
 // ════════════════════════════════════════
@@ -1664,18 +1943,37 @@ function printReport1() {
 }
 
 function printReport2() {
-  const title = document.getElementById('r2Title').textContent;
-  const body  = document.getElementById('r2Body').innerHTML;
   const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-  openPrint(title, today, body);
+  const month = document.getElementById('r2Month').value;
+  const title = 'แยกประเภทรถ จอง-ปล่อย' + (month ? ' — ' + thMonth(month) : '');
+  const bodySmall = document.getElementById('r2BodySmall')?.innerHTML || '';
+  const bodyBig   = document.getElementById('r2BodyBig')?.innerHTML || '';
+  const html = `
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">ฝ่ายขายรถเล็ก</h3>
+    ${bodySmall}
+    <div style="margin-top:20px;"></div>
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">ฝ่ายขายรถใหญ่</h3>
+    ${bodyBig}
+  `;
+  openPrint(title, today, html);
 }
 
 function printReport3() {
-  const title  = document.getElementById('r3Title').textContent;
-  const tgt    = document.getElementById('r3Target').textContent;
-  const body   = document.getElementById('r3Body').innerHTML;
-  const today  = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-  openPrint(title, today, `${tgt?`<p style="font-weight:700;color:#1a3a6b;margin-bottom:8px;">${tgt}</p>`:''}${body}`);
+  const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const month = document.getElementById('r3Month').value;
+  const title = 'Daily SC Performance' + (month ? ' — ' + thMonth(month) : '');
+  const tgtSmall = document.getElementById('r3TargetSmall')?.textContent || '';
+  const bodySmall = document.getElementById('r3BodySmall')?.innerHTML || '';
+  const bodyBig   = document.getElementById('r3BodyBig')?.innerHTML || '';
+  const html = `
+    ${tgtSmall?`<div style="font-weight:700;color:#1a3a6b;margin-bottom:8px;">${tgtSmall}</div>`:''}
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">ฝ่ายขายรถเล็ก</h3>
+    ${bodySmall}
+    <div style="margin-top:16px;"></div>
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">ฝ่ายขายรถใหญ่</h3>
+    ${bodyBig}
+  `;
+  openPrint(title, today, html);
 }
 
 function openPrint(title, today, bodyHtml) {
