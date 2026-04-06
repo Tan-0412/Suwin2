@@ -106,12 +106,12 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 /* ── STATUS BADGES ── */
 .badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
-.badge-PS {background:#DBEAFE;color:#1D4ED8;}          /* มุ่งหวัง — ฟ้า */
-.badge-EBK{background:#FCE7F3;color:#9D174D;}          /* คาดจอง — ชมพู */
-.badge-BK {background:#FED7AA;color:#9A3412;}          /* จอง — ส้ม */
-.badge-ERS{background:#FEF9C3;color:#854D0E;}          /* คาดปล่อย — เหลือง */
-.badge-RS {background:#D1FAE5;color:#065F46;}          /* ปล่อย — เขียว */
-.badge-CL {background:#FEE2E2;color:#991B1B;}          /* ยกเลิก — แดง */
+.badge-PS{background:#E8F4FF;color:#1565C0;}
+.badge-EBK{background:#FFF3CD;color:#856404;}
+.badge-BK{background:#D4EDDA;color:#155724;}
+.badge-ERS{background:#FFE8D0;color:#7D3C00;}
+.badge-RS{background:#D1F2EB;color:#0B5E3A;}
+.badge-CL{background:#F8D7DA;color:#721C24;}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;}
@@ -291,20 +291,17 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     <div class="sum-card" style="border-left-color:var(--primary3);">
       <div class="sum-val" id="sAll">—</div><div class="sum-lbl">ทั้งหมด</div>
     </div>
-    <div class="sum-card" style="border-left-color:#9A3412;">
-      <div class="sum-val" id="sBK" style="color:#9A3412;">—</div><div class="sum-lbl">🟠 จอง</div>
+    <div class="sum-card" style="border-left-color:var(--accent);">
+      <div class="sum-val" id="sBK" style="color:var(--green);">—</div><div class="sum-lbl">จอง BK</div>
     </div>
-    <div class="sum-card" style="border-left-color:#065F46;">
-      <div class="sum-val" id="sRS" style="color:#065F46;">—</div><div class="sum-lbl">🟢 ปล่อย</div>
+    <div class="sum-card" style="border-left-color:var(--green);">
+      <div class="sum-val" id="sRS" style="color:var(--green2);">—</div><div class="sum-lbl">ปล่อย RS</div>
     </div>
-    <div class="sum-card" style="border-left-color:#9D174D;">
-      <div class="sum-val" id="sEBK" style="color:#9D174D;">—</div><div class="sum-lbl">🩷 คาดจอง</div>
-    </div>
-    <div class="sum-card" style="border-left-color:#854D0E;">
-      <div class="sum-val" id="sERS" style="color:#854D0E;">—</div><div class="sum-lbl">🟡 คาดปล่อย</div>
+    <div class="sum-card" style="border-left-color:var(--orange);">
+      <div class="sum-val" id="sEBK" style="color:var(--orange);">—</div><div class="sum-lbl">คาดจอง EBK</div>
     </div>
     <div class="sum-card" style="border-left-color:var(--red);">
-      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">🔴 ยกเลิก</div>
+      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">ยกเลิก CL</div>
     </div>
   </div>
 
@@ -1219,13 +1216,11 @@ function updateSummary() {
   const bk  = filteredBookings.filter(r => isBK(r['สถานะ'])).length;
   const ebk = filteredBookings.filter(r => isEBK(r['สถานะ'])).length;
   const rs  = filteredBookings.filter(r => isRS(r['สถานะ'])).length;
-  const ers = filteredBookings.filter(r => isERS(r['สถานะ'])).length;
   const cl  = filteredBookings.filter(r => isCL(r['สถานะ'])).length;
   document.getElementById('sAll').textContent = all;
   document.getElementById('sBK').textContent  = bk;
   document.getElementById('sEBK').textContent = ebk;
   document.getElementById('sRS').textContent  = rs;
-  document.getElementById('sERS').textContent = ers;
   document.getElementById('sCL').textContent  = cl;
   renderSCChart();
 }
@@ -1365,9 +1360,10 @@ function renderSCChart() {
 
   filteredBookings.forEach(r => {
     const sc = r['ที่ปรึกษาการขาย'];
-    if (!scData[sc]) scData[sc] = {bk:0,rs:0,bkModels:[],rsModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc};
+    if (!scData[sc]) scData[sc] = {bk:0,rs:0,ers:0,bkModels:[],rsModels:[],ersModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc};
     if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
-    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+    if (isRS(r['สถานะ']))  { scData[sc].rs++;  scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+    if (isERS(r['สถานะ'])) { scData[sc].ers++; scData[sc].ersModels.push(r['รุ่นรถ']||'—'); }
   });
 
   // เก็บ data ไว้ใน window object — หลีกเลี่ยงปัญหา HTML attribute encoding
@@ -1539,10 +1535,10 @@ function hideDscTip() {
 function showBarTip(e, scName) {
   const d = window._chartData && window._chartData[scName];
   if (!d) return;
-  showChartTooltipWithHint(e, scName, d.bkModels||[], d.rsModels||[]);
+  showChartTooltipWithHint(e, scName, d.bkModels||[], d.rsModels||[], d.ersModels||[]);
 }
 
-function showChartTooltipWithHint(e, sc, bkModels, rsModels) {
+function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
   hideChartTooltip();
   const tip = document.createElement('div');
   tip.id = 'chartTip';
@@ -1573,7 +1569,17 @@ function showChartTooltipWithHint(e, sc, bkModels, rsModels) {
     });
     html += '</div>';
   }
-  if (!bkModels.length && !rsModels.length) {
+  if (ersModels && ersModels.length) {
+    const counts = {};
+    ersModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🟡 คาดปล่อย (${ersModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#fde68a;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (!bkModels.length && !rsModels.length && !(ersModels&&ersModels.length)) {
     html += `<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>`;
   }
   html += `<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);
@@ -2563,29 +2569,16 @@ function fmtDate(s) {
 }
 
 function statusCode(val) {
+  // แปลงภาษาไทย → code ถ้าจำเป็น
   if (!val) return '';
-  // ถ้าเป็น code อยู่แล้ว (PS/EBK/BK/ERS/RS/CL) ให้คืนค่าเดิม
-  const codes = ['PS','EBK','BK','ERS','RS','CL'];
-  if (codes.includes(val)) return val;
-  // แปลงภาษาไทย → code
-  if (isPS(val))  return 'PS';
-  if (isEBK(val)) return 'EBK';
-  if (isBK(val))  return 'BK';
-  if (isERS(val)) return 'ERS';
-  if (isRS(val))  return 'RS';
-  if (isCL(val))  return 'CL';
-  // fallback: หาจาก meta
   const found = meta.status.find(s => s['สถานะ'] === val || s['STATUS'] === val);
   return found ? found['STATUS'] : val;
 }
 
 function statusLabel(val) {
   if (!val) return '—';
-  // แปลงเป็น code ก่อน แล้วหา label ภาษาไทย
-  const code = statusCode(val);
-  const found = meta.status.find(s => s['STATUS'] === code);
-  if (found) return found['สถานะ'] || found['STATUS'];
-  // ถ้าไม่มีใน meta ใช้ค่าที่รับมาเลย
+  const found = meta.status.find(s => s['STATUS'] === val || s['สถานะ'] === val);
+  if (found) return `${found['STATUS']} · ${found['สถานะ']}`;
   return val;
 }
 
