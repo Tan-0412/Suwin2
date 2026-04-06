@@ -1031,7 +1031,14 @@ function populateSel(id, data, valField, labelField, allLabel) {
     if (!val) return;
     const o=document.createElement('option');o.value=val;o.textContent=lbl||val;sel.appendChild(o);
   });
-  if (prev) sel.value = prev;
+  // restore ค่าเดิม — ลอง exact match ก่อน แล้ว trimmed match
+  if (prev) {
+    sel.value = prev;
+    if (sel.value !== prev) {
+      const opt = [...sel.options].find(o => o.value.trim() === prev.trim());
+      if (opt) sel.value = opt.value;
+    }
+  }
 }
 
 // ════════════════════════════════════════
@@ -1591,18 +1598,45 @@ function openAddModal() {
 
 function openEditModal(i) {
   const r = filteredBookings[i];
-  editingRow = r._row;
+  if (!r) { toast('ไม่พบข้อมูลแถวนี้', 'err'); return; }
+  editingRow = r._row || null;
+  if (!editingRow) { toast('❌ ไม่พบเลขแถว (_row) ไม่สามารถแก้ไขได้', 'err'); return; }
+
   document.getElementById('modalTitle').textContent = '✏️ แก้ไขรายการจอง';
   document.getElementById('mDate').value    = thToInputDate(r['วันที่จอง']);
-  document.getElementById('mName').value    = r['ชื่อลูกค้า']||'';
-  document.getElementById('mPhone').value   = r['เบอร์']||'';
-  document.getElementById('mDetail').value  = r['รายละเอียดรถ']||'';
-  document.getElementById('mRelDate').value = thToInputDate(r['วันที่ปล่อย']);
-  document.getElementById('mSC').value      = r['ที่ปรึกษาการขาย']||'';
-  document.getElementById('mModel').value   = r['รุ่นรถ']||'';
-  document.getElementById('mStatus').value  = r['สถานะ']||'BK';
-  document.getElementById('mSource').value  = r['ที่มาลูกค้า']||'';
+  document.getElementById('mName').value    = r['ชื่อลูกค้า'] || '';
+  document.getElementById('mPhone').value   = r['เบอร์'] || '';
+  document.getElementById('mDetail').value  = r['รายละเอียดรถ'] || '';
+  document.getElementById('mRelDate').value = thToInputDate(r['วันที่ปล่อย'] || '');
+
+  // SC
+  setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
+  // Model
+  setSelectValue('mModel', r['รุ่นรถ'] || '');
+  // Status — ข้อมูลใน sheet อาจเก็บเป็น STATUS code (BK) หรือภาษาไทย (จอง) ก็ได้
+  const rawStatus = r['สถานะ'] || '';
+  // หา STATUS code ที่ตรงกับค่าที่เก็บในชีท
+  const statusMatch = meta.status.find(s =>
+    s['STATUS'] === rawStatus || s['สถานะ'] === rawStatus
+  );
+  const statusVal = statusMatch ? statusMatch['STATUS'] : rawStatus;
+  setSelectValue('mStatus', statusVal);
+  // Source
+  setSelectValue('mSource', r['ที่มาลูกค้า'] || '');
+
   document.getElementById('bookingModal').classList.add('open');
+}
+
+// ตั้งค่า select — ถ้าไม่พบ option จะ fallback เป็นค่าว่าง
+function setSelectValue(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.value = val;
+  // ถ้าไม่พบให้ลอง trim
+  if (sel.value !== val) {
+    const opt = [...sel.options].find(o => o.value.trim() === val.trim());
+    if (opt) sel.value = opt.value;
+  }
 }
 
 function closeModal() {
@@ -1618,30 +1652,41 @@ async function saveBooking() {
   if (!date || !name || !sc || !model || !status) {
     toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return;
   }
+
+  // แปลง status code → ภาษาไทยตามที่ชีทเก็บจริง (ถ้า Apps Script เก็บเป็นภาษาไทย)
+  // ส่งทั้ง STATUS code ตรงๆ — Apps Script ฝั่ง updateBooking รับ p['สถานะ'] ตรงๆ
   const params = {
-    'วันที่จอง':          formatThDate(date),
-    'ชื่อลูกค้า':         name,
-    'เบอร์':              document.getElementById('mPhone').value.trim(),
-    'รายละเอียดรถ':       document.getElementById('mDetail').value.trim(),
-    'รุ่นรถ':             model,
-    'สถานะ':              status,
-    'วันที่ปล่อย':        formatThDate(document.getElementById('mRelDate').value),
-    'ที่ปรึกษาการขาย':    sc,
-    'ที่มาลูกค้า':        document.getElementById('mSource').value,
+    'วันที่จอง':       formatThDate(date),
+    'ชื่อลูกค้า':      name,
+    'เบอร์':           document.getElementById('mPhone').value.trim(),
+    'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
+    'รุ่นรถ':          model,
+    'สถานะ':           status,
+    'วันที่ปล่อย':     formatThDate(document.getElementById('mRelDate').value),
+    'ที่ปรึกษาการขาย': sc,
+    'ที่มาลูกค้า':     document.getElementById('mSource').value,
   };
+
   try {
     let r;
     if (editingRow) {
-      r = await callGS({ action:'updateBooking', _row: editingRow, ...params });
+      // ตรวจสอบให้แน่ใจว่า _row เป็นตัวเลขที่ถูกต้อง
+      const rowNum = parseInt(editingRow);
+      if (!rowNum || rowNum < 2) {
+        toast('❌ เลขแถวไม่ถูกต้อง (' + editingRow + ')', 'err'); return;
+      }
+      r = await callGS({ action: 'updateBooking', _row: rowNum, ...params });
     } else {
-      r = await callGS({ action:'addBooking', ...params });
+      r = await callGS({ action: 'addBooking', ...params });
     }
-    if (r.ok) {
+    if (r && r.ok) {
       toast(editingRow ? '✅ แก้ไขสำเร็จ!' : '✅ เพิ่มรายการสำเร็จ!', 'ok');
       closeModal();
       await loadBookings();
-    } else throw new Error(r.error||'ไม่สำเร็จ');
-  } catch(e) { toast('❌ '+e.message, 'err'); }
+    } else {
+      throw new Error((r && r.error) || 'ไม่สำเร็จ — ตรวจสอบ Apps Script');
+    }
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
 }
 
 function confirmDelete(i) {
