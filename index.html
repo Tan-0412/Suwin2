@@ -418,41 +418,29 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   PAGE: REPORT 2 — แยกประเภทรถ จอง-ปล่อย รายวัน
 ════════════════════════════════════ -->
 <div class="page" id="page-report2">
-  <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h2>🚗 แยกประเภทรถ จอง-ปล่อย</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="r2Month" style="font-size:12px;padding:6px 10px;border:1.5px solid rgba(255,255,255,0.3);
-          border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-family:'Sarabun',sans-serif;">
-          <option value="">ทั้งหมด</option>
-        </select>
-        <button class="btn btn-accent btn-sm" onclick="runReport2()">🔍 ดูรายงาน</button>
-        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
-      </div>
-    </div>
-  </div>
-
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr">
-      <div><h2 id="r2TitleSmall">📊 ฝ่ายขายรถเล็ก — แยกประเภทรถ จอง-ปล่อย</h2>
-        <p id="r2SubSmall">—</p>
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <h2 id="r2TitleSmall">📊 ฝ่ายขายรถเล็ก — แยกประเภทรถ จอง-ปล่อย</h2>
+        <p id="r2SubSmall" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
       </div>
+      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
     </div>
     <div class="tbl-wrap" id="r2BodySmall">
-      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+      <div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>
     </div>
   </div>
-
   <!-- รถใหญ่ -->
   <div class="card">
     <div class="card-hdr">
-      <div><h2 id="r2TitleBig">📊 ฝ่ายขายรถใหญ่ — แยกประเภทรถ จอง-ปล่อย</h2>
-        <p id="r2SubBig">—</p>
+      <div>
+        <h2 id="r2TitleBig">📊 ฝ่ายขายรถใหญ่ — แยกประเภทรถ จอง-ปล่อย</h2>
+        <p id="r2SubBig" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
       </div>
     </div>
     <div class="tbl-wrap" id="r2BodyBig">
-      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+      <div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>
     </div>
   </div>
 </div>
@@ -461,18 +449,11 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   PAGE: REPORT 3 — Daily SC Performance
 ════════════════════════════════════ -->
 <div class="page" id="page-report3">
-  <!-- Filter: เดือน + ปุ่ม -->
+  <!-- Header -->
   <div class="card" style="margin-bottom:12px;">
     <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <h2>👤 Daily SC Performance</h2>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <select id="r3Month" style="font-size:12px;padding:6px 10px;border:1.5px solid rgba(255,255,255,0.3);
-          border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-family:'Sarabun',sans-serif;">
-          <option value="">ทั้งหมด</option>
-        </select>
-        <button class="btn btn-accent btn-sm" onclick="runReport3()">🔍 ดูรายงาน</button>
-        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport3()">🖨️ พิมพ์</button>
-      </div>
+      <h2 id="r3MainTitle">👤 Daily SC Performance</h2>
+      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport3()">🖨️ พิมพ์</button>
     </div>
   </div>
 
@@ -1009,7 +990,7 @@ function populateMonthFilter() {
     'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 
   // populate ทุก select เดือน
-  ['fMonth','r1Month','r2Month','r3Month'].forEach(id => {
+  ['fMonth','r1Month'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const prev = sel.value;
@@ -1039,7 +1020,7 @@ function filterBooking() {
     if (month  && !dateMatchMonth(r['วันที่จอง'], month)) return false;
     if (q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
     return true;
-  });
+  }).sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
   renderBookings();
   updateSummary();
 }
@@ -1497,9 +1478,10 @@ async function runReport1() {
 //  REPORT 2 — แยกประเภทรถ จอง-ปล่อย (SC × รุ่น)
 // ════════════════════════════════════════
 async function runReport2() {
-  const month = document.getElementById('r2Month').value;
-  const params = { action:'getBookings' };
-  if (month) params.month = month;
+  // ใช้เดือนปัจจุบันอัตโนมัติ
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+  const params = { action:'getBookings', month: curYM };
 
   ['r2BodySmall','r2BodyBig'].forEach(id => {
     document.getElementById(id).innerHTML =
@@ -1509,7 +1491,7 @@ async function runReport2() {
   try {
     const d = await callGS(params);
     const rows = d.data || [];
-    const monthLabel = month ? thMonth(month) : 'ทั้งหมด';
+    const monthLabel = thMonth(curYM);
     const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
 
     // แยก SC ตามฝ่าย
@@ -1689,9 +1671,9 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
 //  REPORT 3 — สรุปตาม SC (Pivot)
 // ════════════════════════════════════════
 async function runReport3() {
-  const month = document.getElementById('r3Month').value;
-  const params = { action:'getBookings' };
-  if (month) params.month = month;
+  // ใช้เดือนปัจจุบันอัตโนมัติ
+  const now = new Date();
+  const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
 
   ['r3BodySmall','r3BodyBig'].forEach(id => {
     document.getElementById(id).innerHTML =
@@ -1703,32 +1685,26 @@ async function runReport3() {
     const dAll = await callGS({ action:'getBookings' });
     const allRows = dAll.data || [];
 
-    // ข้อมูลเดือนที่เลือก
-    const dCur = month ? await callGS(params) : { data: allRows };
+    // ข้อมูลเดือนปัจจุบัน
+    const dCur = await callGS({ action:'getBookings', month: curYM });
     const curRows = dCur.data || [];
 
     // เดือนก่อนหน้า
-    let prevRows = [];
-    if (month) {
-      const [y, m] = month.split('-').map(Number);
-      const prevDate = new Date(y, m-2, 1);
-      const prevYM = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
-      const dPrev = await callGS({ action:'getBookings', month: prevYM });
-      prevRows = dPrev.data || [];
-    }
+    const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
+    const prevYM = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
+    const dPrev = await callGS({ action:'getBookings', month: prevYM });
+    const prevRows = dPrev.data || [];
 
     // เป้า
     let targetVal = 0;
-    if (month) {
-      const [y, m] = month.split('-');
-      const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-        'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-      const label = TH[parseInt(m)] + ' ' + parseInt(y);
-      const tgt = allTargets.find(t => t['เดือน'] === label);
-      if (tgt) targetVal = parseInt(tgt['เป้าการจำหน่าย'])||0;
-    }
+    const [y, m] = curYM.split('-');
+    const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const label = TH[parseInt(m)] + ' ' + parseInt(y);
+    const tgt = allTargets.find(t => t['เดือน'] === label);
+    if (tgt) targetVal = parseInt(tgt['เป้าการจำหน่าย'])||0;
 
-    const monthLabel = month ? thMonth(month) : 'ทั้งหมด';
+    const monthLabel = thMonth(curYM);
     const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
 
     // แยก SC ตามฝ่าย
