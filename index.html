@@ -354,7 +354,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
           <select id="r1SC"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="frow"><label>เดือนจอง</label>
-          <input type="month" id="r1Month">
+          <select id="r1Month"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="frow"><label>วันที่เริ่มต้น</label>
           <input type="date" id="r1DateFrom">
@@ -400,7 +400,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     <div class="card-hdr"><h2>🔍 ตัวกรองรายงานสรุปตามรุ่นรถ</h2></div>
     <div class="card-body">
       <div class="filter-row">
-        <div class="frow"><label>เดือนจอง</label><input type="month" id="r2Month"></div>
+        <div class="frow"><label>เดือนจอง</label><select id="r2Month"><option value="">ทั้งหมด</option></select></div>
         <div class="frow"><label>วันที่เริ่มต้น</label><input type="date" id="r2DateFrom"></div>
         <div class="frow"><label>วันที่สิ้นสุด</label><input type="date" id="r2DateTo"></div>
         <div class="frow"><label>ที่ปรึกษา</label>
@@ -429,7 +429,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     <div class="card-hdr"><h2>🔍 ตัวกรองรายงานสรุปตามที่ปรึกษาการขาย</h2></div>
     <div class="card-body">
       <div class="filter-row">
-        <div class="frow"><label>เดือนจอง</label><input type="month" id="r3Month"></div>
+        <div class="frow"><label>เดือนจอง</label><select id="r3Month"><option value="">ทั้งหมด</option></select></div>
         <div class="frow"><label>วันที่เริ่มต้น</label><input type="date" id="r3DateFrom"></div>
         <div class="frow"><label>วันที่สิ้นสุด</label><input type="date" id="r3DateTo"></div>
         <div style="display:flex;gap:6px;align-self:flex-end;">
@@ -940,10 +940,7 @@ async function loadBookings() {
 }
 
 function populateMonthFilter() {
-  const sel = document.getElementById('fMonth');
-  if (!sel) return;
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">ทั้งหมด</option>';
+  // รวบรวมเดือนจากข้อมูลจริง
   const months = new Set();
   allBookings.forEach(r => {
     const d = r['วันที่จอง'];
@@ -953,14 +950,22 @@ function populateMonthFilter() {
   });
   const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
     'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  [...months].sort().reverse().forEach(ym => {
-    const [y, m] = ym.split('-');
-    const o = document.createElement('option');
-    o.value = ym;
-    o.textContent = TH[parseInt(m)] + ' ' + y;
-    sel.appendChild(o);
+
+  // populate ทุก select เดือน
+  ['fMonth','r1Month','r2Month','r3Month'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">ทั้งหมด</option>';
+    [...months].sort().reverse().forEach(ym => {
+      const [y, m] = ym.split('-');
+      const o = document.createElement('option');
+      o.value = ym;
+      o.textContent = TH[parseInt(m)] + ' ' + y;
+      sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
   });
-  if (prev) sel.value = prev;
 }
 
 function filterBooking() {
@@ -1046,6 +1051,13 @@ function updateSummary() {
 
 // ── Chart Tooltip ──
 let chartTooltip = null;
+function onBarEnter(e, el) {
+  const sc = decodeURIComponent(el.dataset.sc || '');
+  const bkModels = JSON.parse(decodeURIComponent(el.dataset.bk || '[]'));
+  const rsModels = JSON.parse(decodeURIComponent(el.dataset.rs || '[]'));
+  showChartTooltip(e, sc, bkModels, rsModels);
+}
+
 function showChartTooltip(e, sc, bkModels, rsModels) {
   hideChartTooltip();
   const tip = document.createElement('div');
@@ -1122,33 +1134,36 @@ function renderSCChart() {
   const chartEl = document.getElementById('scChart');
   if (!chartEl || !meta.sc.length) return;
 
-  // Group bookings by SC — count BK/RS + collect models
+  // สร้าง lookup สำหรับ tooltip
+  window._chartData = {};
+
   const scData = {};
   meta.sc.forEach(s => {
-    scData[s['ที่ปรึกษาการขาย']] = {
-      bk: 0, rs: 0,
-      bkModels: [], rsModels: [],
-      ฝ่าย: s['ฝ่าย'] || '',
-      ทีม: s['ทีม'] || '',
-      ลำดับ: parseInt(s['ลำดับ'] || 99),
-      ชื่อเล่น: s['ชื่อเล่น'] || s['ที่ปรึกษาการขาย'],
+    const name = s['ที่ปรึกษาการขาย'];
+    scData[name] = {
+      bk:0, rs:0, bkModels:[], rsModels:[],
+      ฝ่าย: s['ฝ่าย']||'',
+      ทีม: s['ทีม']||'',
+      ลำดับ: parseInt(s['ลำดับ']||99),
+      ชื่อเล่น: s['ชื่อเล่น']||name,
     };
   });
 
   filteredBookings.forEach(r => {
     const sc = r['ที่ปรึกษาการขาย'];
-    if (!scData[sc]) scData[sc] = { bk:0, rs:0, bkModels:[], rsModels:[], ฝ่าย:'', ทีม:'', ลำดับ:99, ชื่อเล่น:sc };
-    if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
-    if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+    if (!scData[sc]) scData[sc] = {bk:0,rs:0,bkModels:[],rsModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc};
+    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
+    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
   });
 
-  // Sort by ลำดับ
+  // เก็บ data ไว้ใน window object — หลีกเลี่ยงปัญหา HTML attribute encoding
+  window._chartData = scData;
+
   const sorted = Object.entries(scData).sort((a,b) => a[1].ลำดับ - b[1].ลำดับ);
   if (!sorted.length) { chartEl.innerHTML = '<div class="empty">ไม่มีข้อมูล</div>'; return; }
 
   const maxVal = Math.max(...sorted.map(([,d]) => Math.max(d.bk, d.rs)), 1);
 
-  // Group by ฝ่าย
   const deptGroups = {};
   sorted.forEach(([sc, d]) => {
     const dept = d.ฝ่าย || 'ไม่ระบุฝ่าย';
@@ -1156,81 +1171,68 @@ function renderSCChart() {
     deptGroups[dept].push([sc, d]);
   });
 
-  let html = '<div style="display:flex;gap:0;align-items:flex-end;height:130px;position:relative;">';
+  let html = '<div style="display:flex;gap:0;align-items:flex-end;min-height:160px;position:relative;width:100%;">';
 
-  // Y-axis grid lines
+  // Y-axis
   html += '<div style="position:absolute;inset:0;pointer-events:none;">';
   [0.25,0.5,0.75,1].forEach(pct => {
     const val = Math.round(maxVal * pct);
-    const bottom = pct * 100;
+    const bottom = pct * 85;
     html += `<div style="position:absolute;bottom:${bottom}%;left:0;right:0;border-top:1px dashed rgba(26,58,107,0.1);"></div>`;
-    html += `<div style="position:absolute;bottom:${bottom}%;left:-22px;font-size:9px;color:var(--gray);transform:translateY(50%);">${val}</div>`;
+    html += `<div style="position:absolute;bottom:${bottom}%;left:0;font-size:9px;color:var(--gray);transform:translateY(50%);width:16px;text-align:right;">${val}</div>`;
   });
   html += '</div>';
 
-  html += '<div style="margin-left:24px;display:inline-flex;gap:0;align-items:flex-end;height:130px;border-bottom:2px solid var(--gray2);border-left:1px solid var(--gray2);padding-bottom:0;padding-right:8px;">';
+  html += '<div style="margin-left:20px;display:flex;gap:0;align-items:flex-end;min-height:140px;flex:1;border-bottom:2px solid var(--gray2);border-left:1px solid var(--gray2);padding:0 8px;">';
 
   Object.entries(deptGroups).forEach(([dept, members], di) => {
-    // Divider between depts
-    if (di > 0) {
-      html += `<div style="width:2px;background:var(--gray2);height:100%;margin:0 4px;align-self:stretch;flex-shrink:0;"></div>`;
-    }
+    if (di > 0) html += `<div style="width:2px;background:var(--gray2);align-self:stretch;margin:0 6px;flex-shrink:0;"></div>`;
 
-    // Group teams within dept
-    const teamGroups = {};
-    members.forEach(([sc,d]) => {
-      const team = d.ทีม || '';
-      if (!teamGroups[team]) teamGroups[team] = [];
-      teamGroups[team].push([sc,d]);
-    });
-
-    html += `<div style="display:flex;flex-direction:column;align-items:stretch;">`;
-    // Dept label at top
+    html += `<div style="display:flex;flex-direction:column;align-items:stretch;flex:1;">`;
     html += `<div style="font-size:9px;font-weight:700;color:var(--primary);text-align:center;
-      background:rgba(26,58,107,0.06);border-radius:4px 4px 0 0;padding:2px 4px;white-space:nowrap;margin-bottom:2px;">${dept}</div>`;
-    html += `<div style="display:flex;align-items:flex-end;gap:2px;flex:1;">`;
+      background:rgba(26,58,107,0.06);border-radius:4px 4px 0 0;padding:2px 6px;white-space:nowrap;">${dept}</div>`;
+    html += `<div style="display:flex;align-items:flex-end;gap:4px;flex:1;justify-content:space-around;padding:4px 2px 0;">`;
 
     members.forEach(([sc, d], mi) => {
-      // Team separator
-      if (mi > 0 && members[mi][1].ทีม !== members[mi-1][1].ทีม) {
+      if (mi > 0 && d.ทีม !== members[mi-1][1].ทีม) {
         html += `<div style="width:1px;background:var(--gray2);align-self:stretch;margin:0 2px;"></div>`;
       }
       const bkH = d.bk > 0 ? Math.max(8, Math.round((d.bk / maxVal) * 100)) : 0;
       const rsH = d.rs > 0 ? Math.max(8, Math.round((d.rs / maxVal) * 100)) : 0;
-      const teamColor = d.ทีม === 'A' ? '#3568c8' : d.ทีม === 'B' ? '#6c3fc8' : '#3568c8';
-      const teamColorLight = d.ทีม === 'A' ? '#25a866' : d.ทีม === 'B' ? '#2ecc71' : '#25a866';
+      const teamColor = d.ทีม==='A' ? '#3568c8' : d.ทีม==='B' ? '#6c3fc8' : '#3568c8';
+      const teamColorLight = d.ทีม==='A' ? '#25a866' : d.ทีม==='B' ? '#2ecc71' : '#25a866';
+      // ใช้ชื่อ SC เป็น key — เก็บใน window._chartData
+      const safeKey = sc.replace(/"/g,'&quot;');
 
-      const scKey = sc.replace(/'/g, "\\'");
-      const bkJson = JSON.stringify(d.bkModels).replace(/'/g, "\\'");
-      const rsJson = JSON.stringify(d.rsModels).replace(/'/g, "\\'");
-      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;"
-        onmouseenter="showChartTooltip(event,'${scKey}',${bkJson},${rsJson})"
+      html += `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;"
+        onmouseenter="showBarTip(event,'${safeKey}')"
         onmouseleave="hideChartTooltip()">
         <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">
-          <div style="width:14px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;
-            transition:height .3s;position:relative;">
-            ${d.bk > 0 ? `<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-              font-size:9px;font-weight:700;color:${teamColor};white-space:nowrap;">${d.bk}</span>` : ''}
+          <div style="width:16px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;transition:height .3s;position:relative;">
+            ${d.bk>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColor};white-space:nowrap;">${d.bk}</span>`:''}
           </div>
-          <div style="width:14px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;
-            transition:height .3s;position:relative;">
-            ${d.rs > 0 ? `<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-              font-size:9px;font-weight:700;color:${teamColorLight};white-space:nowrap;">${d.rs}</span>` : ''}
+          <div style="width:16px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;transition:height .3s;position:relative;">
+            ${d.rs>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColorLight};white-space:nowrap;">${d.rs}</span>`:''}
           </div>
         </div>
-        <div style="font-size:9px;color:var(--tx);text-align:center;white-space:nowrap;margin-top:3px;
-          font-weight:600;">${d.ชื่อเล่น}</div>
-        ${d.ทีม ? `<div style="font-size:8px;color:var(--gray);background:${d.ทีม==='A'?'#e8f0ff':'#f0e8ff'};
-          padding:0 4px;border-radius:3px;">ทีม ${d.ทีม}</div>` : ''}
+        <div style="font-size:9px;font-weight:600;color:var(--tx);text-align:center;white-space:nowrap;margin-top:3px;">${d.ชื่อเล่น}</div>
+        ${d.ทีม?`<div style="font-size:8px;color:var(--gray);background:${d.ทีม==='A'?'#e8f0ff':'#f0e8ff'};padding:0 4px;border-radius:3px;">ทีม ${d.ทีม}</div>`:''}
       </div>`;
     });
 
-    html += `</div></div>`;
+    html += '</div></div>';
   });
 
   html += '</div></div>';
   chartEl.innerHTML = html;
 }
+
+function showBarTip(e, scName) {
+  const d = window._chartData && window._chartData[scName];
+  if (!d) return;
+  showChartTooltip(e, scName, d.bkModels||[], d.rsModels||[]);
+}
+
 
 // ════════════════════════════════════════
 //  ADD / EDIT MODAL
