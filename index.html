@@ -969,6 +969,7 @@ async function loadMeta() {
     const d = await callGS({ action: 'getMeta' });
     meta = d;
     // Populate dropdowns
+    populateDeptFilter();  // ฝ่าย ต้องมาก่อน SC
     populateSel('fSC',    meta.sc,     'ที่ปรึกษาการขาย', '', 'ทั้งหมด');
     populateSel('fStatus',meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
     populateSel('fModel', meta.isuzu,  'รุ่นรถ', '', 'ทั้งหมด');
@@ -1183,6 +1184,39 @@ function updateSummary() {
 
 // ── Chart Tooltip ──
 let chartTooltip = null;
+// กรองรายการจองจากการคลิกแท่งกราฟ
+let _activeBarSC = null;
+function filterByBar(scName) {
+  hideChartTooltip();
+  // ถ้าคลิก SC เดิม = ล้างตัวกรอง
+  if (_activeBarSC === scName) {
+    _activeBarSC = null;
+    document.getElementById('fSC').value = '';
+    // reset highlight
+    document.querySelectorAll('[id^="bar_"]').forEach(el => {
+      el.style.background = '';
+      el.style.opacity = '1';
+    });
+    filterBooking();
+    return;
+  }
+  _activeBarSC = scName;
+  // set fSC dropdown
+  const sel = document.getElementById('fSC');
+  if (sel) sel.value = scName;
+  // highlight bar ที่เลือก, หรี่อันอื่น
+  document.querySelectorAll('[id^="bar_"]').forEach(el => {
+    const isSelected = el.id === `bar_${scName.replace(/"/g,'&quot;')}`;
+    el.style.background = isSelected ? 'rgba(232,160,32,0.2)' : '';
+    el.style.opacity    = isSelected ? '1' : '0.4';
+  });
+  filterBooking();
+  // scroll ลงไปที่ตาราง
+  setTimeout(() => {
+    document.querySelector('.card:has(#bookingBody)')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
+}
+
 function onBarEnter(e, el) {
   const sc = decodeURIComponent(el.dataset.sc || '');
   const bkModels = JSON.parse(decodeURIComponent(el.dataset.bk || '[]'));
@@ -1336,14 +1370,17 @@ function renderSCChart() {
       // ใช้ชื่อ SC เป็น key — เก็บใน window._chartData
       const safeKey = sc.replace(/"/g,'&quot;');
 
-      html += `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;"
+      html += `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;
+        border-radius:6px;padding:2px;transition:background .15s;"
+        id="bar_${safeKey}"
         onmouseenter="showBarTip(event,'${safeKey}')"
-        onmouseleave="hideChartTooltip()">
+        onmouseleave="hideChartTooltip()"
+        onclick="filterByBar('${safeKey}')">
         <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">
-          <div style="width:16px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;transition:height .3s;position:relative;">
+          <div style="width:16px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
             ${d.bk>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColor};white-space:nowrap;">${d.bk}</span>`:''}
           </div>
-          <div style="width:16px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;transition:height .3s;position:relative;">
+          <div style="width:16px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
             ${d.rs>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColorLight};white-space:nowrap;">${d.rs}</span>`:''}
           </div>
         </div>
@@ -1362,65 +1399,65 @@ function renderSCChart() {
 // ── DSC Tooltip ──
 let _dscTip = null;
 function showDscTip(e, name, field) {
-  hideDscTip();
   const data = window._dscData && window._dscData[name];
   if (!data) return;
   const rows = data[field] || [];
-  const labels = { carry:'📋 จองยกมา', bk:'🆕 จองเดือนนี้', rs:'🚗 ปล่อยเดือนนี้' };
-  const colors = { carry:'#7b5ea7', bk:'#2451a0', rs:'#1a7a4a' };
-
-  const tip = document.createElement('div');
-  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
-    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
-    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:280px;min-width:160px;`;
-
-  let html = `<div style="font-weight:700;color:${colors[field]};margin-bottom:8px;
-    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
-    ${labels[field]} (${rows.length} รายการ)</div>`;
-
-  if (rows.length === 0) {
-    html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
-  } else {
-    rows.forEach(r => {
-      html += `<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.08);">${r}</div>`;
-    });
+  const labels = {
+    carry:'📋 จองยกมา', ebk:'🔸 คาดว่าจะจอง', bk:'🆕 จองเดือนนี้',
+    rs:'🚗 จองปล่อยเดือนนี้', total:'📊 รวมจองปัจจุบัน',
+    ers:'⏳ คาดว่าจะปล่อย', rsTotal:'✅ ยอดปล่อย', cl:'❌ ถอนจอง',
+  };
+  const colors = {
+    carry:'#7b5ea7', ebk:'#e06010', bk:'#2451a0',
+    rs:'#1a7a4a', total:'#1565C0',
+    ers:'#e06010', rsTotal:'#1a7a4a', cl:'#c0392b',
+  };
+  // online source fields
+  if (field.startsWith('src_')) {
+    const srcName = field.replace('src_','');
+    _showTipRows(e, `🌐 Online · ${srcName} · ${name}`, '#c2185b', rows);
+    return;
   }
+  _showTipRows(e, `${labels[field]||field} · ${name}`, colors[field]||'#1a3a6b', rows);
+}
 
-  tip.innerHTML = html;
-  document.body.appendChild(tip);
-  _dscTip = tip;
-
-  const margin = 12;
-  let x = e.clientX + margin;
-  let y = e.clientY + margin;
-  setTimeout(() => {
-    if (!tip.parentNode) return;
-    if (x + tip.offsetWidth > window.innerWidth - margin) x = e.clientX - tip.offsetWidth - margin;
-    if (y + tip.offsetHeight > window.innerHeight - margin) y = e.clientY - tip.offsetHeight - margin;
-    tip.style.left = x + 'px';
-    tip.style.top  = y + 'px';
-  }, 0);
+function showModelTipByModel(e, name, field, model) {
+  hideDscTip();
+  const data = window._modelData && window._modelData[name];
+  if (!data) return;
+  let rows = [];
+  if (field === 'bk') {
+    rows = (data.bkRows||[]).filter(r => r.includes(model));
+  } else {
+    rows = (data.rsRows && data.rsRows[model]) || [];
+  }
+  const label = field==='bk' ? `📋 จอง · ${model}` : `🚗 ปล่อย · ${model}`;
+  const color = field==='bk' ? '#2451a0' : '#1a7a4a';
+  _showTipRows(e, label, color, rows);
 }
 
 function showModelTip(e, name, field) {
   hideDscTip();
   const data = window._modelData && window._modelData[name];
   if (!data) return;
-  const rows = field==='bk' ? (data.bkRows||[]) : (data.rsRows||[]);
-  const label = field==='bk' ? '📋 ยอดจอง' : '🚗 ยอดปล่อย';
+  const rows = field==='bk' ? (data.bkRows||[]) : (data.rsRows?._all||[]);
+  const label = field==='bk' ? `📋 ยอดจอง · ${name}` : `🚗 ยอดปล่อย · ${name}`;
   const color = field==='bk' ? '#2451a0' : '#1a7a4a';
+  _showTipRows(e, label, color, rows);
+}
 
+function _showTipRows(e, label, color, rows) {
+  hideDscTip();
   const tip = document.createElement('div');
   tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
     border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
-    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:280px;min-width:160px;`;
-
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:320px;min-width:200px;
+    max-height:300px;overflow-y:auto;`;
   let html = `<div style="font-weight:700;color:${color};margin-bottom:8px;
-    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
-    ${label} · ${name} (${rows.length})</div>`;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;position:sticky;top:0;
+    background:var(--primary);">${label} (${rows.length})</div>`;
   if (!rows.length) html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
-  else rows.forEach(r => { html += `<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.08);">${r}</div>`; });
-
+  else rows.forEach(r => { html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08);line-height:1.5;">${r}</div>`; });
   tip.innerHTML = html;
   document.body.appendChild(tip);
   _dscTip = tip;
@@ -1441,7 +1478,50 @@ function hideDscTip() {
 function showBarTip(e, scName) {
   const d = window._chartData && window._chartData[scName];
   if (!d) return;
-  showChartTooltip(e, scName, d.bkModels||[], d.rsModels||[]);
+  showChartTooltipWithHint(e, scName, d.bkModels||[], d.rsModels||[]);
+}
+
+function showChartTooltipWithHint(e, sc, bkModels, rsModels) {
+  hideChartTooltip();
+  const tip = document.createElement('div');
+  tip.id = 'chartTip';
+  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:260px;min-width:180px;line-height:1.6;`;
+
+  let html = `<div style="font-weight:700;font-size:13px;color:var(--accent2);margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">🧑‍💼 ${sc}</div>`;
+
+  if (bkModels.length) {
+    const counts = {};
+    bkModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">📋 จอง (${bkModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (rsModels.length) {
+    const counts = {};
+    rsModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🚗 ปล่อย (${rsModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (!bkModels.length && !rsModels.length) {
+    html += `<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>`;
+  }
+  html += `<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);
+    font-size:10px;color:rgba(245,200,66,0.8);">👆 คลิกเพื่อกรองรายการจอง</div>`;
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  chartTooltip = tip;
+  positionTooltip(e, tip);
 }
 
 
@@ -1710,8 +1790,10 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
   const pivot = {};
   sorted.forEach(s => {
     const name = s['ที่ปรึกษาการขาย'];
-    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:[], rsRows:[] };
-    models.forEach(m => { pivot[name][m] = { bk:0, rs:0 }; });
+    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:[], rsRows:{} };
+    models.forEach(m => { pivot[name][m] = { bk:0, rs:0 }; pivot[name].rsRows[m] = []; });
+    pivot[name].rsRows['_all'] = [];
+    pivot[name].bkRows = [];
   });
 
   rows.forEach(r => {
@@ -1719,13 +1801,16 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
     const model = r['รุ่นรถ'];
     if (!pivot[sc]) return;
     if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
+    const line = `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
     if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) {
       pivot[sc][model].bk++; pivot[sc].bkTotal++;
-      pivot[sc].bkRows.push(`${r['วันที่จอง']||''} ${model} (${r['ที่มาลูกค้า']||''})`);
+      pivot[sc].bkRows.push(line);
     }
     if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) {
       pivot[sc][model].rs++; pivot[sc].rsTotal++;
-      pivot[sc].rsRows.push(`${r['วันที่จอง']||''} ${model}`);
+      if (!pivot[sc].rsRows[model]) pivot[sc].rsRows[model] = [];
+      pivot[sc].rsRows[model].push(line);
+      pivot[sc].rsRows['_all'].push(line);
     }
   });
   // เก็บใน window สำหรับ tooltip
@@ -1773,18 +1858,25 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
       const nickname = sc['ชื่อเล่น']||name;
       const p = pivot[name] || { bkTotal:0, rsTotal:0 };
 
+      const safeN2 = name.replace(/"/g,'&quot;');
       const bkCells = models.map(m => {
         const v = p[m]?.bk||0;
         tBkCols[m]+=v; gBkCols[m]+=v;
+        const safeM = m.replace(/"/g,'&quot;');
         return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
-          color:${v?'var(--primary2)':'#ccc'};">${v||0}</td>`;
+          color:${v?'var(--primary2)':'#ccc'};${v?'cursor:pointer;':''}"
+          ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','bk','${safeM}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
       }).join('');
 
       const rsCells = models.map(m => {
         const v = p[m]?.rs||0;
         tRsCols[m]+=v; gRsCols[m]+=v;
+        const safeM = m.replace(/"/g,'&quot;');
         return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
-          color:${v?'var(--green)':'#ccc'};">${v||0}</td>`;
+          color:${v?'var(--green)':'#ccc'};${v?'cursor:pointer;':''}"
+          ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','rs','${safeM}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
       }).join('');
 
       tBkTotal += p.bkTotal||0;
@@ -1980,10 +2072,30 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     const cl = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ'])).length;
 
     // เก็บ detail สำหรับ tooltip
+    const fmt = r => `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
+    const ebkRows2 = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ']));
+    const ersRows2 = ersRows;
+    const rsTotalRows2 = rsTotalRows;
+    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ']));
+    // Online แยก source
+    const srcRowsMap = {};
+    sources.forEach(src => {
+      if (src === 'อื่นๆ') {
+        srcRowsMap[src] = allBkRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']));
+      } else {
+        srcRowsMap[src] = allBkRows.filter(r => r['ที่มาลูกค้า'] === src);
+      }
+    });
     window._dscData[name] = {
-      carry: carryRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''}`),
-      bk:    bkThisRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''} (${r['ที่มาลูกค้า']||''})`),
-      rs:    rsMonthRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''}`),
+      carry:   carryRows.map(fmt),
+      ebk:     ebkRows2.map(fmt),
+      bk:      bkThisRows.map(fmt),
+      rs:      rsMonthRows.map(fmt),
+      total:   [...carryRows, ...bkThisRows].map(fmt),
+      ers:     ersRows2.map(fmt),
+      rsTotal: rsTotalRows2.map(fmt),
+      cl:      clRows2.map(fmt),
+      ...Object.fromEntries(sources.map(s => [`src_${s}`, srcRowsMap[s].map(fmt)])),
     };
 
     return { name, carry, ebk, bk, onlineBySource, rsMonth, total, ers, rsTotal, cl,
@@ -2037,23 +2149,26 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       const srcCells = sources.map(s => {
         const v = d.onlineBySource[s]||0;
         tSrc[s]+=v; gSrc[s]+=v;
-        return `<td class="num ${v?'bk':'zero'}">${v||0}</td>`;
+        const safeS = s.replace(/'/g,"\'");
+        return `<td class="num ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
       }).join('');
       tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk; tRsM+=d.rsMonth;
       tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
 
       const safeN = d.name.replace(/"/g,'&quot;');
+      const tip = (field) => `style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','${field}')" onmouseleave="hideDscTip()"`;
       html += `<tr>
         <td class="name">${d.ชื่อเล่น}</td>
-        <td class="num carry" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','carry')" onmouseleave="hideDscTip()">${d.carry||0}</td>
-        <td class="num ebk ${d.ebk?'':'zero'}">${d.ebk||0}</td>
-        <td class="num bk ${d.bk?'':'zero'}" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','bk')" onmouseleave="hideDscTip()">${d.bk||0}</td>
+        <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
+        <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
+        <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
         ${srcCells}
-        <td class="num rs ${d.rsMonth?'':'zero'}" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','rs')" onmouseleave="hideDscTip()">${d.rsMonth||0}</td>
-        <td class="num bk" style="background:#EEF4FF;">${d.total||0}</td>
-        <td class="num ebk ${d.ers?'':'zero'}">${d.ers||0}</td>
-        <td class="num rs ${d.rsTotal?'':'zero'}">${d.rsTotal||0}</td>
-        <td class="num cl ${d.cl?'':'zero'}">${d.cl||0}</td>
+        <td class="num rs ${d.rsMonth?'':'zero'}" ${d.rsMonth?tip('rs'):''}>${d.rsMonth||0}</td>
+        <td class="num bk" style="background:#EEF4FF;cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','total')" onmouseleave="hideDscTip()">${d.total||0}</td>
+        <td class="num ebk ${d.ers?'':'zero'}" ${d.ers?tip('ers'):''}>${d.ers||0}</td>
+        <td class="num rs ${d.rsTotal?'':'zero'}" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
+        <td class="num cl ${d.cl?'':'zero'}" ${d.cl?tip('cl'):''}>${d.cl||0}</td>
       </tr>`;
     });
 
