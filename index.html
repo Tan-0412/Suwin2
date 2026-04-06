@@ -1692,21 +1692,29 @@ async function runReport3() {
   });
 
   try {
-    // ดึงข้อมูลทั้งหมดใน Customer — ไม่กรองเดือน
+    // ดึงข้อมูลทั้งหมดใน Customer
     const dAll = await callGS({ action:'getBookings' });
     const allRows = dAll.data || [];
-    const curRows = allRows;  // ใช้ทั้งหมด
-    const prevRows = [];      // ไม่มียกมา (ใช้ทั้งหมด)
 
-    // เป้า — ใช้เป้าล่าสุด
+    // แยกตามเดือนปัจจุบัน
+    const now2 = new Date();
+    const curYM = now2.getFullYear() + '-' + String(now2.getMonth()+1).padStart(2,'0');
+
+    // จองเดือนนี้ = วันที่จองอยู่ในเดือนปัจจุบัน
+    const curRows = allRows.filter(r => dateMatchMonth(r['วันที่จอง'], curYM));
+    // จองยกมา = วันที่จองก่อนเดือนปัจจุบัน (และยังไม่ปล่อย)
+    const prevRows = allRows.filter(r => !dateMatchMonth(r['วันที่จอง'], curYM));
+
+    // เป้าเดือนปัจจุบัน
     let targetVal = 0;
-    if (allTargets.length > 0) {
-      const lastTarget = allTargets[allTargets.length - 1];
-      targetVal = parseInt(lastTarget['เป้าการจำหน่าย'])||0;
-    }
+    const TH2 = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const curLabel = TH2[now2.getMonth()+1] + ' ' + now2.getFullYear();
+    const tgt2 = allTargets.find(t => t['เดือน'] === curLabel);
+    if (tgt2) targetVal = parseInt(tgt2['เป้าการจำหน่าย'])||0;
 
     const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-    const monthLabel = 'ข้อมูลทั้งหมด';
+    const monthLabel = thMonth(curYM);
 
     // แยก SC ตามฝ่าย
     const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
@@ -1756,9 +1764,9 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   // คำนวณข้อมูลแต่ละ SC
   const calc = (sc) => {
     const name = sc['ที่ปรึกษาการขาย'];
-    // ยกมา = BK ที่ค้างจากเดือนก่อน (BK/EBK ที่ไม่มี RS)
+    // ยกมา = BK/EBK ที่วันที่จองก่อนเดือนนี้ และยังไม่ปล่อย (ไม่มีสถานะ RS)
     const carry = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
-      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ'])).length;
+      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ']) && !isCL(r['สถานะ'])).length;
     // EBK เดือนนี้
     const ebk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ'])).length;
     // BK เดือนนี้
