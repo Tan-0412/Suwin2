@@ -81,9 +81,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-h
   background:#fafbfd;outline:none;transition:border-color .2s;width:100%;
 }
 .frow input:focus,.frow select:focus,.frow textarea:focus{border-color:var(--primary3);background:#fff;}
-input[type="month"]:not([value]):not(:focus){color:var(--gray);}
-input[type="month"]::before{content:attr(placeholder);color:var(--gray);}
-input[type="month"]:valid::before,input[type="month"]:focus::before{content:"";}
+
 .frow textarea{resize:vertical;min-height:60px;}
 .frow.span2{grid-column:span 2;}
 .frow.span3{grid-column:span 3;}
@@ -316,7 +314,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
           <select id="fStatus" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="frow"><label>เดือนจอง</label>
-          <input type="month" id="fMonth" onchange="filterBooking()" placeholder="ทั้งหมด">
+          <select id="fMonth" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
         </div>
         <button class="btn btn-outline btn-sm" onclick="resetFilter()" style="align-self:flex-end;">✕ ล้าง</button>
       </div>
@@ -828,9 +826,13 @@ function init() {
 }
 
 async function loadAll() {
-  await loadMeta();
-  await loadBookings();
-  await loadTargets();
+  try { await loadMeta(); } catch(e) { console.error('loadMeta:', e); }
+  try { await loadBookings(); } catch(e) {
+    console.error('loadBookings:', e);
+    document.getElementById('bookingBody').innerHTML =
+      '<tr><td colspan="11"><div class="empty">❌ โหลดไม่สำเร็จ: ' + e.message + '</div></td></tr>';
+  }
+  try { await loadTargets(); } catch(e) { console.error('loadTargets:', e); }
 }
 
 // ════════════════════════════════════════
@@ -929,6 +931,7 @@ async function loadBookings() {
   try {
     const d = await callGS({ action: 'getBookings' });
     allBookings = (d.data || []).sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
+    populateMonthFilter();
     filterBooking();
   } catch(e) {
     document.getElementById('bookingBody').innerHTML =
@@ -946,7 +949,7 @@ function filterBooking() {
   filteredBookings = allBookings.filter(r => {
     if (sc     && r['ที่ปรึกษาการขาย'] !== sc)    return false;
     if (model  && r['รุ่นรถ'] !== model)          return false;
-    if (status && r['สถานะ'] !== status)           return false;
+    if (status && r['สถานะ'] !== status && !(meta.status.find(s=>s['STATUS']===status && s['สถานะ']===r['สถานะ']))) return false;
     if (month  && !dateMatchMonth(r['วันที่จอง'], month)) return false;
     if (q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
     return true;
@@ -972,7 +975,8 @@ function renderBookings() {
     return;
   }
   document.getElementById('bookingBody').innerHTML = filteredBookings.map((r,i) => {
-    const statusBadge = `<span class="badge badge-${r['สถานะ']||'BK'}">${statusLabel(r['สถานะ'])}</span>`;
+    const sc_code = statusCode(r['สถานะ']);
+    const statusBadge = `<span class="badge badge-${sc_code||'BK'}">${statusLabel(r['สถานะ'])}</span>`;
     const alt = i%2===1?'alt':'';
     return `<tr class="${alt}">
       <td style="color:var(--gray);font-size:10px;">${i+1}</td>
@@ -995,12 +999,19 @@ function renderBookings() {
   }).join('');
 }
 
+function isBK(s)  { return s==='BK'  || s==='จอง'; }
+function isEBK(s) { return s==='EBK' || s==='คาดจอง'; }
+function isRS(s)  { return s==='RS'  || s==='ปล่อย'; }
+function isERS(s) { return s==='ERS' || s==='คาดปล่อย'; }
+function isCL(s)  { return s==='CL'  || s==='ยกเลิกจอง'; }
+function isPS(s)  { return s==='PS'  || s==='มุ่งหวัง'; }
+
 function updateSummary() {
   const all = filteredBookings.length;
-  const bk  = filteredBookings.filter(r => r['สถานะ'] === 'BK').length;
-  const ebk = filteredBookings.filter(r => r['สถานะ'] === 'EBK').length;
-  const rs  = filteredBookings.filter(r => r['สถานะ'] === 'RS').length;
-  const cl  = filteredBookings.filter(r => r['สถานะ'] === 'CL').length;
+  const bk  = filteredBookings.filter(r => isBK(r['สถานะ'])).length;
+  const ebk = filteredBookings.filter(r => isEBK(r['สถานะ'])).length;
+  const rs  = filteredBookings.filter(r => isRS(r['สถานะ'])).length;
+  const cl  = filteredBookings.filter(r => isCL(r['สถานะ'])).length;
   document.getElementById('sAll').textContent = all;
   document.getElementById('sBK').textContent  = bk;
   document.getElementById('sEBK').textContent = ebk;
@@ -1103,8 +1114,8 @@ function renderSCChart() {
   filteredBookings.forEach(r => {
     const sc = r['ที่ปรึกษาการขาย'];
     if (!scData[sc]) scData[sc] = { bk:0, rs:0, bkModels:[], rsModels:[], ฝ่าย:'', ทีม:'', ลำดับ:99, ชื่อเล่น:sc };
-    if (r['สถานะ'] === 'BK' || r['สถานะ'] === 'EBK') { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
-    if (r['สถานะ'] === 'RS' || r['สถานะ'] === 'ERS') { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+    if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
+    if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
   });
 
   // Sort by ลำดับ
@@ -1429,8 +1440,8 @@ async function runReport2() {
     rows.forEach(r => {
       const model = r['รุ่นรถ'];
       if (!pivot[model]) pivot[model] = { bk:0, rs:0 };
-      if (r['สถานะ'] === 'BK' || r['สถานะ'] === 'EBK') pivot[model].bk++;
-      if (r['สถานะ'] === 'RS' || r['สถานะ'] === 'ERS') pivot[model].rs++;
+      if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) pivot[model].bk++;
+      if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) pivot[model].rs++;
     });
 
     let totalBk = 0, totalRs = 0;
@@ -1531,8 +1542,8 @@ async function runReport3() {
       const model = r['รุ่นรถ'];
       if (!pivot[sc]) { pivot[sc] = { _total:{bk:0,rs:0} }; models.forEach(m => pivot[sc][m]={bk:0,rs:0}); }
       if (!pivot[sc][model]) pivot[sc][model] = {bk:0,rs:0};
-      if (r['สถานะ'] === 'BK' || r['สถานะ'] === 'EBK') { pivot[sc][model].bk++; pivot[sc]._total.bk++; }
-      if (r['สถานะ'] === 'RS' || r['สถานะ'] === 'ERS') { pivot[sc][model].rs++; pivot[sc]._total.rs++; }
+      if (isBK(r['สถานะ']) || isEBK(r['สถานะ'])) { pivot[sc][model].bk++; pivot[sc]._total.bk++; }
+      if (isRS(r['สถานะ']) || isERS(r['สถานะ'])) { pivot[sc][model].rs++; pivot[sc]._total.rs++; }
     });
 
     // Grand totals
@@ -1738,8 +1749,17 @@ async function callGS(params, url) {
   const base = url || scriptUrl;
   if (!base) throw new Error('ไม่มี URL');
   const qs = new URLSearchParams(params).toString();
-  const res = await fetch(base + '?' + qs);
-  return await res.json();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  try {
+    const res = await fetch(base + '?' + qs, { signal: controller.signal });
+    clearTimeout(timer);
+    return await res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('หมดเวลาเชื่อมต่อ (timeout)');
+    throw e;
+  }
 }
 
 // ════════════════════════════════════════
@@ -1760,9 +1780,18 @@ function fmtDate(s) {
   return s;
 }
 
-function statusLabel(code) {
-  const found = meta.status.find(s => s['STATUS'] === code);
-  return found ? `${code} · ${found['สถานะ']}` : (code||'—');
+function statusCode(val) {
+  // แปลงภาษาไทย → code ถ้าจำเป็น
+  if (!val) return '';
+  const found = meta.status.find(s => s['สถานะ'] === val || s['STATUS'] === val);
+  return found ? found['STATUS'] : val;
+}
+
+function statusLabel(val) {
+  if (!val) return '—';
+  const found = meta.status.find(s => s['STATUS'] === val || s['สถานะ'] === val);
+  if (found) return `${found['STATUS']} · ${found['สถานะ']}`;
+  return val;
 }
 
 function thMonth(ym) {
