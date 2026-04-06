@@ -1284,6 +1284,85 @@ function renderSCChart() {
   chartEl.innerHTML = html;
 }
 
+// ── DSC Tooltip ──
+let _dscTip = null;
+function showDscTip(e, name, field) {
+  hideDscTip();
+  const data = window._dscData && window._dscData[name];
+  if (!data) return;
+  const rows = data[field] || [];
+  const labels = { carry:'📋 จองยกมา', bk:'🆕 จองเดือนนี้', rs:'🚗 ปล่อยเดือนนี้' };
+  const colors = { carry:'#7b5ea7', bk:'#2451a0', rs:'#1a7a4a' };
+
+  const tip = document.createElement('div');
+  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:280px;min-width:160px;`;
+
+  let html = `<div style="font-weight:700;color:${colors[field]};margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
+    ${labels[field]} (${rows.length} รายการ)</div>`;
+
+  if (rows.length === 0) {
+    html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
+  } else {
+    rows.forEach(r => {
+      html += `<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.08);">${r}</div>`;
+    });
+  }
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  _dscTip = tip;
+
+  const margin = 12;
+  let x = e.clientX + margin;
+  let y = e.clientY + margin;
+  setTimeout(() => {
+    if (!tip.parentNode) return;
+    if (x + tip.offsetWidth > window.innerWidth - margin) x = e.clientX - tip.offsetWidth - margin;
+    if (y + tip.offsetHeight > window.innerHeight - margin) y = e.clientY - tip.offsetHeight - margin;
+    tip.style.left = x + 'px';
+    tip.style.top  = y + 'px';
+  }, 0);
+}
+
+function showModelTip(e, name, field) {
+  hideDscTip();
+  const data = window._modelData && window._modelData[name];
+  if (!data) return;
+  const rows = field==='bk' ? (data.bkRows||[]) : (data.rsRows||[]);
+  const label = field==='bk' ? '📋 ยอดจอง' : '🚗 ยอดปล่อย';
+  const color = field==='bk' ? '#2451a0' : '#1a7a4a';
+
+  const tip = document.createElement('div');
+  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:280px;min-width:160px;`;
+
+  let html = `<div style="font-weight:700;color:${color};margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
+    ${label} · ${name} (${rows.length})</div>`;
+  if (!rows.length) html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
+  else rows.forEach(r => { html += `<div style="padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.08);">${r}</div>`; });
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  _dscTip = tip;
+  setTimeout(() => {
+    if (!tip.parentNode) return;
+    const margin=12;
+    let x=e.clientX+margin, y=e.clientY+margin;
+    if (x+tip.offsetWidth>window.innerWidth-margin) x=e.clientX-tip.offsetWidth-margin;
+    if (y+tip.offsetHeight>window.innerHeight-margin) y=e.clientY-tip.offsetHeight-margin;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }, 0);
+}
+
+function hideDscTip() {
+  if (_dscTip) { _dscTip.remove(); _dscTip = null; }
+}
+
 function showBarTip(e, scName) {
   const d = window._chartData && window._chartData[scName];
   if (!d) return;
@@ -1550,10 +1629,11 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
   });
 
   // คำนวณ SC × model
+  window._modelData = window._modelData || {};
   const pivot = {};
   sorted.forEach(s => {
     const name = s['ที่ปรึกษาการขาย'];
-    pivot[name] = { bkTotal:0, rsTotal:0 };
+    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:[], rsRows:[] };
     models.forEach(m => { pivot[name][m] = { bk:0, rs:0 }; });
   });
 
@@ -1562,8 +1642,19 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
     const model = r['รุ่นรถ'];
     if (!pivot[sc]) return;
     if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
-    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { pivot[sc][model].bk++; pivot[sc].bkTotal++; }
-    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) { pivot[sc][model].rs++; pivot[sc].rsTotal++; }
+    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) {
+      pivot[sc][model].bk++; pivot[sc].bkTotal++;
+      pivot[sc].bkRows.push(`${r['วันที่จอง']||''} ${model} (${r['ที่มาลูกค้า']||''})`);
+    }
+    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) {
+      pivot[sc][model].rs++; pivot[sc].rsTotal++;
+      pivot[sc].rsRows.push(`${r['วันที่จอง']||''} ${model}`);
+    }
+  });
+  // เก็บใน window สำหรับ tooltip
+  sorted.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    window._modelData[name] = pivot[name];
   });
 
   // headers
@@ -1625,9 +1716,11 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
       tbody += `<tr style="${idx%2===1?'background:#fafcff;':''}">
         <td style="text-align:left;font-weight:600;padding:7px 10px;">${nickname}</td>
         ${bkCells}
-        <td style="text-align:center;font-weight:700;color:var(--primary2);background:#EEF4FF;">${p.bkTotal||0}</td>
+        <td style="text-align:center;font-weight:700;color:var(--primary2);background:#EEF4FF;cursor:pointer;"
+          onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
         ${rsCells}
-        <td style="text-align:center;font-weight:700;color:var(--green);background:#EFF9F4;">${p.rsTotal||0}</td>
+        <td style="text-align:center;font-weight:700;color:var(--green);background:#EFF9F4;cursor:pointer;"
+          onmouseenter="showModelTip(event,'${name}','rs')" onmouseleave="hideDscTip()">${p.rsTotal||0}</td>
       </tr>`;
     });
 
@@ -1761,39 +1854,61 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     return parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99);
   });
 
+  // เก็บ tooltip data ไว้ใน window
+  window._dscData = window._dscData || {};
+
   // คำนวณข้อมูลแต่ละ SC
   const calc = (sc) => {
     const name = sc['ที่ปรึกษาการขาย'];
-    // ยกมา = BK/EBK ที่วันที่จองก่อนเดือนนี้ และยังไม่ปล่อย (ไม่มีสถานะ RS)
-    const carry = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
-      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ']) && !isCL(r['สถานะ'])).length;
-    // EBK เดือนนี้
+
+    // ยกมา = BK ที่วันจองก่อนเดือนนี้ และยังไม่ปล่อย ไม่ยกเลิก
+    const carryRows = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) && !isRS(r['สถานะ']) && !isCL(r['สถานะ']));
+    const carry = carryRows.length;
+
+    // EBK เดือนนี้ (คาดจอง)
     const ebk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ'])).length;
+
     // BK เดือนนี้
-    const bk = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ'])).length;
-    // Online 3 คอลัมน์ — เพจส่วนตัว / เพจบริษัท / อื่นๆ (รวมที่เหลือ)
+    const bkThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
+    const bk = bkThisRows.length;
+
+    // Online — นับ BK ทั้งหมดใน allRows (ไม่กรองเดือน)
+    const allBkRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
     const fixedSources = ['เพจส่วนตัว', 'เพจบริษัท'];
     const onlineBySource = {};
     fixedSources.forEach(src => {
-      onlineBySource[src] = curRows.filter(r =>
-        r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']) && r['ที่มาลูกค้า']===src
-      ).length;
+      onlineBySource[src] = allBkRows.filter(r => r['ที่มาลูกค้า']===src).length;
     });
-    // อื่นๆ = BK ที่ไม่ใช่ 2 แหล่งข้างบน
-    onlineBySource['อื่นๆ'] = curRows.filter(r =>
-      r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']) &&
-      !fixedSources.includes(r['ที่มาลูกค้า'])
-    ).length;
-    // RS ในเดือน
-    const rsMonth = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ'])).length;
+    onlineBySource['อื่นๆ'] = allBkRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า'])).length;
+
+    // จองปล่อยเดือนนี้ = BK + RS ที่เกิดในเดือนปัจจุบัน
+    const rsMonthRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ']));
+    const rsMonth = rsMonthRows.length;
+
     // รวมจองปัจจุบัน = carry + bk - rsMonth
     const total = carry + bk - rsMonth;
-    // ERS
-    const ers = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isERS(r['สถานะ'])).length;
-    // ยอดปล่อย (RS ทั้งหมดใน allRows ของ SC นี้)
-    const rsTotal = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isRS(r['สถานะ'])).length;
+
+    // คาดปล่อย = ERS หรือ RS ที่ยังไม่มีวันที่ปล่อย
+    const ersRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      isRS(r['สถานะ']) && !r['วันที่ปล่อย']);
+    const ers = ersRows.length;
+
+    // ยอดปล่อย = RS ที่มีวันที่ปล่อยแล้ว
+    const rsTotalRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      isRS(r['สถานะ']) && r['วันที่ปล่อย']);
+    const rsTotal = rsTotalRows.length;
+
     // ถอนจอง
-    const cl = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ'])).length;
+    const cl = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ'])).length;
+
+    // เก็บ detail สำหรับ tooltip
+    window._dscData[name] = {
+      carry: carryRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''}`),
+      bk:    bkThisRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''} (${r['ที่มาลูกค้า']||''})`),
+      rs:    rsMonthRows.map(r => `${r['วันที่จอง']} ${r['รุ่นรถ']||''}`),
+    };
+
     return { name, carry, ebk, bk, onlineBySource, rsMonth, total, ers, rsTotal, cl,
       ทีม: sc['ทีม']||'', ชื่อเล่น: sc['ชื่อเล่น']||name };
   };
@@ -1819,7 +1934,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
         <th class="online-hdr" colspan="${sources.length}">Online</th>
-        <th class="rs-hdr" rowspan="2">จอง<br>ปล่อย</th>
+        <th class="rs-hdr" rowspan="2">จองปล่อย<br>เดือนนี้</th>
         <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
         <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
@@ -1850,13 +1965,14 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk; tRsM+=d.rsMonth;
       tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
 
+      const safeN = d.name.replace(/"/g,'&quot;');
       html += `<tr>
         <td class="name">${d.ชื่อเล่น}</td>
-        <td class="num carry">${d.carry||0}</td>
+        <td class="num carry" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','carry')" onmouseleave="hideDscTip()">${d.carry||0}</td>
         <td class="num ebk ${d.ebk?'':'zero'}">${d.ebk||0}</td>
-        <td class="num bk ${d.bk?'':'zero'}">${d.bk||0}</td>
+        <td class="num bk ${d.bk?'':'zero'}" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','bk')" onmouseleave="hideDscTip()">${d.bk||0}</td>
         ${srcCells}
-        <td class="num rs ${d.rsMonth?'':'zero'}">${d.rsMonth||0}</td>
+        <td class="num rs ${d.rsMonth?'':'zero'}" style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','rs')" onmouseleave="hideDscTip()">${d.rsMonth||0}</td>
         <td class="num bk" style="background:#EEF4FF;">${d.total||0}</td>
         <td class="num ebk ${d.ers?'':'zero'}">${d.ers||0}</td>
         <td class="num rs ${d.rsTotal?'':'zero'}">${d.rsTotal||0}</td>
