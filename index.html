@@ -624,6 +624,15 @@ function getBookings(p) {
       return d && d <= new Date(p.dateTo + 'T23:59:59');
     });
   }
+  // เรียงจากวันที่จองล่าสุดก่อน
+  data.sort((a, b) => {
+    const da = parseDate(a['วันที่จอง']);
+    const db = parseDate(b['วันที่จอง']);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return db - da;
+  });
   return data;
 }
 
@@ -975,7 +984,7 @@ async function loadBookings() {
     '<tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
   try {
     const d = await callGS({ action: 'getBookings' });
-    allBookings = (d.data || []).sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
+    allBookings = (d.data || []).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
     populateMonthFilter();
     filterBooking();
   } catch(e) {
@@ -1030,7 +1039,7 @@ function filterBooking() {
     if (month  && !dateMatchMonth(r['วันที่จอง'], month)) return false;
     if (q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
     return true;
-  }).sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
+  }).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
   renderBookings();
   updateSummary();
 }
