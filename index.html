@@ -311,10 +311,13 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
       <h2>📊 ยอดจองแต่ละ SC</h2>
       <div style="display:flex;gap:8px;align-items:center;font-size:10px;">
         <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
-          <span style="width:10px;height:10px;border-radius:2px;background:#3568c8;display:inline-block;"></span>จอง
+          <span style="width:10px;height:10px;border-radius:2px;background:#2471c8;display:inline-block;"></span>จอง
         </span>
         <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
-          <span style="width:10px;height:10px;border-radius:2px;background:#25a866;display:inline-block;"></span>ปล่อย
+          <span style="width:10px;height:10px;border-radius:2px;background:#ca8a04;display:inline-block;"></span>คาดปล่อย
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>ปล่อย
         </span>
       </div>
     </div>
@@ -1372,7 +1375,7 @@ function renderSCChart() {
   const sorted = Object.entries(scData).sort((a,b) => a[1].ลำดับ - b[1].ลำดับ);
   if (!sorted.length) { chartEl.innerHTML = '<div class="empty">ไม่มีข้อมูล</div>'; return; }
 
-  const maxVal = Math.max(...sorted.map(([,d]) => Math.max(d.bk, d.rs)), 1);
+  const maxVal = Math.max(...sorted.map(([,d]) => Math.max(d.bk, d.rs, d.ers||0)), 1);
 
   const deptGroups = {};
   sorted.forEach(([sc, d]) => {
@@ -1407,19 +1410,21 @@ function renderSCChart() {
       if (mi > 0 && d.ทีม !== members[mi-1][1].ทีม) {
         html += `<div style="width:1px;background:var(--gray2);align-self:stretch;margin:0 2px;"></div>`;
       }
-      const bkH = d.bk > 0 ? Math.max(8, Math.round((d.bk / maxVal) * 100)) : 0;
-      const rsH = d.rs > 0 ? Math.max(8, Math.round((d.rs / maxVal) * 100)) : 0;
-      // รถเล็ก: ทีม A=น้ำเงิน, ทีม B=ม่วง | รถใหญ่: ทีม สุวิน=ส้ม, อื่น=เขียวเข้ม
+      const bkH  = d.bk  > 0 ? Math.max(8, Math.round((d.bk  / maxVal) * 100)) : 0;
+      const ersH = (d.ers||0) > 0 ? Math.max(8, Math.round((d.ers / maxVal) * 100)) : 0;
+      const rsH  = d.rs  > 0 ? Math.max(8, Math.round((d.rs  / maxVal) * 100)) : 0;
+
+      // สีแท่ง BK ตามทีม, ERS = เหลือง, RS = เขียว (คงที่ทุกทีม)
       const isBigDept = (d.ฝ่าย||'').includes('ใหญ่');
-      let teamColor, teamColorLight;
+      let bkColor;
       if (isBigDept) {
-        teamColor      = d.ทีม==='สุวิน' ? '#e05c00' : d.ทีม==='A' ? '#c0392b' : '#d35400';
-        teamColorLight = d.ทีม==='สุวิน' ? '#f39c12' : d.ทีม==='A' ? '#e74c3c' : '#e67e22';
+        bkColor = d.ทีม==='สุวิน' ? '#e05c00' : '#d35400';
       } else {
-        teamColor      = d.ทีม==='A' ? '#2471c8' : d.ทีม==='B' ? '#7c3aed' : '#2471c8';
-        teamColorLight = d.ทีม==='A' ? '#16a34a' : d.ทีม==='B' ? '#059669' : '#16a34a';
+        bkColor = d.ทีม==='A' ? '#2471c8' : d.ทีม==='B' ? '#7c3aed' : '#2471c8';
       }
-      // ใช้ชื่อ SC เป็น key — เก็บใน window._chartData
+      const ersColor = '#ca8a04'; // เหลืองเข้ม
+      const rsColor  = '#16a34a'; // เขียว
+
       const safeKey = sc.replace(/"/g,'&quot;');
 
       html += `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;
@@ -1429,11 +1434,14 @@ function renderSCChart() {
         onmouseleave="hideChartTooltip()"
         onclick="filterByBar('${safeKey}')">
         <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">
-          <div style="width:16px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
-            ${d.bk>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColor};white-space:nowrap;">${d.bk}</span>`:''}
+          <div style="width:14px;height:${bkH}px;background:${bkColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${d.bk>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${bkColor};white-space:nowrap;">${d.bk}</span>`:''}
           </div>
-          <div style="width:16px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
-            ${d.rs>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${teamColorLight};white-space:nowrap;">${d.rs}</span>`:''}
+          <div style="width:14px;height:${ersH}px;background:${ersColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${(d.ers||0)>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${ersColor};white-space:nowrap;">${d.ers}</span>`:''}
+          </div>
+          <div style="width:14px;height:${rsH}px;background:${rsColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${d.rs>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${rsColor};white-space:nowrap;">${d.rs}</span>`:''}
           </div>
         </div>
         <div style="font-size:9px;font-weight:600;color:var(--tx);text-align:center;white-space:nowrap;margin-top:3px;">${d.ชื่อเล่น}</div>
