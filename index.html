@@ -1498,20 +1498,16 @@ async function runReport1() {
 // ════════════════════════════════════════
 async function runReport2() {
   // ใช้เดือนปัจจุบันอัตโนมัติ
-  const now = new Date();
-  const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  const params = { action:'getBookings', month: curYM };
-
   ['r2BodySmall','r2BodyBig'].forEach(id => {
     document.getElementById(id).innerHTML =
       '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
   });
 
   try {
-    const d = await callGS(params);
+    const d = await callGS({ action:'getBookings' });
     const rows = d.data || [];
-    const monthLabel = thMonth(curYM);
     const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const monthLabel = 'ข้อมูลทั้งหมด';
 
     // แยก SC ตามฝ่าย
     const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
@@ -1690,41 +1686,27 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
 //  REPORT 3 — สรุปตาม SC (Pivot)
 // ════════════════════════════════════════
 async function runReport3() {
-  // ใช้เดือนปัจจุบันอัตโนมัติ
-  const now = new Date();
-  const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-
   ['r3BodySmall','r3BodyBig'].forEach(id => {
     document.getElementById(id).innerHTML =
       '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
   });
 
   try {
-    // โหลดข้อมูลทั้งหมด (ไม่กรองเดือนสำหรับ "ยกมา")
+    // ดึงข้อมูลทั้งหมดใน Customer — ไม่กรองเดือน
     const dAll = await callGS({ action:'getBookings' });
     const allRows = dAll.data || [];
+    const curRows = allRows;  // ใช้ทั้งหมด
+    const prevRows = [];      // ไม่มียกมา (ใช้ทั้งหมด)
 
-    // ข้อมูลเดือนปัจจุบัน
-    const dCur = await callGS({ action:'getBookings', month: curYM });
-    const curRows = dCur.data || [];
-
-    // เดือนก่อนหน้า
-    const prevDate = new Date(now.getFullYear(), now.getMonth()-1, 1);
-    const prevYM = prevDate.getFullYear() + '-' + String(prevDate.getMonth()+1).padStart(2,'0');
-    const dPrev = await callGS({ action:'getBookings', month: prevYM });
-    const prevRows = dPrev.data || [];
-
-    // เป้า
+    // เป้า — ใช้เป้าล่าสุด
     let targetVal = 0;
-    const [y, m] = curYM.split('-');
-    const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
-      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-    const label = TH[parseInt(m)] + ' ' + parseInt(y);
-    const tgt = allTargets.find(t => t['เดือน'] === label);
-    if (tgt) targetVal = parseInt(tgt['เป้าการจำหน่าย'])||0;
+    if (allTargets.length > 0) {
+      const lastTarget = allTargets[allTargets.length - 1];
+      targetVal = parseInt(lastTarget['เป้าการจำหน่าย'])||0;
+    }
 
-    const monthLabel = thMonth(curYM);
     const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const monthLabel = 'ข้อมูลทั้งหมด';
 
     // แยก SC ตามฝ่าย
     const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
