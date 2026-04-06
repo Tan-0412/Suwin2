@@ -81,6 +81,9 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-h
   background:#fafbfd;outline:none;transition:border-color .2s;width:100%;
 }
 .frow input:focus,.frow select:focus,.frow textarea:focus{border-color:var(--primary3);background:#fff;}
+input[type="month"]:not([value]):not(:focus){color:var(--gray);}
+input[type="month"]::before{content:attr(placeholder);color:var(--gray);}
+input[type="month"]:valid::before,input[type="month"]:focus::before{content:"";}
 .frow textarea{resize:vertical;min-height:60px;}
 .frow.span2{grid-column:span 2;}
 .frow.span3{grid-column:span 3;}
@@ -128,11 +131,11 @@ td.r{text-align:right;}td.c{text-align:center;}
 .action-btns{display:flex;gap:4px;justify-content:center;}
 
 /* ── SUMMARY CARDS ── */
-.sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
-.sum-card{background:var(--white);border-radius:12px;padding:14px;box-shadow:var(--shadow2);
-  border-top:3px solid var(--primary3);text-align:center;}
-.sum-val{font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:700;color:var(--primary);}
-.sum-lbl{font-size:10px;color:var(--gray);font-weight:600;margin-top:3px;text-transform:uppercase;}
+.sum-grid{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sum-card{background:var(--white);border-radius:10px;padding:8px 14px;box-shadow:var(--shadow2);
+  border-left:3px solid var(--primary3);display:flex;align-items:center;gap:10px;flex:1;min-width:100px;}
+.sum-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--primary);line-height:1;}
+.sum-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;line-height:1.3;}
 
 /* ── FILTER ── */
 .filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
@@ -252,12 +255,41 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 ════════════════════════════════════ -->
 <div class="page active" id="page-booking">
 
-  <!-- Summary -->
+  <!-- Summary (compact) -->
   <div class="sum-grid" id="sumGrid">
-    <div class="sum-card"><div class="sum-val" id="sAll">—</div><div class="sum-lbl">รายการทั้งหมด</div></div>
-    <div class="sum-card" style="border-top-color:var(--accent);"><div class="sum-val" id="sBK" style="color:var(--green);">—</div><div class="sum-lbl">จอง (BK)</div></div>
-    <div class="sum-card" style="border-top-color:var(--green);"><div class="sum-val" id="sRS" style="color:var(--green2);">—</div><div class="sum-lbl">ปล่อย (RS)</div></div>
-    <div class="sum-card" style="border-top-color:var(--red);"><div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">ยกเลิก (CL)</div></div>
+    <div class="sum-card" style="border-left-color:var(--primary3);">
+      <div class="sum-val" id="sAll">—</div><div class="sum-lbl">ทั้งหมด</div>
+    </div>
+    <div class="sum-card" style="border-left-color:var(--accent);">
+      <div class="sum-val" id="sBK" style="color:var(--green);">—</div><div class="sum-lbl">จอง BK</div>
+    </div>
+    <div class="sum-card" style="border-left-color:var(--green);">
+      <div class="sum-val" id="sRS" style="color:var(--green2);">—</div><div class="sum-lbl">ปล่อย RS</div>
+    </div>
+    <div class="sum-card" style="border-left-color:var(--orange);">
+      <div class="sum-val" id="sEBK" style="color:var(--orange);">—</div><div class="sum-lbl">คาดจอง EBK</div>
+    </div>
+    <div class="sum-card" style="border-left-color:var(--red);">
+      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">ยกเลิก CL</div>
+    </div>
+  </div>
+
+  <!-- Bar Chart -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="padding:10px 16px;">
+      <h2>📊 ยอดจองแต่ละ SC</h2>
+      <div style="display:flex;gap:8px;align-items:center;font-size:10px;">
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#3568c8;display:inline-block;"></span>จอง
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#25a866;display:inline-block;"></span>ปล่อย
+        </span>
+      </div>
+    </div>
+    <div style="padding:14px 16px;overflow-x:auto;">
+      <div id="scChart" style="min-height:120px;"></div>
+    </div>
   </div>
 
   <!-- Filter + Add -->
@@ -284,7 +316,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
           <select id="fStatus" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="frow"><label>เดือนจอง</label>
-          <input type="month" id="fMonth" onchange="filterBooking()">
+          <input type="month" id="fMonth" onchange="filterBooking()" placeholder="ทั้งหมด">
         </div>
         <button class="btn btn-outline btn-sm" onclick="resetFilter()" style="align-self:flex-end;">✕ ล้าง</button>
       </div>
@@ -790,13 +822,7 @@ function init() {
   setConn(true);
   loadAll();
   updateShareUrl();
-  // Default month filter
-  const now = new Date();
-  const ym = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-  document.getElementById('fMonth').value = ym;
-  document.getElementById('r1Month').value = ym;
-  document.getElementById('r2Month').value = ym;
-  document.getElementById('r3Month').value = ym;
+  // Default month = ทั้งหมด (ไม่ set ค่าใดๆ)
 
 
 }
@@ -950,7 +976,7 @@ function renderBookings() {
     const alt = i%2===1?'alt':'';
     return `<tr class="${alt}">
       <td style="color:var(--gray);font-size:10px;">${i+1}</td>
-      <td class="mono" style="font-size:11px;">${r['วันที่จอง']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
       <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
       <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
       <td style="font-size:11px;max-width:160px;">${r['รายละเอียดรถ']||'—'}</td>
@@ -972,12 +998,203 @@ function renderBookings() {
 function updateSummary() {
   const all = filteredBookings.length;
   const bk  = filteredBookings.filter(r => r['สถานะ'] === 'BK').length;
+  const ebk = filteredBookings.filter(r => r['สถานะ'] === 'EBK').length;
   const rs  = filteredBookings.filter(r => r['สถานะ'] === 'RS').length;
   const cl  = filteredBookings.filter(r => r['สถานะ'] === 'CL').length;
   document.getElementById('sAll').textContent = all;
   document.getElementById('sBK').textContent  = bk;
+  document.getElementById('sEBK').textContent = ebk;
   document.getElementById('sRS').textContent  = rs;
   document.getElementById('sCL').textContent  = cl;
+  renderSCChart();
+}
+
+// ── Chart Tooltip ──
+let chartTooltip = null;
+function showChartTooltip(e, sc, bkModels, rsModels) {
+  hideChartTooltip();
+  const tip = document.createElement('div');
+  tip.id = 'chartTip';
+  tip.style.cssText = `
+    position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;
+    max-width:260px;min-width:180px;line-height:1.6;
+  `;
+
+  let html = `<div style="font-weight:700;font-size:13px;color:var(--accent2);margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
+    🧑‍💼 ${sc}
+  </div>`;
+
+  if (bkModels.length) {
+    const counts = {};
+    bkModels.forEach(m => counts[m] = (counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">📋 จอง (${bkModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c]) => {
+      html += `<div style="display:flex;justify-content:space-between;gap:12px;">
+        <span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (rsModels.length) {
+    const counts = {};
+    rsModels.forEach(m => counts[m] = (counts[m]||0)+1);
+    html += `<div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🚗 ปล่อย (${rsModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c]) => {
+      html += `<div style="display:flex;justify-content:space-between;gap:12px;">
+        <span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (!bkModels.length && !rsModels.length) {
+    html += `<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>`;
+  }
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  chartTooltip = tip;
+  positionTooltip(e, tip);
+}
+
+function positionTooltip(e, tip) {
+  const margin = 12;
+  let x = e.clientX + margin;
+  let y = e.clientY + margin;
+  const tw = tip.offsetWidth || 200;
+  const th = tip.offsetHeight || 100;
+  if (x + tw > window.innerWidth - margin) x = e.clientX - tw - margin;
+  if (y + th > window.innerHeight - margin) y = e.clientY - th - margin;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+}
+
+function hideChartTooltip() {
+  if (chartTooltip) { chartTooltip.remove(); chartTooltip = null; }
+}
+
+document.addEventListener('mousemove', e => {
+  if (chartTooltip) positionTooltip(e, chartTooltip);
+});
+document.addEventListener('mouseleave', () => hideChartTooltip());
+
+function renderSCChart() {
+  const chartEl = document.getElementById('scChart');
+  if (!chartEl || !meta.sc.length) return;
+
+  // Group bookings by SC — count BK/RS + collect models
+  const scData = {};
+  meta.sc.forEach(s => {
+    scData[s['ที่ปรึกษาการขาย']] = {
+      bk: 0, rs: 0,
+      bkModels: [], rsModels: [],
+      ฝ่าย: s['ฝ่าย'] || '',
+      ทีม: s['ทีม'] || '',
+      ลำดับ: parseInt(s['ลำดับ'] || 99),
+      ชื่อเล่น: s['ชื่อเล่น'] || s['ที่ปรึกษาการขาย'],
+    };
+  });
+
+  filteredBookings.forEach(r => {
+    const sc = r['ที่ปรึกษาการขาย'];
+    if (!scData[sc]) scData[sc] = { bk:0, rs:0, bkModels:[], rsModels:[], ฝ่าย:'', ทีม:'', ลำดับ:99, ชื่อเล่น:sc };
+    if (r['สถานะ'] === 'BK' || r['สถานะ'] === 'EBK') { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
+    if (r['สถานะ'] === 'RS' || r['สถานะ'] === 'ERS') { scData[sc].rs++; scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+  });
+
+  // Sort by ลำดับ
+  const sorted = Object.entries(scData).sort((a,b) => a[1].ลำดับ - b[1].ลำดับ);
+  if (!sorted.length) { chartEl.innerHTML = '<div class="empty">ไม่มีข้อมูล</div>'; return; }
+
+  const maxVal = Math.max(...sorted.map(([,d]) => Math.max(d.bk, d.rs)), 1);
+
+  // Group by ฝ่าย
+  const deptGroups = {};
+  sorted.forEach(([sc, d]) => {
+    const dept = d.ฝ่าย || 'ไม่ระบุฝ่าย';
+    if (!deptGroups[dept]) deptGroups[dept] = [];
+    deptGroups[dept].push([sc, d]);
+  });
+
+  let html = '<div style="display:flex;gap:0;align-items:flex-end;height:130px;position:relative;">';
+
+  // Y-axis grid lines
+  html += '<div style="position:absolute;inset:0;pointer-events:none;">';
+  [0.25,0.5,0.75,1].forEach(pct => {
+    const val = Math.round(maxVal * pct);
+    const bottom = pct * 100;
+    html += `<div style="position:absolute;bottom:${bottom}%;left:0;right:0;border-top:1px dashed rgba(26,58,107,0.1);"></div>`;
+    html += `<div style="position:absolute;bottom:${bottom}%;left:-22px;font-size:9px;color:var(--gray);transform:translateY(50%);">${val}</div>`;
+  });
+  html += '</div>';
+
+  html += '<div style="margin-left:24px;display:inline-flex;gap:0;align-items:flex-end;height:130px;border-bottom:2px solid var(--gray2);border-left:1px solid var(--gray2);padding-bottom:0;padding-right:8px;">';
+
+  Object.entries(deptGroups).forEach(([dept, members], di) => {
+    // Divider between depts
+    if (di > 0) {
+      html += `<div style="width:2px;background:var(--gray2);height:100%;margin:0 4px;align-self:stretch;flex-shrink:0;"></div>`;
+    }
+
+    // Group teams within dept
+    const teamGroups = {};
+    members.forEach(([sc,d]) => {
+      const team = d.ทีม || '';
+      if (!teamGroups[team]) teamGroups[team] = [];
+      teamGroups[team].push([sc,d]);
+    });
+
+    html += `<div style="display:flex;flex-direction:column;align-items:stretch;">`;
+    // Dept label at top
+    html += `<div style="font-size:9px;font-weight:700;color:var(--primary);text-align:center;
+      background:rgba(26,58,107,0.06);border-radius:4px 4px 0 0;padding:2px 4px;white-space:nowrap;margin-bottom:2px;">${dept}</div>`;
+    html += `<div style="display:flex;align-items:flex-end;gap:2px;flex:1;">`;
+
+    members.forEach(([sc, d], mi) => {
+      // Team separator
+      if (mi > 0 && members[mi][1].ทีม !== members[mi-1][1].ทีม) {
+        html += `<div style="width:1px;background:var(--gray2);align-self:stretch;margin:0 2px;"></div>`;
+      }
+      const bkH = d.bk > 0 ? Math.max(8, Math.round((d.bk / maxVal) * 100)) : 0;
+      const rsH = d.rs > 0 ? Math.max(8, Math.round((d.rs / maxVal) * 100)) : 0;
+      const teamColor = d.ทีม === 'A' ? '#3568c8' : d.ทีม === 'B' ? '#6c3fc8' : '#3568c8';
+      const teamColorLight = d.ทีม === 'A' ? '#25a866' : d.ทีม === 'B' ? '#2ecc71' : '#25a866';
+
+      const scKey = sc.replace(/'/g, "\\'");
+      const bkJson = JSON.stringify(d.bkModels).replace(/'/g, "\\'");
+      const rsJson = JSON.stringify(d.rsModels).replace(/'/g, "\\'");
+      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;"
+        onmouseenter="showChartTooltip(event,'${scKey}',${bkJson},${rsJson})"
+        onmouseleave="hideChartTooltip()">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">
+          <div style="width:14px;height:${bkH}px;background:${teamColor};border-radius:3px 3px 0 0;
+            transition:height .3s;position:relative;">
+            ${d.bk > 0 ? `<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+              font-size:9px;font-weight:700;color:${teamColor};white-space:nowrap;">${d.bk}</span>` : ''}
+          </div>
+          <div style="width:14px;height:${rsH}px;background:${teamColorLight};border-radius:3px 3px 0 0;
+            transition:height .3s;position:relative;">
+            ${d.rs > 0 ? `<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+              font-size:9px;font-weight:700;color:${teamColorLight};white-space:nowrap;">${d.rs}</span>` : ''}
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--tx);text-align:center;white-space:nowrap;margin-top:3px;
+          font-weight:600;">${d.ชื่อเล่น}</div>
+        ${d.ทีม ? `<div style="font-size:8px;color:var(--gray);background:${d.ทีม==='A'?'#e8f0ff':'#f0e8ff'};
+          padding:0 4px;border-radius:3px;">ทีม ${d.ทีม}</div>` : ''}
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += '</div></div>';
+  chartEl.innerHTML = html;
 }
 
 // ════════════════════════════════════════
@@ -1167,7 +1384,7 @@ async function runReport1() {
     document.getElementById('r1Body').innerHTML = rows.map((r,i) => `
       <tr class="${i%2===1?'alt':''}">
         <td style="color:var(--gray);font-size:10px;">${i+1}</td>
-        <td class="mono" style="font-size:11px;">${r['วันที่จอง']||'—'}</td>
+        <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
         <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
         <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
         <td style="font-size:11px;">${r['รายละเอียดรถ']||'—'}</td>
@@ -1528,6 +1745,21 @@ async function callGS(params, url) {
 // ════════════════════════════════════════
 //  HELPERS
 // ════════════════════════════════════════
+function fmtDate(s) {
+  if (!s) return '—';
+  // ถ้าเป็น dd/MM/yyyy อยู่แล้ว
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
+  // ถ้าเป็น Date string จาก JS เช่น "Mon Mar 02 2026 ..."
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return s;
+}
+
 function statusLabel(code) {
   const found = meta.status.find(s => s['STATUS'] === code);
   return found ? `${code} · ${found['สถานะ']}` : (code||'—');
