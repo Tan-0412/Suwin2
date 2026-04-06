@@ -1733,24 +1733,27 @@ async function runReport1() {
 //  REPORT 2 — แยกประเภทรถ จอง-ปล่อย (SC × รุ่น)
 // ════════════════════════════════════════
 async function runReport2() {
-  // ใช้เดือนปัจจุบันอัตโนมัติ
   ['r2BodySmall','r2BodyBig'].forEach(id => {
     document.getElementById(id).innerHTML =
       '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
   });
 
   try {
+    // ดึงข้อมูลทั้งหมด (ต้องการวันที่ปล่อยจากทุกเดือน)
     const d = await callGS({ action:'getBookings' });
     const rows = d.data || [];
-    const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-    const monthLabel = 'ข้อมูลทั้งหมด';
 
-    // แยก SC ตามฝ่าย
+    // เดือนปัจจุบัน
+    const now = new Date();
+    const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const today = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const monthLabel = thMonth(curYM);
+
     const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
     const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
 
-    renderModelReport('small', scSmall, rows, monthLabel, today);
-    renderModelReport('big',   scBig,   rows, monthLabel, today);
+    renderModelReport('small', scSmall, rows, monthLabel, today, curYM);
+    renderModelReport('big',   scBig,   rows, monthLabel, today, curYM);
 
   } catch(e) {
     ['r2BodySmall','r2BodyBig'].forEach(id => {
@@ -1759,7 +1762,7 @@ async function runReport2() {
   }
 }
 
-function renderModelReport(type, scList, rows, monthLabel, today) {
+function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
   const suffix = type === 'small' ? 'Small' : 'Big';
   const bodyEl  = document.getElementById('r2Body' + suffix);
   const titleEl = document.getElementById('r2Title' + suffix);
@@ -1797,20 +1800,32 @@ function renderModelReport(type, scList, rows, monthLabel, today) {
   });
 
   rows.forEach(r => {
-    const sc = r['ที่ปรึกษาการขาย'];
+    const sc    = r['ที่ปรึกษาการขาย'];
     const model = r['รุ่นรถ'];
     if (!pivot[sc]) return;
+    if (isCL(r['สถานะ'])) return;  // ไม่นับยกเลิก
+
     if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
-    const line = `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
-    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) {
+    const relDate = r['วันที่ปล่อย'] ? String(r['วันที่ปล่อย']).trim() : '';
+    const bookDate = r['วันที่จอง'] ? String(r['วันที่จอง']).trim() : '';
+    const bookInCur = dateMatchMonth(bookDate, curYM);
+    const relInCur  = relDate && dateMatchMonth(relDate, curYM);
+
+    const lineBk = `${fmtDate(bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+    const lineRs = `${fmtDate(relDate||bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+
+    // ยอดจอง = วันจองในเดือนนี้ AND ไม่มีวันปล่อยในเดือนนี้
+    if (bookInCur && !relInCur) {
       pivot[sc][model].bk++; pivot[sc].bkTotal++;
-      pivot[sc].bkRows.push(line);
+      pivot[sc].bkRows.push(lineBk);
     }
-    if (isRS(r['สถานะ'])||isERS(r['สถานะ'])) {
+
+    // ยอดปล่อย = วันปล่อยในเดือนนี้ (จองเมื่อไรก็ได้)
+    if (relInCur) {
       pivot[sc][model].rs++; pivot[sc].rsTotal++;
       if (!pivot[sc].rsRows[model]) pivot[sc].rsRows[model] = [];
-      pivot[sc].rsRows[model].push(line);
-      pivot[sc].rsRows['_all'].push(line);
+      pivot[sc].rsRows[model].push(lineRs);
+      pivot[sc].rsRows['_all'].push(lineRs);
     }
   });
   // เก็บใน window สำหรับ tooltip
