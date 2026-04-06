@@ -1471,12 +1471,12 @@ function showModelTipByModel(e, name, field, model) {
   if (!data) return;
   let rows = [];
   if (field === 'bk') {
-    rows = (data.bkRows||[]).filter(r => r.includes(model));
+    rows = (data.bkRows && data.bkRows[model]) || [];
   } else {
     rows = (data.rsRows && data.rsRows[model]) || [];
   }
-  const label = field==='bk' ? `📋 จอง · ${model}` : `🚗 ปล่อย · ${model}`;
-  const color = field==='bk' ? '#2451a0' : '#1a7a4a';
+  const label = field==='bk' ? `📋 จอง · ${model} · ${name}` : `🚗 ปล่อย · ${model} · ${name}`;
+  const color = field==='bk' ? '#3b6fd4' : '#2e9e6a';
   _showTipRows(e, label, color, rows);
 }
 
@@ -1486,16 +1486,9 @@ function showModelTip(e, name, field) {
   if (!data) return;
   let rows = [];
   if (field === 'bk') {
-    rows = data.bkRows || [];
+    rows = (data.bkRows && data.bkRows['_all']) || [];
   } else {
-    // rsRows._all หรือ รวมทุก model
-    if (data.rsRows && data.rsRows['_all']) {
-      rows = data.rsRows['_all'];
-    } else if (data.rsRows) {
-      rows = Object.entries(data.rsRows)
-        .filter(([k]) => k !== '_all')
-        .flatMap(([,v]) => v);
-    }
+    rows = (data.rsRows && data.rsRows['_all']) || [];
   }
   const label = field==='bk' ? `📋 ยอดจอง · ${name}` : `🚗 ยอดปล่อย · ${name}`;
   const color = field==='bk' ? '#3b6fd4' : '#2e9e6a';
@@ -1870,37 +1863,42 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
   const pivot = {};
   sorted.forEach(s => {
     const name = s['ที่ปรึกษาการขาย'];
-    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:[], rsRows:{} };
-    models.forEach(m => { pivot[name][m] = { bk:0, rs:0 }; pivot[name].rsRows[m] = []; });
+    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:{}, rsRows:{} };
+    models.forEach(m => {
+      pivot[name][m] = { bk:0, rs:0 };
+      pivot[name].bkRows[m] = [];
+      pivot[name].rsRows[m] = [];
+    });
+    pivot[name].bkRows['_all'] = [];
     pivot[name].rsRows['_all'] = [];
-    pivot[name].bkRows = [];
   });
 
   rows.forEach(r => {
     const sc    = r['ที่ปรึกษาการขาย'];
     const model = r['รุ่นรถ'];
     if (!pivot[sc]) return;
-    if (isCL(r['สถานะ'])) return;  // ไม่นับยกเลิก
+    if (isCL(r['สถานะ'])) return;
 
     if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
-    const relDate = r['วันที่ปล่อย'] ? String(r['วันที่ปล่อย']).trim() : '';
-    const bookDate = r['วันที่จอง'] ? String(r['วันที่จอง']).trim() : '';
+    if (!pivot[sc].bkRows[model]) pivot[sc].bkRows[model] = [];
+    if (!pivot[sc].rsRows[model]) pivot[sc].rsRows[model] = [];
+
+    const relDate  = r['วันที่ปล่อย'] ? String(r['วันที่ปล่อย']).trim() : '';
+    const bookDate = r['วันที่จอง']   ? String(r['วันที่จอง']).trim()   : '';
     const bookInCur = dateMatchMonth(bookDate, curYM);
     const relInCur  = relDate && dateMatchMonth(relDate, curYM);
 
-    const lineBk = `${fmtDate(bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
-    const lineRs = `${fmtDate(relDate||bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+    const line = `${fmtDate(bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
 
-    // ยอดจอง = วันจองในเดือนนี้ AND ไม่มีวันปล่อยในเดือนนี้
     if (bookInCur && !relInCur) {
       pivot[sc][model].bk++; pivot[sc].bkTotal++;
-      pivot[sc].bkRows.push(lineBk);
+      pivot[sc].bkRows[model].push(line);
+      pivot[sc].bkRows['_all'].push(line);
     }
 
-    // ยอดปล่อย = วันปล่อยในเดือนนี้ (จองเมื่อไรก็ได้)
     if (relInCur) {
+      const lineRs = `${fmtDate(relDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
       pivot[sc][model].rs++; pivot[sc].rsTotal++;
-      if (!pivot[sc].rsRows[model]) pivot[sc].rsRows[model] = [];
       pivot[sc].rsRows[model].push(lineRs);
       pivot[sc].rsRows['_all'].push(lineRs);
     }
