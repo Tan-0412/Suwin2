@@ -428,7 +428,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="card" style="margin-bottom:12px;">
     <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <div>
-        <h2 id="r2TitleSmall">📊 ฝ่ายขายรถเล็ก — แยกประเภทรถ จอง-ปล่อย</h2>
+        <h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2>
         <p id="r2SubSmall" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
       </div>
       <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
@@ -441,7 +441,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="card">
     <div class="card-hdr">
       <div>
-        <h2 id="r2TitleBig">📊 ฝ่ายขายรถใหญ่ — แยกประเภทรถ จอง-ปล่อย</h2>
+        <h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2>
         <p id="r2SubBig" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
       </div>
     </div>
@@ -1769,8 +1769,11 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
   const subEl   = document.getElementById('r2Sub' + suffix);
   const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
 
-  titleEl.textContent = `📊 ${deptName} — แยกประเภทรถ จอง-ปล่อย`;
-  subEl.textContent   = monthLabel + ' · พิมพ์ ' + today;
+  const now2 = new Date();
+  const titleMonth = thMonthYear(curYM);
+  const titleDate  = thDateFull(now2);
+  titleEl.textContent = `รายงานยอดจองและปล่อยรถ ประจำเดือน ${titleMonth}`;
+  subEl.textContent   = `แยกประเภทตามรุ่นรถ ${deptName} ณ วันที่ ${titleDate}`;
 
   if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
 
@@ -2430,6 +2433,26 @@ function statusLabel(val) {
   const found = meta.status.find(s => s['STATUS'] === val || s['สถานะ'] === val);
   if (found) return `${found['STATUS']} · ${found['สถานะ']}`;
   return val;
+}
+
+function thMonthYear(ym) {
+  // "2026-04" → "เมษายน 2569"
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const buddhistYear = parseInt(y) + 543;
+  return `${TH[parseInt(m)]} ${buddhistYear}`;
+}
+
+function thDateFull(date) {
+  // Date → "6 เมษายน 2569"
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear() + 543;
+  return `${d} ${TH[m]} ${y}`;
 }
 
 function thMonth(ym) {
