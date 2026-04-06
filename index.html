@@ -1350,7 +1350,7 @@ function renderSCChart() {
   meta.sc.forEach(s => {
     const name = s['ที่ปรึกษาการขาย'];
     scData[name] = {
-      bk:0, rs:0, bkModels:[], rsModels:[],
+      bk:0, rs:0, ers:0, bkModels:[], rsModels:[], ersModels:[],
       ฝ่าย: s['ฝ่าย']||'',
       ทีม: s['ทีม']||'',
       ลำดับ: parseInt(s['ลำดับ']||99),
