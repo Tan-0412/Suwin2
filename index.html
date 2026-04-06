@@ -209,6 +209,15 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .pivot-table tr:nth-child(even) td{background:#fafcff;}
 .pivot-table tr.total-row td{background:#f0e8d0;font-weight:700;font-size:13px;border-top:2px solid var(--accent);}
 .pivot-table td.zero{color:#ccc;}
+/* Light card header สำหรับรายงาน */
+.card-hdr-light{background:linear-gradient(135deg,#e8f0ff,#f0f5ff);
+  padding:14px 18px;border-bottom:2px solid #c0d0f0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-hdr-light h2{color:#1a3a6b;font-size:14px;font-weight:700;}
+.card-hdr-light p{color:#4a6090;font-size:11px;margin-top:2px;}
+.target-badge{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;
+  color:#c05000;background:#fff3e0;padding:6px 16px;border-radius:20px;
+  border:2px solid #ffb74d;display:inline-flex;align-items:center;gap:6px;}
 .dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
 .dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
 .dsc-table th{padding:8px 9px;text-align:center;
@@ -380,7 +389,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         <div class="frow"><label>ฝ่าย</label>
           <select id="r1Dept" onchange="onDeptChange('r1Dept','r1SC')"><option value="">ทั้งหมด</option></select>
         </div>
-        <div class="frow"><label>ที่ปรึกษา</label>
+        <div class="frow"><label>ที่ปรึกษาการขาย</label>
           <select id="r1SC"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="frow"><label>เดือนจอง</label>
@@ -397,9 +406,11 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         </div>
         <div style="display:flex;gap:6px;align-self:flex-end;">
           <button class="btn btn-primary btn-sm" onclick="runReport1()">🔍 ค้นหา</button>
+          <button class="btn btn-outline btn-sm" onclick="clearReport1()">✕ เคลียร์</button>
           <button class="btn btn-accent btn-sm" onclick="printReport1()">🖨️ พิมพ์</button>
         </div>
       </div>
+
     </div>
   </div>
   <div class="card" id="r1Card">
@@ -428,12 +439,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 <div class="page" id="page-report2">
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div class="card-hdr-light">
       <div>
         <h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2>
-        <p id="r2SubSmall" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
+        <p id="r2SubSmall">—</p>
       </div>
-      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
+      <button class="btn btn-primary btn-sm" onclick="printReport2()">🖨️ พิมพ์</button>
     </div>
     <div class="tbl-wrap" id="r2BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -441,10 +452,10 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   </div>
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr">
+    <div class="card-hdr-light">
       <div>
         <h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2>
-        <p id="r2SubBig" style="color:rgba(245,200,66,0.8);font-size:10px;margin-top:2px;">—</p>
+        <p id="r2SubBig">—</p>
       </div>
     </div>
     <div class="tbl-wrap" id="r2BodyBig">
@@ -467,14 +478,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr">
+    <div class="card-hdr-light">
       <div>
         <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
         <p id="r3SubSmall">—</p>
       </div>
-      <span id="r3TargetSmall" style="font-family:'IBM Plex Mono',monospace;font-size:11px;
-        color:rgba(245,200,66,0.9);background:rgba(232,160,32,0.15);
-        padding:3px 10px;border-radius:12px;border:1px solid rgba(232,160,32,0.3);display:none;"></span>
+      <span id="r3TargetSmall" class="target-badge" style="display:none;">🎯 <span id="r3TargetVal">—</span></span>
     </div>
     <div class="tbl-wrap" id="r3BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -483,7 +492,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr">
+    <div class="card-hdr-light">
       <div>
         <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
         <p id="r3SubBig">—</p>
@@ -611,13 +620,22 @@ function getBookings(p) {
 
   if (p.dept)   data = data.filter(r => r['ที่ปรึกษาการขาย'] && scDeptMap()[r['ที่ปรึกษาการขาย']] === p.dept);
   if (p.sc)     data = data.filter(r => r['ที่ปรึกษาการขาย'] === p.sc);
-  if (p.status) data = data.filter(r => r['สถานะ'] === p.status);
+  if (p.status) {
+    // รองรับทั้ง code (BK) และภาษาไทย (จอง)
+    const statusMap = getStatusMap();
+    data = data.filter(r => {
+      const s = r['สถานะ'];
+      return s === p.status ||
+             (statusMap[p.status] && s === statusMap[p.status]) ||
+             (statusMap[s] && statusMap[s] === p.status);
+    });
+  }
   if (p.month) {
     data = data.filter(r => {
       const d = r['วันที่จอง'];
       if (!d) return false;
       const parts = d.split('/');
-      if (parts.length >= 3) return `${parts[2]}-${parts[1].padStart(2,'0')}` === p.month;
+      if (parts.length >= 3) return parts[2] + '-' + parts[1].padStart(2,'0') === p.month;
       return false;
     });
   }
@@ -643,6 +661,22 @@ function getBookings(p) {
     return db - da;
   });
   return data;
+}
+
+function getStatusMap() {
+  // map: STATUS code → สถานะภาษาไทย
+  const map = {};
+  const sh = getSheet(SHEETS.status);
+  if (!sh) return map;
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return map;
+  const hdrs = rows[0].map(h => String(h).trim());
+  const ci = hdrs.indexOf('STATUS');
+  const ni = hdrs.indexOf('สถานะ');
+  rows.slice(1).forEach(r => {
+    if (ci >= 0 && ni >= 0) map[String(r[ci]).trim()] = String(r[ni]).trim();
+  });
+  return map;
 }
 
 function scDeptMap() {
@@ -1450,9 +1484,21 @@ function showModelTip(e, name, field) {
   hideDscTip();
   const data = window._modelData && window._modelData[name];
   if (!data) return;
-  const rows = field==='bk' ? (data.bkRows||[]) : (data.rsRows?._all||[]);
+  let rows = [];
+  if (field === 'bk') {
+    rows = data.bkRows || [];
+  } else {
+    // rsRows._all หรือ รวมทุก model
+    if (data.rsRows && data.rsRows['_all']) {
+      rows = data.rsRows['_all'];
+    } else if (data.rsRows) {
+      rows = Object.entries(data.rsRows)
+        .filter(([k]) => k !== '_all')
+        .flatMap(([,v]) => v);
+    }
+  }
   const label = field==='bk' ? `📋 ยอดจอง · ${name}` : `🚗 ยอดปล่อย · ${name}`;
-  const color = field==='bk' ? '#2451a0' : '#1a7a4a';
+  const color = field==='bk' ? '#3b6fd4' : '#2e9e6a';
   _showTipRows(e, label, color, rows);
 }
 
@@ -1691,6 +1737,20 @@ function confirmDeleteTarget(i) {
 // ════════════════════════════════════════
 //  REPORT 1 — รายละเอียด
 // ════════════════════════════════════════
+function clearReport1() {
+  document.getElementById('r1Dept').value    = '';
+  onDeptChange('r1Dept','r1SC');
+  document.getElementById('r1SC').value      = '';
+  document.getElementById('r1Month').value   = '';
+  document.getElementById('r1DateFrom').value = '';
+  document.getElementById('r1DateTo').value   = '';
+  document.getElementById('r1Status').value  = '';
+  document.getElementById('r1FilterWarning').style.display = 'none';
+  document.getElementById('r1Body').innerHTML =
+    '<tr><td colspan="10"><div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div></td></tr>';
+  document.getElementById('r1Count').textContent = '0 รายการ';
+}
+
 async function runReport1() {
   const dept1    = document.getElementById('r1Dept').value;
   const sc       = document.getElementById('r1SC').value;
@@ -1698,6 +1758,10 @@ async function runReport1() {
   const dateFrom = document.getElementById('r1DateFrom').value;
   const dateTo   = document.getElementById('r1DateTo').value;
   const status   = document.getElementById('r1Status').value;
+
+  // ซ่อน warning (ทุกตัวกรองทำงานได้แล้ว)
+  const warnEl = document.getElementById('r1FilterWarning');
+  if (warnEl) warnEl.style.display = 'none';
 
   const params = { action:'getBookings' };
   if (dept1)    params.dept = dept1;
@@ -1910,8 +1974,8 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       tBkTotal += p.bkTotal||0;
       tRsTotal += p.rsTotal||0;
 
-      tbody += `<tr style="${idx%2===1?'background:#fafcff;':''}">
-        <td style="text-align:left;font-weight:600;padding:7px 10px;">${nickname}</td>
+      tbody += `<tr style="${idx%2===1?'background:#f5f8ff;':'background:#fff;'}">
+        <td style="text-align:left;font-weight:600;padding:7px 10px;color:#1a3060;">${nickname}</td>
         ${bkCells}
         <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;"
           onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
@@ -1945,9 +2009,9 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
         <tr>
           <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
             min-width:100px;">รายชื่อ SC</th>
-          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:7px;text-align:center;border-radius:4px 0 0 0;">
+          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:8px;text-align:center;">
             ยอดจอง</th>
-          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:7px;text-align:center;border-radius:0 4px 0 0;">
+          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:8px;text-align:center;">
             ยอดปล่อย</th>
         </tr>
         <tr>
@@ -2037,7 +2101,9 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
   if (targetVal > 0 && tgtEl) {
     tgtEl.style.display = '';
-    tgtEl.textContent = `🎯 เป้า: ${targetVal.toLocaleString()} คัน`;
+    const valEl = document.getElementById('r3TargetVal');
+    if (valEl) valEl.textContent = `เป้า: ${targetVal.toLocaleString()} คัน`;
+    else tgtEl.textContent = `🎯 เป้า: ${targetVal.toLocaleString()} คัน`;
   } else if (tgtEl) {
     tgtEl.style.display = 'none';
   }
