@@ -2,7 +2,7 @@
   "name": "ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ",
   "short_name": "จองรถ",
   "description": "ระบบบันทึกยอดจองรถ บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด สาขาสุวินทวงศ์",
-  "start_url": "./booking.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
