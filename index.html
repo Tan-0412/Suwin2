@@ -106,12 +106,12 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 /* ── STATUS BADGES ── */
 .badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
-.badge-PS{background:#E8F4FF;color:#1565C0;}
-.badge-EBK{background:#FFF3CD;color:#856404;}
-.badge-BK{background:#D4EDDA;color:#155724;}
-.badge-ERS{background:#FFE8D0;color:#7D3C00;}
-.badge-RS{background:#D1F2EB;color:#0B5E3A;}
-.badge-CL{background:#F8D7DA;color:#721C24;}
+.badge-PS {background:#DBEAFE;color:#1D4ED8;}
+.badge-EBK{background:#FCE7F3;color:#9D174D;}
+.badge-BK {background:#FED7AA;color:#9A3412;}
+.badge-ERS{background:#FEF9C3;color:#854D0E;}
+.badge-RS {background:#D1FAE5;color:#065F46;}
+.badge-CL {background:#FEE2E2;color:#991B1B;}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;}
@@ -291,17 +291,20 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     <div class="sum-card" style="border-left-color:var(--primary3);">
       <div class="sum-val" id="sAll">—</div><div class="sum-lbl">ทั้งหมด</div>
     </div>
-    <div class="sum-card" style="border-left-color:var(--accent);">
-      <div class="sum-val" id="sBK" style="color:var(--green);">—</div><div class="sum-lbl">จอง BK</div>
+    <div class="sum-card" style="border-left-color:#9A3412;">
+      <div class="sum-val" id="sBK" style="color:#9A3412;">—</div><div class="sum-lbl">🟠 จอง</div>
     </div>
-    <div class="sum-card" style="border-left-color:var(--green);">
-      <div class="sum-val" id="sRS" style="color:var(--green2);">—</div><div class="sum-lbl">ปล่อย RS</div>
+    <div class="sum-card" style="border-left-color:#065F46;">
+      <div class="sum-val" id="sRS" style="color:#065F46;">—</div><div class="sum-lbl">🟢 ปล่อย</div>
     </div>
-    <div class="sum-card" style="border-left-color:var(--orange);">
-      <div class="sum-val" id="sEBK" style="color:var(--orange);">—</div><div class="sum-lbl">คาดจอง EBK</div>
+    <div class="sum-card" style="border-left-color:#9D174D;">
+      <div class="sum-val" id="sEBK" style="color:#9D174D;">—</div><div class="sum-lbl">🩷 คาดจอง</div>
+    </div>
+    <div class="sum-card" style="border-left-color:#854D0E;">
+      <div class="sum-val" id="sERS" style="color:#854D0E;">—</div><div class="sum-lbl">🟡 คาดปล่อย</div>
     </div>
     <div class="sum-card" style="border-left-color:var(--red);">
-      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">ยกเลิก CL</div>
+      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">🔴 ยกเลิก</div>
     </div>
   </div>
 
@@ -1219,11 +1222,13 @@ function updateSummary() {
   const bk  = filteredBookings.filter(r => isBK(r['สถานะ'])).length;
   const ebk = filteredBookings.filter(r => isEBK(r['สถานะ'])).length;
   const rs  = filteredBookings.filter(r => isRS(r['สถานะ'])).length;
+  const ers = filteredBookings.filter(r => isERS(r['สถานะ'])).length;
   const cl  = filteredBookings.filter(r => isCL(r['สถานะ'])).length;
   document.getElementById('sAll').textContent = all;
   document.getElementById('sBK').textContent  = bk;
   document.getElementById('sEBK').textContent = ebk;
   document.getElementById('sRS').textContent  = rs;
+  document.getElementById('sERS').textContent = ers;
   document.getElementById('sCL').textContent  = cl;
   renderSCChart();
 }
@@ -2577,16 +2582,24 @@ function fmtDate(s) {
 }
 
 function statusCode(val) {
-  // แปลงภาษาไทย → code ถ้าจำเป็น
   if (!val) return '';
+  const codes = ['PS','EBK','BK','ERS','RS','CL'];
+  if (codes.includes(val)) return val;
+  if (isPS(val))  return 'PS';
+  if (isEBK(val)) return 'EBK';
+  if (isBK(val))  return 'BK';
+  if (isERS(val)) return 'ERS';
+  if (isRS(val))  return 'RS';
+  if (isCL(val))  return 'CL';
   const found = meta.status.find(s => s['สถานะ'] === val || s['STATUS'] === val);
   return found ? found['STATUS'] : val;
 }
 
 function statusLabel(val) {
   if (!val) return '—';
-  const found = meta.status.find(s => s['STATUS'] === val || s['สถานะ'] === val);
-  if (found) return `${found['STATUS']} · ${found['สถานะ']}`;
+  const code = statusCode(val);
+  const found = meta.status.find(s => s['STATUS'] === code);
+  if (found) return found['สถานะ'] || found['STATUS'];
   return val;
 }
 
