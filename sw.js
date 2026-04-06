@@ -1,5 +1,5 @@
 // ── Service Worker — ระบบจองรถ PWA ──
-const CACHE = 'booking-v2';
+const CACHE = 'booking-v3';
 
 self.addEventListener('install', e => {
   // cache เฉพาะที่แน่ใจว่ามีอยู่จริง
