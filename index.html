@@ -557,6 +557,7 @@ const SHEETS = {
   customer: 'Customer',
   sc:       'SC',
   isuzu:    'ISUZU',
+  model:    'Model',
   status:   'STATUS',
   source:   'SOURCE',
   target:   'TARGET',
@@ -600,9 +601,10 @@ function sheetData(name) {
 function getMeta() {
   const sc     = sheetData(SHEETS.sc).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
   const isuzu  = sheetData(SHEETS.isuzu).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
+  const model  = sheetData(SHEETS.model);
   const status = sheetData(SHEETS.status).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
   const source = sheetData(SHEETS.source).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
-  return { sc, isuzu, status, source };
+  return { sc, isuzu, model, status, source };
 }
 
 function getBookings(p) {
@@ -832,10 +834,19 @@ function ok(data) {
         <div class="frow"><label>เบอร์โทร</label>
           <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
         </div>
-        <div class="frow"><label>รุ่นรถ *</label>
-          <select id="mModel"></select>
+        <div class="frow"><label>รุ่นรถ * <span style="font-size:9px;color:var(--gray);font-weight:400;">(จากชีท ISUZU)</span></label>
+          <select id="mModel" onchange="onModelChange()"></select>
         </div>
-        <div class="frow span2"><label>รายละเอียดรถ</label>
+
+        <!-- ── ช่อง รายละเอียดจากชีท Model ── -->
+        <div class="frow" id="mDetailModelWrap" style="display:none;">
+          <label>รายละเอียดรถ (จากชีท Model) <span style="font-size:9px;color:var(--gray);font-weight:400;">ไม่บังคับ</span></label>
+          <select id="mDetailModel" onchange="onDetailModelChange()">
+            <option value="">-- เลือกรายละเอียด (ถ้ามี) --</option>
+          </select>
+        </div>
+
+        <div class="frow span2"><label>รายละเอียดรถ <span style="font-size:9px;color:var(--gray);font-weight:400;">แก้ไขได้</span></label>
           <input type="text" id="mDetail" placeholder="เช่น Cab4 2.2 Ddi L AT">
         </div>
         <div class="frow"><label>สถานะ *</label>
@@ -899,7 +910,7 @@ function ok(data) {
 //  STATE
 // ════════════════════════════════════════
 let scriptUrl = '';
-let meta = { sc:[], isuzu:[], status:[], source:[] };
+let meta = { sc:[], isuzu:[], model:[], status:[], source:[] };
 let allBookings = [];
 let filteredBookings = [];
 let allTargets = [];
@@ -1016,13 +1027,35 @@ async function loadMeta() {
     populateSel('fStatus',meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
     populateSel('fModel', meta.isuzu,  'รุ่นรถ', '', 'ทั้งหมด');
     populateSel('mSC',    meta.sc,     'ที่ปรึกษาการขาย');
-    populateSel('mModel', meta.isuzu,  'รุ่นรถ');
+    populateIsuzuDropdown('mModel');
     populateSel('mStatus',meta.status, 'STATUS', 'สถานะ');
     populateSel('mSource',meta.source, 'ที่มาลูกค้า');
     // Report filters
     ['r1SC','r2SC'].forEach(id => populateSel(id, meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด'));
     populateSel('r1Status', meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
   } catch(e) { console.error('loadMeta:', e); }
+}
+
+// populate dropdown รุ่นรถ ISUZU พร้อม optgroup
+function populateIsuzuDropdown(id) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรุ่นรถ --</option>';
+  (meta.isuzu || []).forEach(item => {
+    const val = item['รุ่นรถ'] || '';
+    if (!val) return;
+    const o = document.createElement('option');
+    o.value = val; o.textContent = val;
+    sel.appendChild(o);
+  });
+  if (prev) {
+    sel.value = prev;
+    if (sel.value !== prev) {
+      const opt = [...sel.options].find(o => o.value.trim() === prev.trim());
+      if (opt) sel.value = opt.value;
+    }
+  }
 }
 
 function populateSel(id, data, valField, labelField, allLabel) {
@@ -1606,6 +1639,73 @@ function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
 
 
 // ════════════════════════════════════════
+//  MODEL / DETAIL DROPDOWN LOGIC
+// ════════════════════════════════════════
+// เมื่อเลือก รุ่นรถ (ISUZU) → โหลดรายละเอียดจาก Model sheet
+function onModelChange() {
+  const modelVal = document.getElementById('mModel').value;
+  const wrap = document.getElementById('mDetailModelWrap');
+  const detSel = document.getElementById('mDetailModel');
+
+  if (!modelVal || !meta.model || meta.model.length === 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  // กรองเฉพาะ row ที่ตรงกับ รุ่นรถ (column "รายละเอียด" contains model keyword)
+  // ชีท Model มีคอลัมน์: รหัสรุ่นรถ, ชื่อรุ่นการจำหน่าย, รายละเอียด
+  // หา keyword จาก รุ่นรถ เช่น "Mu-X", "D-MAX", "TFR", "V-Cross"
+  const keyword = modelVal.replace(/\s+/g,'').toLowerCase();
+
+  // ลองแมปชื่อ isuzu → คำค้นใน Model
+  const modelKeywords = {
+    'mu-x':   ['mu-x','mux'],
+    'd-max':  ['cab4','x-series','hr 4drs','v-cross','vcross'],
+  };
+
+  // หา matching rows จากชีท Model
+  let rows = meta.model.filter(r => {
+    const desc = (r['รายละเอียด'] || '').toLowerCase();
+    const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
+
+    // ลอง exact keyword จากชื่อ isuzu model
+    if (keyword.includes('mux') || keyword.includes('mu-x') || keyword.includes('mux')) {
+      return desc.includes('mu-x');
+    }
+    if (keyword.includes('dmax') || keyword.includes('d-max')) {
+      return !desc.includes('mu-x');
+    }
+    // fallback: ค้นชื่อรุ่นรถโดยตรง
+    return desc.toLowerCase().includes(keyword) || code.toLowerCase().includes(keyword);
+  });
+
+  // ถ้าไม่พบก็แสดงทั้งหมด
+  if (rows.length === 0) rows = meta.model;
+
+  detSel.innerHTML = '<option value="">-- เลือกรายละเอียด (ถ้ามี) --</option>';
+  rows.forEach(r => {
+    const desc = r['รายละเอียด'] || '';
+    const code = r['รหัสรุ่นรถ'] || '';
+    if (!desc) return;
+    const o = document.createElement('option');
+    o.value = desc;
+    o.dataset.code = code;
+    o.textContent = desc + (code ? `  [${code}]` : '');
+    detSel.appendChild(o);
+  });
+
+  wrap.style.display = rows.length > 0 ? '' : 'none';
+}
+
+// เมื่อเลือกรายละเอียดจาก Model dropdown → copy ลง mDetail
+function onDetailModelChange() {
+  const val = document.getElementById('mDetailModel').value;
+  if (val) {
+    document.getElementById('mDetail').value = val;
+  }
+}
+
+// ════════════════════════════════════════
 //  ADD / EDIT MODAL
 // ════════════════════════════════════════
 function openAddModal() {
@@ -1616,6 +1716,8 @@ function openAddModal() {
   document.getElementById('mPhone').value   = '';
   document.getElementById('mDetail').value  = '';
   document.getElementById('mRelDate').value = '';
+  document.getElementById('mDetailModelWrap').style.display = 'none';
+  document.getElementById('mDetailModel').innerHTML = '<option value="">-- เลือกรายละเอียด (ถ้ามี) --</option>';
   if (meta.status.length) document.getElementById('mStatus').value = 'BK';
   document.getElementById('bookingModal').classList.add('open');
 }
@@ -1635,8 +1737,17 @@ function openEditModal(i) {
 
   // SC
   setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
-  // Model
+  // Model — set ก่อน แล้ว trigger onModelChange เพื่อ populate detail dropdown
   setSelectValue('mModel', r['รุ่นรถ'] || '');
+  onModelChange();
+  // พยายาม restore รายละเอียดใน detail dropdown
+  const savedDetail = r['รายละเอียดรถ'] || '';
+  document.getElementById('mDetail').value = savedDetail;
+  if (savedDetail) {
+    const detSel = document.getElementById('mDetailModel');
+    const matchOpt = [...detSel.options].find(o => o.value === savedDetail);
+    if (matchOpt) detSel.value = savedDetail;
+  }
   // Status — ข้อมูลใน sheet อาจเก็บเป็น STATUS code (BK) หรือภาษาไทย (จอง) ก็ได้
   const rawStatus = r['สถานะ'] || '';
   // หา STATUS code ที่ตรงกับค่าที่เก็บในชีท
