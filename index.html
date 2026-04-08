@@ -853,9 +853,21 @@ function testUpdate() {
           <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
         </div>
         <div class="frow"><label>รุ่นรถ *</label>
-          <select id="mModel"></select>
+          <select id="mModel" onchange="onModelChange()"></select>
         </div>
-        <div class="frow span2"><label>รายละเอียดรถ</label>
+        <!-- dropdown รายละเอียดจากชีท Model — โผล่เมื่อเลือกรุ่นรถ -->
+        <div class="frow span2" id="mDetailModelWrap" style="display:none;">
+          <label>📋 เลือกรายละเอียดจากชีท Model
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เลือกแล้วจะเติมช่องด้านล่างอัตโนมัติ</span>
+          </label>
+          <select id="mDetailModel" onchange="onDetailModelChange()"
+            style="border-color:var(--primary3);background:#f0f5ff;">
+            <option value="">-- เลือกรายละเอียด --</option>
+          </select>
+        </div>
+        <div class="frow span2"><label>รายละเอียดรถ
+          <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">แก้ไขได้</span>
+        </label>
           <input type="text" id="mDetail" placeholder="เช่น Cab4 2.2 Ddi L AT">
         </div>
         <div class="frow"><label>สถานะ *</label>
@@ -919,7 +931,7 @@ function testUpdate() {
 //  STATE
 // ════════════════════════════════════════
 let scriptUrl = '';
-let meta = { sc:[], isuzu:[], status:[], source:[] };
+let meta = { sc:[], isuzu:[], model:[], status:[], source:[] };
 let allBookings = [];
 let filteredBookings = [];
 let allTargets = [];
@@ -1030,19 +1042,39 @@ async function loadMeta() {
   try {
     const d = await callGS({ action: 'getMeta' });
     meta = d;
-    // Populate dropdowns
-    populateDeptFilter();  // ฝ่าย ต้องมาก่อน SC
+    populateDeptFilter();
     populateSel('fSC',    meta.sc,     'ที่ปรึกษาการขาย', '', 'ทั้งหมด');
     populateSel('fStatus',meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
     populateSel('fModel', meta.isuzu,  'รุ่นรถ', '', 'ทั้งหมด');
     populateSel('mSC',    meta.sc,     'ที่ปรึกษาการขาย');
-    populateSel('mModel', meta.isuzu,  'รุ่นรถ');
+    populateIsuzuDropdown('mModel');
     populateSel('mStatus',meta.status, 'STATUS', 'สถานะ');
     populateSel('mSource',meta.source, 'ที่มาลูกค้า');
-    // Report filters
     ['r1SC','r2SC'].forEach(id => populateSel(id, meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด'));
     populateSel('r1Status', meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
   } catch(e) { console.error('loadMeta:', e); }
+}
+
+// populate รุ่นรถ ISUZU
+function populateIsuzuDropdown(id) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรุ่นรถ --</option>';
+  (meta.isuzu || []).forEach(item => {
+    const val = item['รุ่นรถ'] || '';
+    if (!val) return;
+    const o = document.createElement('option');
+    o.value = val; o.textContent = val;
+    sel.appendChild(o);
+  });
+  if (prev) {
+    sel.value = prev;
+    if (sel.value !== prev) {
+      const opt = [...sel.options].find(o => o.value.trim() === prev.trim());
+      if (opt) sel.value = opt.value;
+    }
+  }
 }
 
 function populateSel(id, data, valField, labelField, allLabel) {
@@ -1626,6 +1658,58 @@ function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
 
 
 // ════════════════════════════════════════
+//  MODEL DROPDOWN LOGIC (ชีท Model)
+// ════════════════════════════════════════
+function onModelChange() {
+  const modelVal = document.getElementById('mModel').value;
+  const wrap     = document.getElementById('mDetailModelWrap');
+  const detSel   = document.getElementById('mDetailModel');
+
+  // ล้าง detail ที่เคยเลือกไว้
+  document.getElementById('mDetail').value = '';
+  detSel.innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
+
+  if (!modelVal || !meta.model || meta.model.length === 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  // กรอง meta.model ด้วยชื่อรุ่นรถที่เลือก
+  // ชีท Model มีคอลัมน์: รหัสรุ่นรถ, ชื่อรุ่นการจำหน่าย (PPV), รายละเอียด
+  // ใช้ modelVal (เช่น "Mu-X", "D-MAX", "STD") จับคู่กับคอลัมน์ รายละเอียด
+  const kw = modelVal.toLowerCase().replace(/[-\s]/g, '');
+
+  const rows = meta.model.filter(r => {
+    const desc = (r['รายละเอียด'] || '').toLowerCase().replace(/[-\s]/g, '');
+    const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
+    // ถ้า modelVal ตรงกับคำในรายละเอียด หรือ รหัสรุ่นรถ
+    return desc.includes(kw) || kw.includes(desc.split(' ')[0]) || code.includes(kw);
+  });
+
+  // ถ้าไม่ match เลย — แสดงทั้งหมดให้เลือกเอง
+  const displayRows = rows.length > 0 ? rows : meta.model;
+
+  displayRows.forEach(r => {
+    const desc = r['รายละเอียด'] || '';
+    const code = r['รหัสรุ่นรถ'] || '';
+    const ppv  = r['ชื่อรุ่นการจำหน่าย'] || r['PPV'] || '';
+    if (!desc) return;
+    const o = document.createElement('option');
+    o.value = desc;
+    // แสดง: รายละเอียด [รหัส]
+    o.textContent = desc + (code ? `  [${code}]` : '');
+    detSel.appendChild(o);
+  });
+
+  wrap.style.display = '';
+}
+
+function onDetailModelChange() {
+  const val = document.getElementById('mDetailModel').value;
+  if (val) document.getElementById('mDetail').value = val;
+}
+
+// ════════════════════════════════════════
 //  ADD / EDIT MODAL
 // ════════════════════════════════════════
 function openAddModal() {
@@ -1636,6 +1720,9 @@ function openAddModal() {
   document.getElementById('mPhone').value   = '';
   document.getElementById('mDetail').value  = '';
   document.getElementById('mRelDate').value = '';
+  // reset detail model dropdown
+  document.getElementById('mDetailModelWrap').style.display = 'none';
+  document.getElementById('mDetailModel').innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
   if (meta.status.length) document.getElementById('mStatus').value = 'BK';
   document.getElementById('bookingModal').classList.add('open');
 }
@@ -1655,8 +1742,17 @@ function openEditModal(i) {
 
   // SC
   setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
-  // Model
+  // Model → trigger onModelChange เพื่อ populate detail dropdown
   setSelectValue('mModel', r['รุ่นรถ'] || '');
+  onModelChange();
+  // restore รายละเอียดรถเดิม
+  const savedDetail = r['รายละเอียดรถ'] || '';
+  document.getElementById('mDetail').value = savedDetail;
+  if (savedDetail) {
+    const detSel = document.getElementById('mDetailModel');
+    const matchOpt = [...detSel.options].find(o => o.value === savedDetail);
+    if (matchOpt) detSel.value = savedDetail;
+  }
   // Status — ข้อมูลใน sheet อาจเก็บเป็น STATUS code (BK) หรือภาษาไทย (จอง) ก็ได้
   const rawStatus = r['สถานะ'] || '';
   // หา STATUS code ที่ตรงกับค่าที่เก็บในชีท
