@@ -247,20 +247,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .pivot-table th.in-hdr{background:var(--primary2);}
 
 /* ── DATE BADGE — จอง-ปล่อยรายวัน (สีเขียว) ── */
-.date-badge-r2{
-  display:inline-flex;align-items:center;gap:8px;
-  background:#e6f5ee;border-radius:8px;padding:5px 14px;
-  border:1px solid #a8dbc0;margin-top:4px;
-}
+.date-badge-r2{display:inline-flex;align-items:center;gap:8px;background:#e6f5ee;border-radius:8px;padding:5px 14px;border:1px solid #a8dbc0;}
 .date-badge-r2 .lbl{font-size:11px;color:#1a7a4a;font-weight:600;}
 .date-badge-r2 .val{font-size:16px;font-weight:700;color:#0f5c36;}
 
 /* ── DATE BADGE — Daily SC (สีน้ำเงิน) ── */
-.date-badge-r3{
-  display:inline-flex;align-items:center;gap:8px;
-  background:#e6eeff;border-radius:8px;padding:5px 14px;
-  border:1px solid #a0b8f0;margin-top:4px;
-}
+.date-badge-r3{display:inline-flex;align-items:center;gap:8px;background:#e6eeff;border-radius:8px;padding:5px 14px;border:1px solid #a0b8f0;}
 .date-badge-r3 .lbl{font-size:11px;color:#1a3a6b;font-weight:600;}
 .date-badge-r3 .val{font-size:16px;font-weight:700;color:#1a2d80;}
 
@@ -463,12 +455,18 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 <div class="page" id="page-report2">
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr-light">
+    <!-- topbar สีน้ำเงินเหมือน Daily SC -->
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2 id="r2MainTitleSmall">📊 รายงานยอดจองสะสมและยอดปล่อยรถ</h2>
+      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
+    </div>
+    <!-- subheader สีอ่อน: ชื่อรายงาน + badge วันที่ขวา -->
+    <div class="card-hdr-light" style="justify-content:space-between;align-items:flex-start;">
       <div>
-        <h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2>
+        <h2 id="r2TitleSmall">รายงานยอดจองสะสมและยอดปล่อยรถ</h2>
         <p id="r2SubSmall">—</p>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="printReport2()">🖨️ พิมพ์</button>
+      <div id="r2DateBadgeSmall" style="display:none;flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" id="r2BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -476,11 +474,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   </div>
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr-light">
+    <div class="card-hdr-light" style="justify-content:space-between;align-items:flex-start;">
       <div>
-        <h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2>
+        <h2 id="r2TitleBig">รายงานยอดจองสะสมและยอดปล่อยรถ</h2>
         <p id="r2SubBig">—</p>
       </div>
+      <div id="r2DateBadgeBig" style="display:none;flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" id="r2BodyBig">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -502,12 +501,15 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="card-hdr-light">
+    <div class="card-hdr-light" style="justify-content:space-between;align-items:flex-start;">
       <div>
         <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
         <p id="r3SubSmall">—</p>
       </div>
-      <span id="r3TargetSmall" class="target-badge" style="display:none;">🎯 <span id="r3TargetVal">—</span></span>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-top:2px;">
+        <span id="r3TargetSmall" class="target-badge" style="display:none;">🎯 <span id="r3TargetVal">—</span></span>
+        <div id="r3DateBadgeSmall"></div>
+      </div>
     </div>
     <div class="tbl-wrap" id="r3BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -516,11 +518,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="card-hdr-light">
+    <div class="card-hdr-light" style="justify-content:space-between;align-items:flex-start;">
       <div>
         <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
         <p id="r3SubBig">—</p>
       </div>
+      <div id="r3DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" id="r3BodyBig">
       <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
@@ -2037,13 +2040,18 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
   const bodyEl  = document.getElementById('r2Body' + suffix);
   const titleEl = document.getElementById('r2Title' + suffix);
   const subEl   = document.getElementById('r2Sub' + suffix);
+  const badgeEl = document.getElementById('r2DateBadge' + suffix);
   const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
 
   const now2 = new Date();
   const titleMonth = thMonthYear(curYM);
   const titleDate  = thDateFull(now2);
-  titleEl.textContent = `รายงานยอดจองและปล่อยรถ ประจำเดือน ${titleMonth}`;
-  subEl.innerHTML = `แยกประเภทตามรุ่นรถ ${deptName}<br><span class="date-badge-r2"><span class="lbl">ณ วันที่</span><span class="val">${titleDate}</span></span>`;
+  titleEl.innerHTML = `รายงานยอดจองสะสมและยอดปล่อยรถ ประจำเดือน ${titleMonth} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
+  subEl.textContent = `แยกประเภทตามรุ่นรถ`;
+  if (badgeEl) {
+    badgeEl.style.display = '';
+    badgeEl.innerHTML = `<span class="date-badge-r2"><span class="lbl">ณ วันที่</span><span class="val">${titleDate}</span></span>`;
+  }
 
   if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
 
@@ -2298,7 +2306,11 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
   const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
   titleEl.textContent = `📊 ${deptName}`;
-  subEl.innerHTML = monthLabel + `<br><span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${today}</span></span>`;
+  subEl.textContent   = monthLabel;
+  const badgeEl3 = document.getElementById('r3DateBadge' + suffix);
+  if (badgeEl3) {
+    badgeEl3.innerHTML = `<span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${today}</span></span>`;
+  }
 
   if (targetVal > 0 && tgtEl) {
     tgtEl.style.display = '';
