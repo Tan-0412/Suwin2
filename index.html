@@ -245,32 +245,23 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .pivot-table td.has-val{color:var(--primary);font-weight:700;}
 .pivot-table th.out-hdr{background:var(--green);}
 .pivot-table th.in-hdr{background:var(--primary2);}
-
-/* ── DATE BADGE — จอง-ปล่อยรายวัน (สีเขียว) ── */
 .date-badge-r2{display:inline-flex;align-items:center;gap:8px;background:#e6f5ee;border-radius:8px;padding:5px 14px;border:1px solid #a8dbc0;}
 .date-badge-r2 .lbl{font-size:11px;color:#1a7a4a;font-weight:600;}
 .date-badge-r2 .val{font-size:16px;font-weight:700;color:#0f5c36;}
-/* ── DATE BADGE — Daily SC (สีน้ำเงิน) ── */
 .date-badge-r3{display:inline-flex;align-items:center;gap:8px;background:#e6eeff;border-radius:8px;padding:5px 14px;border:1px solid #a0b8f0;}
 .date-badge-r3 .lbl{font-size:11px;color:#1a3a6b;font-weight:600;}
 .date-badge-r3 .val{font-size:16px;font-weight:700;color:#1a2d80;}
-/* ── DATE PICKER MODAL ── */
 .datepick-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:700;align-items:center;justify-content:center;}
 .datepick-overlay.open{display:flex;}
 .datepick-box{background:#fff;border-radius:16px;overflow:hidden;width:min(94vw,360px);box-shadow:0 20px 60px rgba(0,0,0,0.3);}
 .datepick-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
 .datepick-hdr h3{color:#fff;font-size:14px;font-weight:700;}
-.datepick-hdr button{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;}
+.datepick-hdr .dp-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:0 4px;}
 .datepick-body{padding:20px;}
 .datepick-body label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
 .datepick-body input[type=date]{width:100%;padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;font-size:14px;font-family:'Sarabun',sans-serif;color:var(--tx);outline:none;}
 .datepick-body input[type=date]:focus{border-color:var(--primary3);}
 .datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
-/* ── SPACING: topbar กับ subheader ── */
-.card-hdr + .card-hdr-light{margin-top:0;}
-.report-subhdr{padding:14px 20px;background:linear-gradient(135deg,#eaf0ff,#f4f7ff);border-bottom:1px solid #d0daf5;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-.report-subhdr h2{color:#1a3a6b;font-size:14px;font-weight:700;}
-.report-subhdr p{color:#4a6090;font-size:11px;margin-top:3px;}
 
 @media(max-width:600px){
   .form-grid{grid-template-columns:1fr;}
@@ -469,34 +460,38 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   PAGE: REPORT 2 — แยกประเภทรถ จอง-ปล่อย รายวัน
 ════════════════════════════════════ -->
 <div class="page" id="page-report2">
-  <!-- รถเล็ก -->
-  <div class="card" style="margin-bottom:12px;">
+
+  <!-- topbar สีน้ำเงิน แยก card เหมือน Daily SC -->
+  <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h2>📊 รายงานยอดจองและปล่อยรถ</h2>
       <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
     </div>
-    <div class="report-subhdr">
+  </div>
+
+  <!-- รถเล็ก -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
         <h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2>
         <p id="r2SubSmall">—</p>
       </div>
-      <div id="r2DateBadgeSmall" style="flex-shrink:0;"></div>
+      <div id="r2DateBadgeSmall" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
-    <div style="height:12px;background:#f8faff;border-bottom:1px solid #e8eef8;"></div>
     <div class="tbl-wrap" id="r2BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
     </div>
   </div>
+
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="report-subhdr">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
         <h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2>
         <p id="r2SubBig">—</p>
       </div>
-      <div id="r2DateBadgeBig" style="flex-shrink:0;"></div>
+      <div id="r2DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
-    <div style="height:12px;background:#f8faff;border-bottom:1px solid #e8eef8;"></div>
     <div class="tbl-wrap" id="r2BodyBig">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
     </div>
@@ -517,14 +512,16 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถเล็ก -->
   <div class="card" style="margin-bottom:12px;">
-    <div class="report-subhdr">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
         <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
         <p id="r3SubSmall" style="display:none;"></p>
       </div>
-      <div id="r3DateBadgeSmall" style="flex-shrink:0;"></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span id="r3TargetSmall" style="display:none;"><span id="r3TargetVal"></span></span>
+        <div id="r3DateBadgeSmall"></div>
+      </div>
     </div>
-    <div style="height:12px;background:#f8faff;border-bottom:1px solid #e8eef8;"></div>
     <div class="tbl-wrap" id="r3BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
     </div>
@@ -532,14 +529,13 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถใหญ่ -->
   <div class="card">
-    <div class="report-subhdr">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
         <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
         <p id="r3SubBig" style="display:none;"></p>
       </div>
       <div id="r3DateBadgeBig" style="flex-shrink:0;"></div>
     </div>
-    <div style="height:12px;background:#f8faff;border-bottom:1px solid #e8eef8;"></div>
     <div class="tbl-wrap" id="r3BodyBig">
       <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
     </div>
@@ -2060,15 +2056,12 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
 
   const now2 = new Date();
   const titleMonth = thMonthYear(curYM);
-  // ใช้วันที่ที่ผู้ใช้เลือกถ้ามี ไม่งั้นใช้วันปัจจุบัน
   const reportDate = window._reportDate || now2;
   const titleDate  = thDateFull(reportDate);
 
   titleEl.innerHTML = `รายงานยอดจองและปล่อยรถ ประจำเดือน ${titleMonth} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
   subEl.textContent = `แยกประเภทตามรุ่นรถ`;
-  if (badgeEl) {
-    badgeEl.innerHTML = `<span class="date-badge-r2"><span class="lbl">ณ วันที่</span><span class="val">${titleDate}</span></span>`;
-  }
+  if (badgeEl) badgeEl.innerHTML = `<span class="date-badge-r2"><span class="lbl">ณ วันที่</span><span class="val">${titleDate}</span></span>`;
 
   if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
 
@@ -2322,21 +2315,15 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   const tgtEl  = document.getElementById('r3Target' + suffix);
 
   const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
-  // ใช้วันที่ที่ผู้ใช้เลือกถ้ามี ไม่งั้นใช้วันปัจจุบัน
   const reportDate3 = window._reportDate || new Date();
   const titleDate3  = thDateFull(reportDate3);
   const titleMonth3 = thMonthYear(curYM);
 
   titleEl.innerHTML = `รายงานยอดจองสะสมและยอดปล่อยรถ ประจำเดือน ${titleMonth3} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
-  // ซ่อน subEl (ไม่แสดงเดือนซ้ำ)
   if (subEl) subEl.style.display = 'none';
-  // ซ่อน target badge
   if (tgtEl) tgtEl.style.display = 'none';
-  // badge วันที่ขวา
   const badgeEl3 = document.getElementById('r3DateBadge' + suffix);
-  if (badgeEl3) {
-    badgeEl3.innerHTML = `<span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${titleDate3}</span></span>`;
-  }
+  if (badgeEl3) badgeEl3.innerHTML = `<span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${titleDate3}</span></span>`;
 
   if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
 
@@ -2594,11 +2581,9 @@ function doPrintReport2() {
   const bodySmall = document.getElementById('r2BodySmall')?.innerHTML || '';
   const bodyBig   = document.getElementById('r2BodyBig')?.innerHTML || '';
   const html = `
-    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>
-    ${bodySmall}
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>${bodySmall}
     <div style="margin-top:20px;"></div>
-    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>
-    ${bodyBig}
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>${bodyBig}
   `;
   openPrint(title, today, html);
 }
@@ -2615,11 +2600,9 @@ function doPrintReport3() {
   const bodySmall = document.getElementById('r3BodySmall')?.innerHTML || '';
   const bodyBig   = document.getElementById('r3BodyBig')?.innerHTML || '';
   const html = `
-    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>
-    ${bodySmall}
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>${bodySmall}
     <div style="margin-top:16px;"></div>
-    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>
-    ${bodyBig}
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>${bodyBig}
   `;
   openPrint(title, today, html);
 }
@@ -2663,10 +2646,8 @@ function openPrint(title, today, bodyHtml) {
     .dsc-table th.left{text-align:left;background:#6b7fa8;}
     .dsc-table td{padding:5px 7px;border:1px solid #e8edf5;text-align:center;}
     .dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;}
-    .dsc-table td.num{font-weight:700;}
-    .dsc-table td.bk{color:#3b6fd4;}.dsc-table td.rs{color:#1a8a55;}
-    .dsc-table td.ebk{color:#d4720a;}.dsc-table td.cl{color:#c0392b;}
-    .dsc-table td.zero{color:#bbb;}
+    .dsc-table td.num{font-weight:700;}.dsc-table td.bk{color:#3b6fd4;}.dsc-table td.rs{color:#1a8a55;}
+    .dsc-table td.ebk{color:#d4720a;}.dsc-table td.cl{color:#c0392b;}.dsc-table td.zero{color:#bbb;}
     .dsc-table tr.team-total td{background:#eef3ff;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
     .dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;border-top:2px solid #f0c060;color:#5a3e00;}
     .dsc-table tr.team-sep td{background:#e8edf8;font-size:7pt;font-weight:700;color:#3b5080;padding:4px 8px;border-top:2px solid #a0b4e0;}
@@ -2879,29 +2860,24 @@ function toast(msg, type) {
 //  DATE PICKER
 // ════════════════════════════════════════
 let _datepickTarget = null;
-
 function openDatePick(target, titleText) {
   _datepickTarget = target;
-  // set default = today
   const now = new Date();
   document.getElementById('datepickInput').value =
-    now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+    now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
   document.getElementById('datepickTitle').textContent = `📅 วันที่รายงาน — ${titleText}`;
   document.getElementById('datepickOverlay').classList.add('open');
 }
-
 function closeDatePick() {
   document.getElementById('datepickOverlay').classList.remove('open');
   _datepickTarget = null;
 }
-
 function confirmDatePick() {
   const val = document.getElementById('datepickInput').value;
   if (!val) { toast('กรุณาเลือกวันที่', 'err'); return; }
-  const [y, m, d] = val.split('-');
+  const [y,m,d] = val.split('-');
   window._reportDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
   closeDatePick();
-  // เรียก print ต่อตาม target
   if (_datepickTarget === 'report2') doPrintReport2();
   else if (_datepickTarget === 'report3') doPrintReport3();
 }
