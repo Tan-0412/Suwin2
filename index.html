@@ -465,7 +465,10 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h2>📊 รายงานยอดจองและปล่อยรถ</h2>
-      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport2()">🖨️ พิมพ์</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report2')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport2()">🖨️ พิมพ์</button>
+      </div>
     </div>
   </div>
   <!-- รถเล็ก -->
@@ -504,7 +507,10 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="card" style="margin-bottom:12px;">
     <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
       <h2 id="r3MainTitle">👤 Daily SC Performance</h2>
-      <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="printReport3()">🖨️ พิมพ์</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report3')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport3()">🖨️ พิมพ์</button>
+      </div>
     </div>
   </div>
 
@@ -2170,10 +2176,10 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
 
   // headers
   const modelBkHeaders = models.map(m =>
-    `<th style="background:#5b8dd9;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;">${m}</th>`
+    `<th style="background:#5b8dd9;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;text-align:center;">${m}</th>`
   ).join('');
   const modelRsHeaders = models.map(m =>
-    `<th style="background:#3aaa74;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;">${m}</th>`
+    `<th style="background:#3aaa74;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;text-align:center;">${m}</th>`
   ).join('');
 
   // group by team
@@ -2265,7 +2271,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       <thead>
         <tr>
           <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
-            min-width:100px;">รายชื่อ SC</th>
+            min-width:100px;">ที่ปรึกษาการขาย SC</th>
           <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:8px;text-align:center;">
             ยอดจอง</th>
           <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:8px;text-align:center;">
@@ -2484,7 +2490,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   let html = `<table class="dsc-table">
     <thead>
       <tr>
-        <th class="left" rowspan="2" style="min-width:120px;">SC</th>
+        <th class="left" rowspan="2" style="min-width:140px;">ที่ปรึกษาการขาย SC</th>
         <th class="carry" rowspan="2">จอง<br>ยกมา</th>
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
@@ -2598,7 +2604,7 @@ function printReport1() {
           <th style="padding:6px 8px;">รุ่น</th>
           <th style="padding:6px 8px;">สถานะ</th>
           <th style="padding:6px 8px;">วันที่ปล่อย</th>
-          <th style="padding:6px 8px;text-align:left;">SC</th>
+          <th style="padding:6px 8px;text-align:left;">ที่ปรึกษาการขาย SC</th>
           <th style="padding:6px 8px;text-align:left;">ที่มา</th>
         </tr>
       </thead>
@@ -2896,25 +2902,15 @@ function confirmDatePick() {
   window._reportDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
   const target = _datepickTarget;
   closeDatePick();
+  // แค่รีเฟรชรายงานให้ badge วันที่อัปเดต — กดปุ่มพิมพ์เองได้เลย
+  if (target === 'report2') runReport2();
+  else if (target === 'report3') runReport3();
+  toast('✅ เปลี่ยนวันที่แล้ว กดพิมพ์ได้เลย', 'ok');
+}
 
-  // เปิดหน้าต่างพิมพ์ทันทีขณะยังอยู่ใน user gesture แล้วค่อยเติมเนื้อหา
-  const printWin = window.open('', '_blank');
-  if (!printWin) {
-    toast('⚠️ กรุณาอนุญาต popup แล้วลองใหม่', 'warn');
-    return;
-  }
-  printWin.document.write('<html><head><meta charset="UTF-8"><title>กำลังโหลด...</title></head><body><p style="font-family:sans-serif;padding:20px;">⏳ กำลังโหลดข้อมูล...</p></body></html>');
-  printWin.document.close();
-
-  // รีเฟรชรายงาน แล้วเติมเนื้อหาในหน้าต่างที่เปิดไว้แล้ว
-  const doLoad = target === 'report2' ? runReport2 : runReport3;
-  const doPrint = target === 'report2' ? doPrintReport2 : doPrintReport3;
-
-  doLoad().then(() => {
-    // ถ้าหน้าต่างยังเปิดอยู่ให้ปิดแล้วเปิดใหม่ด้วยเนื้อหาจริง
-    try { printWin.close(); } catch(e) {}
-    doPrint();
-  });
+function changeReportDate(target) {
+  const titleText = target === 'report2' ? 'รายงานยอดจองและปล่อยรถ' : 'Daily SC Performance';
+  openDatePick(target, titleText);
 }
 
 init();
