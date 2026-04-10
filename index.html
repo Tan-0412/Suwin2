@@ -2896,12 +2896,25 @@ function confirmDatePick() {
   window._reportDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
   const target = _datepickTarget;
   closeDatePick();
-  // รีเฟรชรายงานให้ badge วันที่อัปเดต แล้วค่อยเปิดหน้าพิมพ์
-  if (target === 'report2') {
-    runReport2().then(() => doPrintReport2());
-  } else if (target === 'report3') {
-    runReport3().then(() => doPrintReport3());
+
+  // เปิดหน้าต่างพิมพ์ทันทีขณะยังอยู่ใน user gesture แล้วค่อยเติมเนื้อหา
+  const printWin = window.open('', '_blank');
+  if (!printWin) {
+    toast('⚠️ กรุณาอนุญาต popup แล้วลองใหม่', 'warn');
+    return;
   }
+  printWin.document.write('<html><head><meta charset="UTF-8"><title>กำลังโหลด...</title></head><body><p style="font-family:sans-serif;padding:20px;">⏳ กำลังโหลดข้อมูล...</p></body></html>');
+  printWin.document.close();
+
+  // รีเฟรชรายงาน แล้วเติมเนื้อหาในหน้าต่างที่เปิดไว้แล้ว
+  const doLoad = target === 'report2' ? runReport2 : runReport3;
+  const doPrint = target === 'report2' ? doPrintReport2 : doPrintReport3;
+
+  doLoad().then(() => {
+    // ถ้าหน้าต่างยังเปิดอยู่ให้ปิดแล้วเปิดใหม่ด้วยเนื้อหาจริง
+    try { printWin.close(); } catch(e) {}
+    doPrint();
+  });
 }
 
 init();
