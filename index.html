@@ -754,7 +754,7 @@ function addBooking(p) {
   const sh = getSheet(SHEETS.customer);
   if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
-  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า'];
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO'];
   const newRow = Array(Math.max(hdrs.length, COLS.length)).fill('');
   COLS.forEach(col => {
     const idx = hdrs.indexOf(col);
@@ -771,7 +771,7 @@ function updateBooking(p) {
   if (!rowNum || rowNum < 2) return { ok:false, error:'row ไม่ถูกต้อง' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
   const existing = sh.getRange(rowNum,1,1,hdrs.length).getValues()[0];
-  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า'];
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO'];
 
   // แปลง STATUS code → ภาษาไทยก่อนบันทึก
   if (p['สถานะ']) {
@@ -979,6 +979,77 @@ function testUpdate() {
     <div class="datepick-footer">
       <button class="btn btn-outline btn-sm" onclick="closeDatePick()">ยกเลิก</button>
       <button class="btn btn-primary btn-sm" onclick="confirmDatePick()">✅ ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ MODAL: รายงานปล่อยรถ ════ -->
+<div class="modal-overlay" id="releaseModal">
+  <div class="modal-box" style="width:min(96vw,680px);">
+    <div class="modal-hdr">
+      <h3>🚗 รายงานการปล่อยรถ</h3>
+      <button class="modal-close" onclick="closeReleaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="frow">
+          <label>ชื่อลูกค้า</label>
+          <input type="text" id="rl-customer">
+        </div>
+        <div class="frow">
+          <label>รุ่นรถ</label>
+          <input type="text" id="rl-model">
+        </div>
+        <div class="frow">
+          <label>เลขเครื่อง</label>
+          <input type="text" id="rl-engine">
+        </div>
+        <div class="frow">
+          <label>เลขแชสซีส์</label>
+          <input type="text" id="rl-chassis">
+        </div>
+        <div class="frow">
+          <label>ไฟแนนซ์</label>
+          <select id="rl-finance">
+            <option value="">-- เลือก --</option>
+            <option>TIL</option>
+            <option>TMT</option>
+            <option>TISCO</option>
+            <option>KBANK</option>
+            <option>SCB</option>
+            <option>BBL</option>
+            <option>KTB</option>
+            <option>BAY</option>
+            <option>AYCAL</option>
+            <option>MTL</option>
+            <option>เงินสด</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>เลขทะเบียนป้ายแดง</label>
+          <input type="text" id="rl-plate">
+        </div>
+        <div class="frow">
+          <label>เลขที่ใบส่งมอบ</label>
+          <input type="text" id="rl-delivery">
+        </div>
+        <div class="frow">
+          <label>เลขที่ใบ PO</label>
+          <input type="text" id="rl-po">
+        </div>
+        <div class="frow" style="grid-column:span 2;">
+          <label>ที่ปรึกษาการขาย SC</label>
+          <input type="text" id="rl-sc">
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:#fff3cd;border-radius:8px;font-size:12px;color:#7a5800;">
+        💡 ข้อมูลเลขเครื่อง เลขแชสซีส์ ไฟแนนซ์ เลขทะเบียน เลขส่งมอบ เลข PO จะถูกบันทึกลง Sheet ด้วย
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReleaseModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAndPrintRelease()">💾 บันทึก & พิมพ์รายงาน</button>
     </div>
   </div>
 </div>
@@ -1336,6 +1407,7 @@ function renderBookings() {
       <td class="c">
         <div class="action-btns">
           <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})" title="แก้ไข">✏️</button>
+          <button class="btn btn-outline btn-sm" style="color:var(--orange);border-color:var(--orange);" onclick="openReleaseReport(${i})" title="พิมพ์รายงานปล่อยรถ">🚗</button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete(${i})" title="ลบ">🗑️</button>
         </div>
       </td>
@@ -2584,6 +2656,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
         <th class="online-hdr" colspan="${sources.length}">Online</th>
+        <th class="rs-hdr" rowspan="2">จองและปล่อย<br>เดือนนี้</th>
         <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
         <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
@@ -2613,7 +2686,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         return `<td class="num ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
           ${v||0}</td>`;
       }).join('');
-      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk;
+      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk; tRsM+=d.rsMonth;
       tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
 
       const safeN = d.name.replace(/"/g,'&quot;');
@@ -2624,6 +2697,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
         <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
         ${srcCells}
+        <td class="num rs ${d.rsMonth?'':'zero'}" ${d.rsMonth?tip('rs'):''}>${d.rsMonth||0}</td>
         <td class="num bk" style="background:#EEF4FF;cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','total')" onmouseleave="hideDscTip()">${d.total||0}</td>
         <td class="num ebk ${d.ers?'':'zero'}" ${d.ers?tip('ers'):''}>${d.ers||0}</td>
         <td class="num rs ${d.rsTotal?'':'zero'}" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
@@ -2639,13 +2713,14 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       <td class="num">${tEbk}</td>
       <td class="num">${tBk}</td>
       ${tSrcCells}
+      <td class="num">${tRsM}</td>
       <td class="num">${tTotal}</td>
       <td class="num">${tErs}</td>
       <td class="num">${tRsT}</td>
       <td class="num">${tCl}</td>
     </tr>`;
 
-    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk;
+    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk; gRsM+=tRsM;
     gTotal+=tTotal; gErs+=tErs; gRsT+=tRsT; gCl+=tCl;
   });
 
@@ -2659,6 +2734,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="num">${gEbk}</td>
         <td class="num">${gBk}</td>
         ${gSrcCells}
+        <td class="num">${gRsM}</td>
         <td class="num">${gTotal}</td>
         <td class="num">${gErs}</td>
         <td class="num">${gRsT}</td>
@@ -3029,6 +3105,174 @@ function confirmDatePick() {
 function changeReportDate(target) {
   const titleText = target === 'report2' ? 'รายงานยอดจองและปล่อยรถ' : 'Daily SC Performance';
   openDatePick(target, titleText);
+}
+
+
+// ════════════════════════════════════════
+//  รายงานปล่อยรถ
+// ════════════════════════════════════════
+let _releaseRowIdx = null;
+
+function openReleaseReport(i) {
+  const r = filteredBookings[i];
+  if (!r) return;
+  _releaseRowIdx = i;
+  document.getElementById('rl-customer').value = r['ชื่อลูกค้า'] || '';
+  document.getElementById('rl-model').value    = r['รุ่นรถ'] || '';
+  document.getElementById('rl-engine').value   = r['เลขเครื่อง'] || '';
+  document.getElementById('rl-chassis').value  = r['เลขแชสซีส์'] || '';
+  document.getElementById('rl-finance').value  = r['ไฟแนนซ์'] || '';
+  document.getElementById('rl-plate').value    = r['เลขทะเบียน'] || '';
+  document.getElementById('rl-delivery').value = r['เลขส่งมอบ'] || '';
+  document.getElementById('rl-po').value       = r['เลข PO'] || '';
+  document.getElementById('rl-sc').value       = r['ที่ปรึกษาการขาย'] || '';
+  document.getElementById('releaseModal').classList.add('open');
+}
+
+function closeReleaseModal() {
+  document.getElementById('releaseModal').classList.remove('open');
+  _releaseRowIdx = null;
+}
+
+async function saveAndPrintRelease() {
+  const r = filteredBookings[_releaseRowIdx];
+  if (!r) return;
+
+  const extra = {
+    'เลขเครื่อง':  document.getElementById('rl-engine').value.trim(),
+    'เลขแชสซีส์': document.getElementById('rl-chassis').value.trim(),
+    'ไฟแนนซ์':    document.getElementById('rl-finance').value,
+    'เลขทะเบียน': document.getElementById('rl-plate').value.trim(),
+    'เลขส่งมอบ':  document.getElementById('rl-delivery').value.trim(),
+    'เลข PO':     document.getElementById('rl-po').value.trim(),
+  };
+
+  // บันทึกลง Sheet
+  try {
+    if (r._row) {
+      await callGS({ action: 'updateBooking', _row: r._row, ...extra });
+      // อัปเดต local cache
+      Object.assign(r, extra);
+      r['ชื่อลูกค้า']        = document.getElementById('rl-customer').value.trim();
+      r['รุ่นรถ']            = document.getElementById('rl-model').value.trim();
+      r['ที่ปรึกษาการขาย']  = document.getElementById('rl-sc').value.trim();
+      toast('✅ บันทึกข้อมูลแล้ว', 'ok');
+    }
+  } catch(e) { toast('⚠️ บันทึกไม่สำเร็จ แต่สามารถพิมพ์ได้', 'warn'); }
+
+  closeReleaseModal();
+  printReleaseReport(r);
+}
+
+function printReleaseReport(r) {
+  const rDate = window._reportDate || new Date();
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  const customer  = document.getElementById('rl-customer')?.value || r['ชื่อลูกค้า'] || '';
+  const model     = document.getElementById('rl-model')?.value    || r['รุ่นรถ'] || '';
+  const engine    = document.getElementById('rl-engine')?.value   || r['เลขเครื่อง'] || '';
+  const chassis   = document.getElementById('rl-chassis')?.value  || r['เลขแชสซีส์'] || '';
+  const finance   = document.getElementById('rl-finance')?.value  || r['ไฟแนนซ์'] || '';
+  const plate     = document.getElementById('rl-plate')?.value    || r['เลขทะเบียน'] || '';
+  const delivery  = document.getElementById('rl-delivery')?.value || r['เลขส่งมอบ'] || '';
+  const po        = document.getElementById('rl-po')?.value       || r['เลข PO'] || '';
+  const sc        = document.getElementById('rl-sc')?.value       || r['ที่ปรึกษาการขาย'] || '';
+
+  // สร้าง 10 แถว โดยแถวแรกใส่ข้อมูล
+  const rows = Array.from({length:10}, (_,i) => {
+    if (i === 0) return `
+      <tr>
+        <td style="color:#c0392b;font-weight:700;font-size:14pt;">${finance}</td>
+        <td style="font-size:11pt;">${model}<br><span style="font-size:9pt;color:#555;">${engine} / ${chassis}</span></td>
+        <td style="font-weight:700;font-size:12pt;">${customer}</td>
+        <td style="color:#c0392b;font-weight:700;font-size:14pt;">${plate}</td>
+        <td style="font-size:10pt;">${delivery}</td>
+        <td style="font-size:10pt;">${po}</td>
+        <td style="font-size:11pt;">${sc}</td>
+      </tr>`;
+    return `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  }).join('');
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>รายงานการปล่อยรถ ${monthLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Sarabun',sans-serif;font-size:12pt;background:#fff;color:#1a2d45;padding:12mm 14mm;}
+    .ctrl{background:#1a3a6b;padding:8px 16px;display:flex;gap:10px;margin:-12mm -14mm 12mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:6px 18px;font-size:12px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
+    /* ── HEADER ── */
+    .doc-header{text-align:center;margin-bottom:8mm;}
+    .doc-title{font-size:20pt;font-weight:800;color:#1a3a6b;margin-bottom:3mm;}
+    .doc-company{font-size:13pt;font-weight:600;margin-bottom:3mm;}
+    .doc-date{font-size:11pt;color:#555;text-align:right;margin-bottom:4mm;}
+    .doc-to{font-size:12pt;margin-bottom:1mm;line-height:1.8;}
+    /* ── TABLE ── */
+    table{width:100%;border-collapse:collapse;margin-top:4mm;}
+    thead tr{background:#1a3a6b;color:#fff;}
+    th{padding:8px 10px;font-size:11pt;font-weight:700;border:1.5px solid #1a3a6b;text-align:center;}
+    td{padding:10px 10px;font-size:11pt;border:1.5px solid #c0a060;min-height:20mm;vertical-align:middle;background:#fff8f0;}
+    tr:nth-child(even) td{background:#fff3e0;}
+    th.fn{width:60px;}
+    th.model{width:220px;}
+    th.cust{min-width:160px;}
+    th.plate{width:90px;color:#ffe082;}
+    th.book{width:100px;}
+    th.po{width:100px;}
+    th.sc{width:100px;}
+    /* ── SIGNATURE ── */
+    .sig-section{display:flex;justify-content:space-between;margin-top:14mm;gap:20mm;}
+    .sig-box{flex:1;text-align:center;}
+    .sig-line{border-bottom:1px solid #333;margin-bottom:4mm;height:12mm;}
+    .sig-name{font-size:12pt;font-weight:700;margin-bottom:1mm;}
+    .sig-role{font-size:10pt;color:#555;}
+    @media print{.ctrl{display:none!important;}body{padding:8mm 10mm;}@page{size:A4 landscape;margin:8mm;}}
+  </style></head><body>
+  <div class="ctrl">
+    <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+    <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
+  </div>
+  <div class="doc-header">
+    <div class="doc-title">รายงานปล่อยรถ</div>
+    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+  </div>
+  <div class="doc-date">ณ วันที่ &nbsp;<b>${dateStr}</b></div>
+  <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</div>
+  <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;<b>${dateStr}</b></div>
+  <table>
+    <thead>
+      <tr>
+        <th class="fn">F/N</th>
+        <th class="model">รุ่นรถ / เลขเครื่อง / เลขแชสซีส์</th>
+        <th class="cust">ชื่อลูกค้า</th>
+        <th class="plate">ป้ายแดง</th>
+        <th class="book" colspan="2">เล่มที่ / เลขที่<br><span style="display:flex;justify-content:space-around;font-size:9pt;font-weight:400;margin-top:2px;"><span>ใบส่งมอบ</span><span>ใบ PO</span></span></th>
+        <th class="sc">SC</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="sig-section">
+    <div class="sig-box">
+      <div class="sig-line"></div>
+      <div style="font-size:11pt;margin-bottom:6mm;">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณรวิวรรณ พันสนิท</div>
+      <div class="sig-role">( ผู้จัดทำรายงาน )</div>
+    </div>
+    <div style="flex:1"></div>
+    <div class="sig-box">
+      <div class="sig-line"></div>
+      <div style="font-size:11pt;margin-bottom:6mm;">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div class="sig-role">( กรรมการผู้จัดการ )</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
 }
 
 init();
