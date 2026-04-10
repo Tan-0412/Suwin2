@@ -2238,7 +2238,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       tRsTotal += p.rsTotal||0;
 
       tbody += `<tr style="${idx%2===1?'background:#f5f8ff;':'background:#fff;'}">
-        <td style="text-align:left;font-weight:600;padding:7px 10px;color:#1a3060;">${nickname}</td>
+        <td style="text-align:left;font-weight:600;padding:7px 10px;color:#1a3060;" class="name">${nickname}</td>
         ${bkCells}
         <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;"
           onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
@@ -2287,7 +2287,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       <tbody>${tbody}</tbody>
       <tfoot>
         <tr style="background:#fef6e4;">
-          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;">ยอดรวม</td>
+          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;">รวมทั้งหมด</td>
           ${gBkColCells}
           <td style="text-align:center;font-weight:700;color:#3b6fd4;border-top:2px solid #f0c060;
             font-size:13px;">${gBkTotal}</td>
@@ -2648,15 +2648,6 @@ function doPrintReport3() {
 function openPrint(title, today, bodyHtml) {
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-<meta name="theme-color" content="#1a3a6b">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="จองรถ">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-
   <title>${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -2665,19 +2656,44 @@ function openPrint(title, today, bodyHtml) {
     .ctrl{background:#1a3a6b;padding:8px 16px;display:flex;gap:10px;margin:-10mm -10mm 10mm;position:sticky;top:0;z-index:50;}
     .pbtn{padding:6px 18px;font-size:12px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
     .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
-    .hdr{text-align:center;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #1a3a6b;}
+    .hdr{text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1a3a6b;}
     .hdr h1{font-size:14pt;font-weight:800;color:#1a3a6b;}
     .hdr p{font-size:9pt;color:#555;margin-top:3px;}
+    /* ── ตาราง ── */
     table{width:100%;border-collapse:collapse;}
-    th{background:#1a3a6b!important;color:#fff!important;padding:6px 8px;font-size:8pt;font-weight:700;}
-    td{padding:5px 8px;border:1px solid #dde;font-size:8.5pt;}
+    th{background:#1a3a6b!important;color:#fff!important;padding:6px 8px;font-size:8pt;font-weight:700;text-align:center!important;border:1px solid rgba(255,255,255,0.2);}
+    th.left-col{text-align:left!important;}
+    td{padding:5px 8px;border:1px solid #dde;font-size:8.5pt;text-align:center;}
+    td.name{text-align:left!important;font-weight:600;}
+    /* แถว/คอลัม ปกติ */
     tr:nth-child(even) td{background:#f5f8ff;}
+    /* ── รวมทีม ── */
+    tr.team-total td, tr[style*="eef3ff"] td{background:#eef3ff!important;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+    /* ── รวมทั้งหมด (แถวสุดท้าย) ── */
+    tr.grand-total td, tr[style*="fef6e4"] td, tfoot tr td{background:#fef6e4!important;font-weight:700;font-size:9pt;border-top:2px solid #f0c060;color:#5a3e00;}
+    /* ── header สี ── */
+    .in-hdr{background:#2451a0!important;}
+    .out-hdr{background:#1a7a4a!important;}
+    .carry{background:#8b6bb1!important;}
+    .ebk-hdr{background:#e07820!important;}
+    .bk-hdr{background:#4a7fd4!important;}
+    .online-hdr{background:#c44d8a!important;}
+    .rs-hdr{background:#2e9e6a!important;}
+    .cl-hdr{background:#d45050!important;}
+    /* ── dsc-table ── */
+    .dsc-table{width:100%;border-collapse:collapse;font-size:8.5pt;}
+    .dsc-table th{padding:5px 6px;text-align:center;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
+    .dsc-table th.left{text-align:left;background:#6b7fa8;}
+    .dsc-table td{padding:5px 7px;border:1px solid #e8edf5;text-align:center;}
+    .dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;}
+    .dsc-table td.num{font-weight:700;}
+    .dsc-table td.bk{color:#3b6fd4;}.dsc-table td.rs{color:#1a8a55;}
+    .dsc-table td.ebk{color:#d4720a;}.dsc-table td.cl{color:#c0392b;}
+    .dsc-table td.zero{color:#bbb;}
+    .dsc-table tr.team-total td{background:#eef3ff!important;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+    .dsc-table tr.grand-total td{background:#fef6e4!important;font-weight:700;font-size:9pt;border-top:2px solid #f0c060;color:#5a3e00;}
+    .dsc-table tr.team-sep td{background:#e8edf8;font-size:7.5pt;font-weight:700;color:#3b5080;padding:4px 8px;border-top:2px solid #a0b4e0;}
     .badge{display:inline-block;padding:1px 7px;border-radius:8px;font-size:7.5pt;font-weight:700;}
-    .pivot-table th{border:1px solid rgba(255,255,255,0.2);}
-    .pivot-table td{text-align:center;border:1px solid #dde;}
-    .pivot-table td.name{text-align:left;font-weight:600;}
-    .pivot-table tr.total-row td{background:#f0e8d0!important;font-weight:700;border-top:2px solid #e8a020;}
-    .in-hdr{background:#2451a0!important;}.out-hdr{background:#1a7a4a!important;}
     .has-val{color:#1a3a6b;font-weight:700;}.zero{color:#ccc;}
     @media print{.ctrl{display:none!important;}body{padding:8mm;}@page{size:A4 landscape;margin:8mm;}}
   </style></head><body>
@@ -2688,7 +2704,7 @@ function openPrint(title, today, bodyHtml) {
   <div class="hdr">
     <div style="font-size:8pt;color:#666;margin-bottom:2px;">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด · สาขาสุวินทวงศ์</div>
     <h1>${title}</h1>
-    <p>วันที่พิมพ์: ${today}</p>
+    <p>ณ วันที่ ${today}</p>
   </div>
   ${bodyHtml}
   </body></html>`);
