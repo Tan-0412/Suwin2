@@ -998,8 +998,16 @@ function testUpdate() {
           <input type="text" id="rl-customer">
         </div>
         <div class="frow">
-          <label>รุ่นรถ</label>
+          <label>ลูกค้ารับรถ <span style="font-size:11px;color:#888;">(อาจต่างจากผู้จอง)</span></label>
+          <input type="text" id="rl-rcv-customer">
+        </div>
+        <div class="frow">
+          <label>รุ่นรถ (สั้น เช่น STD)</label>
           <input type="text" id="rl-model">
+        </div>
+        <div class="frow">
+          <label>ชื่อรุ่นรถ (เต็ม เช่น TFR41JCANCTM)</label>
+          <input type="text" id="rl-model-full">
         </div>
         <div class="frow">
           <label>เลขเครื่อง</label>
@@ -1037,14 +1045,6 @@ function testUpdate() {
         <div class="frow">
           <label>เลขที่ใบ PO</label>
           <input type="text" id="rl-po">
-        </div>
-        <div class="frow">
-          <label>ลูกค้ารับรถ <span style="font-size:11px;color:#888;">(อาจต่างจากผู้จอง)</span></label>
-          <input type="text" id="rl-rcv-customer">
-        </div>
-        <div class="frow">
-          <label>ชื่อรุ่นรถ <span style="font-size:11px;color:#888;">(ชื่อเต็ม เช่น TFR41JCANCTM)</span></label>
-          <input type="text" id="rl-model-full">
         </div>
         <div class="frow" style="grid-column:span 2;">
           <label>ที่ปรึกษาการขาย SC</label>
@@ -3160,20 +3160,21 @@ async function saveAndPrintRelease() {
   };
 
   // บันทึกลง Sheet
+  const saveBtn = document.querySelector('#releaseModal .btn-primary');
+  if (saveBtn) { saveBtn.disabled=true; saveBtn.textContent='⏳ กำลังบันทึก...'; }
   try {
     if (r._row) {
       await callGS({ action: 'updateBooking', _row: r._row, ...extra });
-      // อัปเดต local cache
       Object.assign(r, extra);
-      r['ชื่อลูกค้า']        = document.getElementById('rl-customer').value.trim();
-      r['รุ่นรถ']            = document.getElementById('rl-model').value.trim();
-      r['ที่ปรึกษาการขาย']  = document.getElementById('rl-sc').value.trim();
-      toast('✅ บันทึกข้อมูลแล้ว', 'ok');
+      r['ชื่อลูกค้า']       = document.getElementById('rl-customer').value.trim();
+      r['รุ่นรถ']           = document.getElementById('rl-model').value.trim();
+      r['ที่ปรึกษาการขาย'] = document.getElementById('rl-sc').value.trim();
     }
-  } catch(e) { toast('⚠️ บันทึกไม่สำเร็จ แต่สามารถพิมพ์ได้', 'warn'); }
-
+  } catch(e) { toast('⚠️ บันทึกไม่สำเร็จ แต่จะเปิดรายงานให้', 'warn'); }
+  if (saveBtn) { saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก & พิมพ์รายงาน'; }
   closeReleaseModal();
-  printReleaseReport(r);
+  toast('✅ บันทึกสำเร็จ กำลังเปิดรายงาน...', 'ok');
+  setTimeout(() => printReleaseReport(r), 600);
 }
 
 function printReleaseReport(r) {
@@ -3196,15 +3197,17 @@ function printReleaseReport(r) {
   const rows = Array.from({length:10}, (_,i) => {
     if (i === 0) return `
       <tr>
-        <td class="fn-cell">${finance}</td>
-        <td class="model-cell"><div class="model-name">${model}</div><div class="eng-chassis">${engine} / ${chassis}</div></td>
-        <td class="cust-cell">${customer}</td>
-        <td class="plate-cell">${plate.split(' ')[0]||plate}<span class="plate-province">${plate.split(' ').slice(1).join(' ')||''}</span></td>
-        <td class="delivery-cell">${delivery}</td>
-        <td class="po-cell">${po}</td>
-        <td class="sc-cell">${sc}</td>
+        <td style="text-align:center;font-weight:800;font-size:11pt;color:#c0392b;white-space:nowrap;">${finance}</td>
+        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${model}</td>
+        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${engine}</td>
+        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${chassis}</td>
+        <td style="font-weight:800;font-size:10.5pt;white-space:nowrap;">${customer}</td>
+        <td style="text-align:center;font-weight:800;font-size:11pt;color:#c0392b;white-space:nowrap;">${plate}</td>
+        <td style="text-align:center;font-weight:800;font-size:10.5pt;white-space:nowrap;">${delivery}</td>
+        <td style="text-align:center;font-weight:800;font-size:10.5pt;white-space:nowrap;">${po}</td>
+        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${sc}</td>
       </tr>`;
-    return `<tr><td class="fn-cell empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td></tr>`;
+    return `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
   }).join('');
 
   const w = window.open('','_blank');
@@ -3270,30 +3273,28 @@ function printReleaseReport(r) {
     <thead>
       <tr>
         <th style="width:48px;">F/N</th>
-        <th style="width:190px;">รุ่นรถ / เลขเครื่อง / เลขแชสซีส์</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:110px;">เลขเครื่อง</th>
+        <th style="width:130px;">เลขแชสซีส์</th>
         <th>ชื่อลูกค้า</th>
-        <th class="plate-hdr" style="width:95px;">ทะเบียนป้ายแดง</th>
-        <th style="width:88px;">ใบส่งมอบ</th>
-        <th style="width:88px;">ใบ PO</th>
-        <th style="min-width:130px;">ที่ปรึกษาการขาย SC</th>
+        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
+        <th style="width:80px;">ใบส่งมอบ</th>
+        <th style="width:80px;">ใบ PO</th>
+        <th style="min-width:120px;">SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
-  <div class="sig-section">
-    <div class="sig-box">
-      <div class="sig-line"></div>
-      <div class="sig-dots">ลงชื่อ.................................................</div>
-      <div style="margin-bottom:4mm;"></div>
-      <div class="sig-name">คุณรวิวรรณ พันสนิท</div>
-      <div class="sig-role">( ผู้จัดทำรายงาน )</div>
+  <div style="display:flex;justify-content:space-between;padding:0 25mm;margin-top:10mm;">
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:8mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
+      <div style="font-size:9pt;color:#555;margin-top:2mm;">( ผู้จัดทำรายงาน )</div>
     </div>
-    <div class="sig-box">
-      <div class="sig-line"></div>
-      <div class="sig-dots">ลงชื่อ.................................................</div>
-      <div style="margin-bottom:4mm;"></div>
-      <div class="sig-name">คุณสุรพล จึงวิวัฒนาภรณ์</div>
-      <div class="sig-role">( กรรมการผู้จัดการ )</div>
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:8mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div style="font-size:9pt;color:#555;margin-top:2mm;">( กรรมการผู้จัดการ )</div>
     </div>
   </div>
   </body></html>`);
