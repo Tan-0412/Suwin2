@@ -2693,12 +2693,7 @@ function printReport1() {
   if(f.status)   chips.push(`สถานะ: <b>${statusLabel(f.status)}</b>`);
   if(f.search)   chips.push(`ค้นหา: <b>"${f.search}"</b>`);
 
-  const filterBar = chips.length ? `
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;
-      background:#eef3ff;border-radius:8px;border:1px solid #c0d0f0;font-size:8.5pt;">
-      <span style="color:#4a6090;font-weight:600;margin-right:4px;">🔍 ตัวกรอง:</span>
-      ${chips.map(c=>`<span style="background:#fff;border:1px solid #c0d0f0;border-radius:4px;padding:2px 8px;color:#1a3a6b;">${c}</span>`).join('')}
-    </div>` : '';
+  const filterBar = ''; // ซ่อน filter chips — มีในหัวรายงานแล้ว
 
   const countEl = document.getElementById('r1Count');
   const countBar = `<div style="text-align:right;font-size:8pt;color:#666;margin-bottom:6px;">${countEl?.textContent||''}</div>`;
