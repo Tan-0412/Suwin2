@@ -3244,8 +3244,7 @@ function printReleaseReport(r) {
     td.delivery-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
     td.po-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
     td.sc-cell{font-size:10pt;min-width:130px;white-space:nowrap;}
-    td.empty{height:11mm;background:#fff8f0;}
-    tr:nth-child(even) td.empty{background:#fff3e0;}
+    td{height:11mm;}
     .sig-section{display:flex;justify-content:center;gap:60mm;margin-top:8mm;}
     .sig-box{text-align:center;min-width:140px;}
     .sig-line{border-bottom:1px solid #333;width:160px;margin:0 auto 5mm;}
@@ -3266,9 +3265,8 @@ function printReleaseReport(r) {
     <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
     <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
   </div>
-  <div style="text-align:right;font-size:9.5pt;margin-bottom:2mm;">ประจำวันที่ &nbsp;<b>${dateStr}</b></div>
-  <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</div>
-  <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;<b>${dateStr}</b></div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
   <table>
     <thead>
       <tr>
@@ -3285,16 +3283,16 @@ function printReleaseReport(r) {
     </thead>
     <tbody>${rows}</tbody>
   </table>
-  <div style="display:flex;justify-content:space-between;padding:0 25mm;margin-top:10mm;">
+  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
     <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:8mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
       <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
-      <div style="font-size:9pt;color:#555;margin-top:2mm;">( ผู้จัดทำรายงาน )</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
     </div>
     <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:8mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
       <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
-      <div style="font-size:9pt;color:#555;margin-top:2mm;">( กรรมการผู้จัดการ )</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
     </div>
   </div>
   </body></html>`);
