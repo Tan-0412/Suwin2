@@ -3195,17 +3195,18 @@ function printReleaseReport(r) {
 
   // สร้าง 10 แถว โดยแถวแรกใส่ข้อมูล
   const rows = Array.from({length:10}, (_,i) => {
+    const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
     if (i === 0) return `
       <tr>
-        <td style="text-align:center;font-weight:800;font-size:11pt;color:#c0392b;white-space:nowrap;">${finance}</td>
-        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${model}</td>
-        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${engine}</td>
-        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${chassis}</td>
-        <td style="font-weight:800;font-size:10.5pt;white-space:nowrap;">${customer}</td>
-        <td style="text-align:center;font-weight:800;font-size:11pt;color:#c0392b;white-space:nowrap;">${plate}</td>
-        <td style="text-align:center;font-weight:800;font-size:10.5pt;white-space:nowrap;">${delivery}</td>
-        <td style="text-align:center;font-weight:800;font-size:10.5pt;white-space:nowrap;">${po}</td>
-        <td style="font-weight:800;font-size:10pt;white-space:nowrap;">${sc}</td>
+        <td style="${tdBase}color:#c0392b;font-size:11pt;">${finance}</td>
+        <td style="${tdBase}">${model}</td>
+        <td style="${tdBase}">${engine}</td>
+        <td style="${tdBase}">${chassis}</td>
+        <td style="${tdBase}font-size:10.5pt;">${customer}</td>
+        <td style="${tdBase}color:#c0392b;font-size:11pt;">${plate}</td>
+        <td style="${tdBase}font-size:10.5pt;">${delivery}</td>
+        <td style="${tdBase}font-size:10.5pt;">${po}</td>
+        <td style="${tdBase}">${sc}</td>
       </tr>`;
     return `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
   }).join('');
