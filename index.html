@@ -2024,104 +2024,127 @@ async function runReport1() {
   const status   = document.getElementById('r1Status').value;
   const search   = (document.getElementById('r1Search')?.value||'').trim().toLowerCase();
 
-  const params = { action:'getBookings' };
-  if (dept1)  params.dept = dept1;
-  if (sc)     params.sc = sc;
-  // ไม่ส่ง month/dateFrom/dateTo ไป API เพราะกรองฝั่ง client แทน
-  // (API กรองปีเป็น ค.ศ. แต่บางเครื่องส่ง พ.ศ. ทำให้ผิด)
-  if (status) params.status = status;
-
   document.getElementById('r1Body').innerHTML =
     '<tr><td colspan="10"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
-  try {
-    const d = await callGS(params);
-    let rows = d.data || [];
 
-    // ── กรองเดือน (client-side) — วันที่ใน Sheet เป็น dd/mm/yyyy ──
-    if (month) {
-      const [ym_y, ym_m] = month.split('-');
-      rows = rows.filter(r => {
-        const dt = String(r['วันที่จอง'] || '').trim();
-        // รูปแบบ dd/mm/yyyy
-        const parts = dt.split('/');
-        if (parts.length >= 3) {
-          const y = parts[2].substring(0,4);
-          const m = parts[1].padStart(2,'0');
-          return y === ym_y && m === ym_m;
-        }
-        // รูปแบบ yyyy-mm-dd
-        if (dt.length >= 7) return dt.startsWith(month);
-        return false;
+  // ใช้ allBookings ที่ normalize วันที่แล้ว แทนการดึงจาก API ใหม่
+  // ถ้ายังไม่มีข้อมูลให้ดึงใหม่
+  let rows = [...(allBookings || [])];
+  if (rows.length === 0) {
+    try {
+      const d = await callGS({ action: 'getBookings' });
+      rows = (d.data || []).map(r => {
+        ['วันที่จอง','วันที่ปล่อย'].forEach(col => {
+          if (r[col]) {
+            const t = parseThDate(String(r[col]));
+            if (t) {
+              const dt = new Date(t);
+              r[col] = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
+            }
+          }
+        });
+        return r;
       });
-    }
-
-    // ── กรองวันที่เริ่ม-สิ้นสุด (client-side) ──
-    if (dateFrom) {
-      const fromTs = new Date(dateFrom).getTime();
-      rows = rows.filter(r => {
-        const t = parseThDate(String(r['วันที่จอง']||'').trim());
-        return t && t >= fromTs;
-      });
-    }
-    if (dateTo) {
-      const toTs = new Date(dateTo + 'T23:59:59').getTime();
-      rows = rows.filter(r => {
-        const t = parseThDate(String(r['วันที่จอง']||'').trim());
-        return t && t <= toTs;
-      });
-    }
-
-    // ── ค้นหาทุกฟิลด์ ──
-    if (search) {
-      rows = rows.filter(r => {
-        const hay = [
-          r['ชื่อลูกค้า'], r['ที่ปรึกษาการขาย'], r['รุ่นรถ'],
-          r['รายละเอียดรถ'], r['วันที่ปล่อย'], r['ที่มาลูกค้า'],
-          r['เบอร์'], r['หมายเหตุ']
-        ].join(' ').toLowerCase();
-        return hay.includes(search);
-      });
-    }
-
-    // ── เรียงล่าสุดก่อน ──
-    rows = rows.sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
-
-    // ── ชื่อรายงาน ──
-    const parts = [];
-    if (dept1) parts.push(dept1);
-    if (sc) parts.push(sc);
-    if (month) parts.push('เดือน ' + thMonth(month));
-    if (dateFrom || dateTo) parts.push((dateFrom||'') + (dateTo ? ' ถึง ' + dateTo : ''));
-    document.getElementById('r1Title').textContent =
-      'รายงานรายละเอียดการจอง' + (parts.length ? ' · ' + parts.join(' · ') : '');
-
-    document.getElementById('r1Count').textContent = rows.length + ' รายการ';
-
-    if (rows.length === 0) {
-      document.getElementById('r1Body').innerHTML = '<tr><td colspan="10"><div class="empty">📭 ไม่พบข้อมูล</div></td></tr>';
+    } catch(e) {
+      document.getElementById('r1Body').innerHTML = `<tr><td colspan="10"><div class="empty">❌ ${e.message}</div></td></tr>`;
       return;
     }
-
-    // เก็บ filter state สำหรับพิมพ์
-    window._r1FilterState = { dept: dept1, sc, month, dateFrom, dateTo, status, search };
-
-    document.getElementById('r1Body').innerHTML = rows.map((r,i) => `
-      <tr class="${i%2===1?'alt':''}">
-        <td style="color:var(--gray);font-size:10px;">${i+1}</td>
-        <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
-        <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
-        <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
-        <td style="font-size:11px;">${r['รายละเอียดรถ']||'—'}</td>
-        <td style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</td>
-        <td><span class="badge badge-${statusCode(r['สถานะ'])}">${statusLabel(r['สถานะ'])}</span></td>
-        <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่ปล่อย'])||'—'}</td>
-        <td style="font-size:11px;">${r['ที่ปรึกษาการขาย']||'—'}</td>
-        <td style="font-size:11px;">${r['ที่มาลูกค้า']||'—'}</td>
-      </tr>`).join('');
-  } catch(e) {
-    document.getElementById('r1Body').innerHTML = `<tr><td colspan="10"><div class="empty">❌ ${e.message}</div></td></tr>`;
   }
+
+  // ── กรองฝ่าย ──
+  if (dept1) {
+    rows = rows.filter(r => {
+      const scObj = meta.sc.find(s => s['ที่ปรึกษาการขาย'] === r['ที่ปรึกษาการขาย']);
+      return scObj && scObj['ฝ่าย'] === dept1;
+    });
+  }
+
+  // ── กรอง SC ──
+  if (sc) rows = rows.filter(r => r['ที่ปรึกษาการขาย'] === sc);
+
+  // ── กรองสถานะ ──
+  if (status) {
+    rows = rows.filter(r => {
+      const code = statusCode(r['สถานะ']);
+      return code === status || r['สถานะ'] === status;
+    });
+  }
+
+  // ── กรองเดือน (dd/mm/yyyy) ──
+  if (month) {
+    const [ym_y, ym_m] = month.split('-');
+    rows = rows.filter(r => {
+      const parts = String(r['วันที่จอง']||'').split('/');
+      if (parts.length >= 3) {
+        return parts[2].substring(0,4) === ym_y && parts[1].padStart(2,'0') === ym_m;
+      }
+      return false;
+    });
+  }
+
+  // ── กรองวันที่เริ่ม-สิ้นสุด ──
+  if (dateFrom) {
+    const fromTs = new Date(dateFrom).getTime();
+    rows = rows.filter(r => {
+      const t = parseThDate(String(r['วันที่จอง']||''));
+      return t && t >= fromTs;
+    });
+  }
+  if (dateTo) {
+    const toTs = new Date(dateTo + 'T23:59:59').getTime();
+    rows = rows.filter(r => {
+      const t = parseThDate(String(r['วันที่จอง']||''));
+      return t && t <= toTs;
+    });
+  }
+
+  // ── ค้นหา ──
+  if (search) {
+    rows = rows.filter(r => {
+      const hay = [r['ชื่อลูกค้า'],r['ที่ปรึกษาการขาย'],r['รุ่นรถ'],
+        r['รายละเอียดรถ'],r['วันที่ปล่อย'],r['ที่มาลูกค้า'],r['เบอร์']
+      ].join(' ').toLowerCase();
+      return hay.includes(search);
+    });
+  }
+
+  // ── เรียงล่าสุดก่อน ──
+  rows = rows.sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
+
+  // ── ชื่อรายงาน ──
+  const TH_M = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const parts2 = [];
+  if (dept1) parts2.push(dept1);
+  if (sc)    parts2.push(sc);
+  if (month) { const [y,m] = month.split('-'); parts2.push(TH_M[parseInt(m)]+' '+y); }
+  if (dateFrom || dateTo) parts2.push((dateFrom?fmtDate(formatThDate(dateFrom)):'')+(dateTo?' ถึง '+fmtDate(formatThDate(dateTo)):''));
+  document.getElementById('r1Title').textContent =
+    'รายงานรายละเอียดการจอง' + (parts2.length ? ' · '+parts2.join(' · ') : '');
+  document.getElementById('r1Count').textContent = rows.length + ' รายการ';
+
+  window._r1FilterState = { dept: dept1, sc, month, dateFrom, dateTo, status, search };
+
+  if (rows.length === 0) {
+    document.getElementById('r1Body').innerHTML = '<tr><td colspan="10"><div class="empty">📭 ไม่พบข้อมูล</div></td></tr>';
+    return;
+  }
+
+  document.getElementById('r1Body').innerHTML = rows.map((r,i) => `
+    <tr class="${i%2===1?'alt':''}">
+      <td style="color:var(--gray);font-size:10px;">${i+1}</td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
+      <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
+      <td style="font-size:11px;">${r['รายละเอียดรถ']||'—'}</td>
+      <td style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</td>
+      <td><span class="badge badge-${statusCode(r['สถานะ'])}">${statusLabel(r['สถานะ'])}</span></td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่ปล่อย'])||'—'}</td>
+      <td style="font-size:11px;">${r['ที่ปรึกษาการขาย']||'—'}</td>
+      <td style="font-size:11px;">${r['ที่มาลูกค้า']||'—'}</td>
+    </tr>`).join('');
 }
+
 
 // ════════════════════════════════════════
 //  REPORT 2 — แยกประเภทรถ จอง-ปล่อย (SC × รุ่น)
