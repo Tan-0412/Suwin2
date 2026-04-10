@@ -416,25 +416,30 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         <div class="frow"><label>ที่ปรึกษาการขาย</label>
           <select id="r1SC"><option value="">ทั้งหมด</option></select>
         </div>
-        <div class="frow"><label>เดือนจอง</label>
+        <div class="frow"><label>เดือนที่จอง</label>
           <select id="r1Month"><option value="">ทั้งหมด</option></select>
         </div>
-        <div class="frow"><label>วันที่เริ่มต้น</label>
+        <div class="frow"><label>วันจองที่เริ่มต้น</label>
           <input type="date" id="r1DateFrom">
         </div>
-        <div class="frow"><label>วันที่สิ้นสุด</label>
+        <div class="frow"><label>วันจองที่สิ้นสุด</label>
           <input type="date" id="r1DateTo">
         </div>
         <div class="frow"><label>สถานะ</label>
           <select id="r1Status"><option value="">ทั้งหมด</option></select>
         </div>
+      </div>
+      <div class="filter-row" style="margin-top:8px;">
+        <div class="frow" style="flex:3;min-width:250px;">
+          <label>🔎 ค้นหา (ชื่อลูกค้า / SC / รุ่นรถ / รายละเอียด / วันที่ปล่อย / ที่มา)</label>
+          <input type="text" id="r1Search" placeholder="พิมพ์คำค้นหา...">
+        </div>
         <div style="display:flex;gap:6px;align-self:flex-end;">
           <button class="btn btn-primary btn-sm" onclick="runReport1()">🔍 ค้นหา</button>
-          <button class="btn btn-outline btn-sm" onclick="clearReport1()">✕ เคลียร์</button>
+          <button class="btn btn-outline btn-sm" onclick="clearReport1()">✕ ล้างตัวกรอง</button>
           <button class="btn btn-accent btn-sm" onclick="printReport1()">🖨️ พิมพ์</button>
         </div>
       </div>
-
     </div>
   </div>
   <div class="card" id="r1Card">
@@ -1992,17 +1997,22 @@ function confirmDeleteTarget(i) {
 //  REPORT 1 — รายละเอียด
 // ════════════════════════════════════════
 function clearReport1() {
-  document.getElementById('r1Dept').value    = '';
+  document.getElementById('r1Dept').value     = '';
   onDeptChange('r1Dept','r1SC');
-  document.getElementById('r1SC').value      = '';
-  document.getElementById('r1Month').value   = '';
+  document.getElementById('r1SC').value       = '';
+  document.getElementById('r1Month').value    = '';
   document.getElementById('r1DateFrom').value = '';
   document.getElementById('r1DateTo').value   = '';
-  document.getElementById('r1Status').value  = '';
-  document.getElementById('r1FilterWarning').style.display = 'none';
+  document.getElementById('r1Status').value   = '';
+  const s = document.getElementById('r1Search');
+  if(s) s.value = '';
+  const warnEl = document.getElementById('r1FilterWarning');
+  if(warnEl) warnEl.style.display = 'none';
   document.getElementById('r1Body').innerHTML =
     '<tr><td colspan="10"><div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div></td></tr>';
   document.getElementById('r1Count').textContent = '0 รายการ';
+  document.getElementById('r1Title').textContent = 'รายงานรายละเอียดการจอง';
+  window._r1FilterState = null;
 }
 
 async function runReport1() {
@@ -2012,33 +2022,81 @@ async function runReport1() {
   const dateFrom = document.getElementById('r1DateFrom').value;
   const dateTo   = document.getElementById('r1DateTo').value;
   const status   = document.getElementById('r1Status').value;
-
-  // ซ่อน warning (ทุกตัวกรองทำงานได้แล้ว)
-  const warnEl = document.getElementById('r1FilterWarning');
-  if (warnEl) warnEl.style.display = 'none';
+  const search   = (document.getElementById('r1Search')?.value||'').trim().toLowerCase();
 
   const params = { action:'getBookings' };
-  if (dept1)    params.dept = dept1;
-  if (sc)       params.sc = sc;
-  if (month)    params.month = month;
-  if (dateFrom) params.dateFrom = dateFrom;
-  if (dateTo)   params.dateTo = dateTo;
-  if (status)   params.status = status;
+  if (dept1)  params.dept = dept1;
+  if (sc)     params.sc = sc;
+  if (status) params.status = status;
 
   document.getElementById('r1Body').innerHTML =
     '<tr><td colspan="10"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
   try {
     const d = await callGS(params);
-    const rows = (d.data||[]).sort((a,b) => compareDates(a['วันที่จอง'],b['วันที่จอง']));
-    document.getElementById('r1Count').textContent = rows.length + ' รายการ';
+    let rows = d.data || [];
+
+    // ── กรองเดือน (client-side) ──
     if (month) {
-      const [y,m] = month.split('-');
-      document.getElementById('r1Title').textContent = `รายงานรายละเอียดการจอง เดือน ${thMonth(month)}`;
+      rows = rows.filter(r => {
+        const dt = r['วันที่จอง'] || '';
+        const parts = dt.split('/');
+        if (parts.length >= 3) {
+          const ym = parts[2].substring(0,4) + '-' + parts[1].padStart(2,'0');
+          return ym === month;
+        }
+        return dt.startsWith(month);
+      });
     }
+
+    // ── กรองวันที่เริ่ม-สิ้นสุด (client-side) ──
+    if (dateFrom) {
+      const from = parseThDate(formatThDate(dateFrom).replace(/\//g,'/'));
+      rows = rows.filter(r => {
+        const t = parseThDate(r['วันที่จอง']);
+        return t && t >= new Date(dateFrom).getTime();
+      });
+    }
+    if (dateTo) {
+      rows = rows.filter(r => {
+        const t = parseThDate(r['วันที่จอง']);
+        return t && t <= new Date(dateTo + 'T23:59:59').getTime();
+      });
+    }
+
+    // ── ค้นหาทุกฟิลด์ ──
+    if (search) {
+      rows = rows.filter(r => {
+        const hay = [
+          r['ชื่อลูกค้า'], r['ที่ปรึกษาการขาย'], r['รุ่นรถ'],
+          r['รายละเอียดรถ'], r['วันที่ปล่อย'], r['ที่มาลูกค้า'],
+          r['เบอร์'], r['หมายเหตุ']
+        ].join(' ').toLowerCase();
+        return hay.includes(search);
+      });
+    }
+
+    // ── เรียงล่าสุดก่อน ──
+    rows = rows.sort((a,b) => compareDates(b['วันที่จอง'], a['วันที่จอง']));
+
+    // ── ชื่อรายงาน ──
+    const parts = [];
+    if (dept1) parts.push(dept1);
+    if (sc) parts.push(sc);
+    if (month) parts.push('เดือน ' + thMonth(month));
+    if (dateFrom || dateTo) parts.push((dateFrom||'') + (dateTo ? ' ถึง ' + dateTo : ''));
+    document.getElementById('r1Title').textContent =
+      'รายงานรายละเอียดการจอง' + (parts.length ? ' · ' + parts.join(' · ') : '');
+
+    document.getElementById('r1Count').textContent = rows.length + ' รายการ';
+
     if (rows.length === 0) {
       document.getElementById('r1Body').innerHTML = '<tr><td colspan="10"><div class="empty">📭 ไม่พบข้อมูล</div></td></tr>';
       return;
     }
+
+    // เก็บ filter state สำหรับพิมพ์
+    window._r1FilterState = { dept: dept1, sc, month, dateFrom, dateTo, status, search };
+
     document.getElementById('r1Body').innerHTML = rows.map((r,i) => `
       <tr class="${i%2===1?'alt':''}">
         <td style="color:var(--gray);font-size:10px;">${i+1}</td>
@@ -2047,8 +2105,8 @@ async function runReport1() {
         <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
         <td style="font-size:11px;">${r['รายละเอียดรถ']||'—'}</td>
         <td style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</td>
-        <td><span class="badge badge-${r['สถานะ']||'BK'}">${statusLabel(r['สถานะ'])}</span></td>
-        <td class="mono" style="font-size:11px;">${r['วันที่ปล่อย']||'—'}</td>
+        <td><span class="badge badge-${statusCode(r['สถานะ'])}">${statusLabel(r['สถานะ'])}</span></td>
+        <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่ปล่อย'])||'—'}</td>
         <td style="font-size:11px;">${r['ที่ปรึกษาการขาย']||'—'}</td>
         <td style="font-size:11px;">${r['ที่มาลูกค้า']||'—'}</td>
       </tr>`).join('');
@@ -2592,11 +2650,33 @@ function printReport1() {
   const title = document.getElementById('r1Title').textContent;
   const tbody = document.getElementById('r1Body').innerHTML;
   const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
-  openPrint(title, today, `
+  const f = window._r1FilterState || {};
+
+  // สร้าง filter summary chips
+  const chips = [];
+  if(f.dept)     chips.push(`ฝ่าย: <b>${f.dept}</b>`);
+  if(f.sc)       chips.push(`SC: <b>${f.sc}</b>`);
+  if(f.month)    chips.push(`เดือน: <b>${thMonth(f.month)}</b>`);
+  if(f.dateFrom) chips.push(`ตั้งแต่: <b>${fmtDate(formatThDate(f.dateFrom))}</b>`);
+  if(f.dateTo)   chips.push(`ถึง: <b>${fmtDate(formatThDate(f.dateTo))}</b>`);
+  if(f.status)   chips.push(`สถานะ: <b>${statusLabel(f.status)}</b>`);
+  if(f.search)   chips.push(`ค้นหา: <b>"${f.search}"</b>`);
+
+  const filterBar = chips.length ? `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:8px 10px;
+      background:#eef3ff;border-radius:8px;border:1px solid #c0d0f0;font-size:8.5pt;">
+      <span style="color:#4a6090;font-weight:600;margin-right:4px;">🔍 ตัวกรอง:</span>
+      ${chips.map(c=>`<span style="background:#fff;border:1px solid #c0d0f0;border-radius:4px;padding:2px 8px;color:#1a3a6b;">${c}</span>`).join('')}
+    </div>` : '';
+
+  const countEl = document.getElementById('r1Count');
+  const countBar = `<div style="text-align:right;font-size:8pt;color:#666;margin-bottom:6px;">${countEl?.textContent||''}</div>`;
+
+  openPrint(title, today, filterBar + countBar + `
     <table style="width:100%;border-collapse:collapse;font-size:9pt;">
-      <thead style="background:#1a3a6b;color:#fff;">
+      <thead>
         <tr>
-          <th style="padding:6px 8px;text-align:left;">#</th>
+          <th style="padding:6px 8px;text-align:center;">#</th>
           <th style="padding:6px 8px;">วันที่จอง</th>
           <th style="padding:6px 8px;text-align:left;">ชื่อลูกค้า</th>
           <th style="padding:6px 8px;">เบอร์</th>
