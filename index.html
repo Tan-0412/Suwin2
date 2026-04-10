@@ -1415,7 +1415,10 @@ function renderBookings() {
       <td class="c">
         <div class="action-btns">
           <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})" title="แก้ไข">✏️</button>
-          <button class="btn btn-outline btn-sm" style="color:var(--orange);border-color:var(--orange);" onclick="openReleaseReport(${i})" title="พิมพ์รายงานปล่อยรถ">🚗</button>
+          <button class="btn btn-outline btn-sm"
+            style="color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray)'};border-color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray2)'};cursor:${r['วันที่ปล่อย']?'pointer':'not-allowed'};opacity:${r['วันที่ปล่อย']?'1':'0.35'};"
+            onclick="${r['วันที่ปล่อย']?'openReleaseReport('+i+')':''}"
+            title="${r['วันที่ปล่อย']?'พิมพ์รายงานปล่อยรถ':'ต้องบันทึกวันที่ปล่อยก่อน'}">🚗</button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete(${i})" title="ลบ">🗑️</button>
         </div>
       </td>
@@ -3198,12 +3201,12 @@ function printReleaseReport(r) {
     const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
     if (i === 0) return `
       <tr>
-        <td style="${tdBase}color:#c0392b;font-size:11pt;">${finance}</td>
+        <td style="${tdBase}font-size:11pt;">${finance}</td>
         <td style="${tdBase}">${model}</td>
         <td style="${tdBase}">${engine}</td>
         <td style="${tdBase}">${chassis}</td>
         <td style="${tdBase}font-size:10.5pt;">${customer}</td>
-        <td style="${tdBase}color:#c0392b;font-size:11pt;">${plate}</td>
+        <td class="plate-col" style="${tdBase}font-size:11pt;">${plate}</td>
         <td style="${tdBase}font-size:10.5pt;">${delivery}</td>
         <td style="${tdBase}font-size:10.5pt;">${po}</td>
         <td style="${tdBase}">${sc}</td>
@@ -3233,8 +3236,17 @@ function printReleaseReport(r) {
     thead tr{background:#b94a00;color:#fff;}
     th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
     th.plate-hdr{color:#ffe082;}
-    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;}
+    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
     tr:nth-child(even) td{background:#fff3e0;}
+    td.plate-col{color:#c0392b!important;font-weight:800;}
+    @media print{
+      thead tr{background:#fff!important;color:#111!important;}
+      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
+      th.plate-hdr{color:#111!important;}
+      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
+      tr:nth-child(even) td{background:#fff!important;}
+      td.plate-col{color:#c0392b!important;}
+    }
     td.fn-cell{text-align:center;font-weight:800;font-size:11pt;color:#c0392b;width:48px;}
     td.model-cell{width:190px;font-size:9pt;}
     td.model-name{font-weight:800;font-size:10pt;}
