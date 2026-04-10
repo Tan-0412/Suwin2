@@ -754,7 +754,7 @@ function addBooking(p) {
   const sh = getSheet(SHEETS.customer);
   if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
-  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO'];
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
   const newRow = Array(Math.max(hdrs.length, COLS.length)).fill('');
   COLS.forEach(col => {
     const idx = hdrs.indexOf(col);
@@ -771,7 +771,7 @@ function updateBooking(p) {
   if (!rowNum || rowNum < 2) return { ok:false, error:'row ไม่ถูกต้อง' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
   const existing = sh.getRange(rowNum,1,1,hdrs.length).getValues()[0];
-  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO'];
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
 
   // แปลง STATUS code → ภาษาไทยก่อนบันทึก
   if (p['สถานะ']) {
@@ -1037,6 +1037,14 @@ function testUpdate() {
         <div class="frow">
           <label>เลขที่ใบ PO</label>
           <input type="text" id="rl-po">
+        </div>
+        <div class="frow">
+          <label>ลูกค้ารับรถ <span style="font-size:11px;color:#888;">(อาจต่างจากผู้จอง)</span></label>
+          <input type="text" id="rl-rcv-customer">
+        </div>
+        <div class="frow">
+          <label>ชื่อรุ่นรถ <span style="font-size:11px;color:#888;">(ชื่อเต็ม เช่น TFR41JCANCTM)</span></label>
+          <input type="text" id="rl-model-full">
         </div>
         <div class="frow" style="grid-column:span 2;">
           <label>ที่ปรึกษาการขาย SC</label>
@@ -3125,7 +3133,9 @@ function openReleaseReport(i) {
   document.getElementById('rl-plate').value    = r['เลขทะเบียน'] || '';
   document.getElementById('rl-delivery').value = r['เลขส่งมอบ'] || '';
   document.getElementById('rl-po').value       = r['เลข PO'] || '';
-  document.getElementById('rl-sc').value       = r['ที่ปรึกษาการขาย'] || '';
+  document.getElementById('rl-sc').value           = r['ที่ปรึกษาการขาย'] || '';
+  document.getElementById('rl-rcv-customer').value  = r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
+  document.getElementById('rl-model-full').value    = r['ชื่อรุ่นรถ'] || r['รายละเอียดรถ'] || '';
   document.getElementById('releaseModal').classList.add('open');
 }
 
@@ -3145,6 +3155,8 @@ async function saveAndPrintRelease() {
     'เลขทะเบียน': document.getElementById('rl-plate').value.trim(),
     'เลขส่งมอบ':  document.getElementById('rl-delivery').value.trim(),
     'เลข PO':     document.getElementById('rl-po').value.trim(),
+    'ลูกค้ารับรถ': document.getElementById('rl-rcv-customer').value.trim(),
+    'ชื่อรุ่นรถ':  document.getElementById('rl-model-full').value.trim(),
   };
 
   // บันทึกลง Sheet
@@ -3170,8 +3182,8 @@ function printReleaseReport(r) {
   const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
   const monthLabel = thMonthYear(curYM);
 
-  const customer  = document.getElementById('rl-customer')?.value || r['ชื่อลูกค้า'] || '';
-  const model     = document.getElementById('rl-model')?.value    || r['รุ่นรถ'] || '';
+  const customer  = document.getElementById('rl-rcv-customer')?.value || r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
+  const model     = document.getElementById('rl-model-full')?.value   || r['ชื่อรุ่นรถ']  || r['รายละเอียดรถ'] || '';
   const engine    = document.getElementById('rl-engine')?.value   || r['เลขเครื่อง'] || '';
   const chassis   = document.getElementById('rl-chassis')?.value  || r['เลขแชสซีส์'] || '';
   const finance   = document.getElementById('rl-finance')?.value  || r['ไฟแนนซ์'] || '';
@@ -3184,74 +3196,86 @@ function printReleaseReport(r) {
   const rows = Array.from({length:10}, (_,i) => {
     if (i === 0) return `
       <tr>
-        <td style="color:#c0392b;font-weight:700;font-size:14pt;">${finance}</td>
-        <td style="font-size:11pt;">${model}<br><span style="font-size:9pt;color:#555;">${engine} / ${chassis}</span></td>
-        <td style="font-weight:700;font-size:12pt;">${customer}</td>
-        <td style="color:#c0392b;font-weight:700;font-size:14pt;">${plate}</td>
-        <td style="font-size:10pt;">${delivery}</td>
-        <td style="font-size:10pt;">${po}</td>
-        <td style="font-size:11pt;">${sc}</td>
+        <td class="fn-cell">${finance}</td>
+        <td class="model-cell"><div class="model-name">${model}</div><div class="eng-chassis">${engine} / ${chassis}</div></td>
+        <td class="cust-cell">${customer}</td>
+        <td class="plate-cell">${plate.split(' ')[0]||plate}<span class="plate-province">${plate.split(' ').slice(1).join(' ')||''}</span></td>
+        <td class="delivery-cell">${delivery}</td>
+        <td class="po-cell">${po}</td>
+        <td class="sc-cell">${sc}</td>
       </tr>`;
-    return `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+    return `<tr><td class="fn-cell empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td><td class="empty"></td></tr>`;
   }).join('');
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>รายงานการปล่อยรถ ${monthLabel}</title>
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Sarabun',sans-serif;font-size:12pt;background:#fff;color:#1a2d45;padding:12mm 14mm;}
-    .ctrl{background:#1a3a6b;padding:8px 16px;display:flex;gap:10px;margin:-12mm -14mm 12mm;position:sticky;top:0;z-index:50;}
-    .pbtn{padding:6px 18px;font-size:12px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    html,body{width:100%;height:100%;}
+    body{font-family:'Sarabun',sans-serif;font-size:9.5pt;background:#fff;color:#1a2d45;
+      padding:6mm 8mm;
+      transform-origin:top left;
+    }
+    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;margin:-6mm -8mm 6mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:5px 14px;font-size:11px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
     .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
-    /* ── HEADER ── */
-    .doc-header{text-align:center;margin-bottom:8mm;}
-    .doc-title{font-size:20pt;font-weight:800;color:#1a3a6b;margin-bottom:3mm;}
-    .doc-company{font-size:13pt;font-weight:600;margin-bottom:3mm;}
-    .doc-date{font-size:11pt;color:#555;text-align:right;margin-bottom:4mm;}
-    .doc-to{font-size:12pt;margin-bottom:1mm;line-height:1.8;}
-    /* ── TABLE ── */
-    table{width:100%;border-collapse:collapse;margin-top:4mm;}
-    thead tr{background:#1a3a6b;color:#fff;}
-    th{padding:8px 10px;font-size:11pt;font-weight:700;border:1.5px solid #1a3a6b;text-align:center;}
-    td{padding:10px 10px;font-size:11pt;border:1.5px solid #c0a060;min-height:20mm;vertical-align:middle;background:#fff8f0;}
+    .doc-header{text-align:center;margin-bottom:3mm;}
+    .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
+    .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
+    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;}
+    thead tr{background:#b94a00;color:#fff;}
+    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    th.plate-hdr{color:#ffe082;}
+    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;}
     tr:nth-child(even) td{background:#fff3e0;}
-    th.fn{width:60px;}
-    th.model{width:220px;}
-    th.cust{min-width:160px;}
-    th.plate{width:90px;color:#ffe082;}
-    th.book{width:100px;}
-    th.po{width:100px;}
-    th.sc{width:100px;}
-    /* ── SIGNATURE ── */
-    .sig-section{display:flex;justify-content:space-between;margin-top:14mm;gap:20mm;}
-    .sig-box{flex:1;text-align:center;}
-    .sig-line{border-bottom:1px solid #333;margin-bottom:4mm;height:12mm;}
-    .sig-name{font-size:12pt;font-weight:700;margin-bottom:1mm;}
-    .sig-role{font-size:10pt;color:#555;}
-    @media print{.ctrl{display:none!important;}body{padding:8mm 10mm;}@page{size:A4 landscape;margin:8mm;}}
+    td.fn-cell{text-align:center;font-weight:800;font-size:11pt;color:#c0392b;width:48px;}
+    td.model-cell{width:190px;font-size:9pt;}
+    td.model-name{font-weight:800;font-size:10pt;}
+    td.eng-chassis{font-size:8.5pt;color:#444;margin-top:2px;}
+    td.cust-cell{font-size:10.5pt;font-weight:600;min-width:140px;}
+    td.plate-cell{text-align:center;color:#c0392b;font-weight:800;font-size:11pt;width:90px;}
+    td.plate-province{display:block;font-size:7.5pt;color:#555;font-weight:400;}
+    td.delivery-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
+    td.po-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
+    td.sc-cell{font-size:10pt;min-width:130px;white-space:nowrap;}
+    td.empty{height:11mm;background:#fff8f0;}
+    tr:nth-child(even) td.empty{background:#fff3e0;}
+    .sig-section{display:flex;justify-content:center;gap:60mm;margin-top:8mm;}
+    .sig-box{text-align:center;min-width:140px;}
+    .sig-line{border-bottom:1px solid #333;width:160px;margin:0 auto 5mm;}
+    .sig-dots{font-size:9.5pt;margin-bottom:3mm;}
+    .sig-name{font-size:11pt;font-weight:700;}
+    .sig-role{font-size:9pt;color:#555;margin-top:1mm;}
+    @media print{
+      .ctrl{display:none!important;}
+      body{padding:6mm 8mm;}
+      @page{size:A4 landscape;margin:6mm;}
+    }
   </style></head><body>
   <div class="ctrl">
     <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
     <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
   </div>
   <div class="doc-header">
-    <div class="doc-title">รายงานปล่อยรถ</div>
+    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
     <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
   </div>
-  <div class="doc-date">ณ วันที่ &nbsp;<b>${dateStr}</b></div>
+  <div style="text-align:right;font-size:9.5pt;margin-bottom:2mm;">ประจำวันที่ &nbsp;<b>${dateStr}</b></div>
   <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</div>
   <div class="doc-to">ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;<b>${dateStr}</b></div>
   <table>
     <thead>
       <tr>
-        <th class="fn">F/N</th>
-        <th class="model">รุ่นรถ / เลขเครื่อง / เลขแชสซีส์</th>
-        <th class="cust">ชื่อลูกค้า</th>
-        <th class="plate">ป้ายแดง</th>
-        <th class="book" colspan="2">เล่มที่ / เลขที่<br><span style="display:flex;justify-content:space-around;font-size:9pt;font-weight:400;margin-top:2px;"><span>ใบส่งมอบ</span><span>ใบ PO</span></span></th>
-        <th class="sc">SC</th>
+        <th style="width:48px;">F/N</th>
+        <th style="width:190px;">รุ่นรถ / เลขเครื่อง / เลขแชสซีส์</th>
+        <th>ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:95px;">ทะเบียนป้ายแดง</th>
+        <th style="width:88px;">ใบส่งมอบ</th>
+        <th style="width:88px;">ใบ PO</th>
+        <th style="min-width:130px;">ที่ปรึกษาการขาย SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -3259,14 +3283,15 @@ function printReleaseReport(r) {
   <div class="sig-section">
     <div class="sig-box">
       <div class="sig-line"></div>
-      <div style="font-size:11pt;margin-bottom:6mm;">ลงชื่อ.................................................</div>
+      <div class="sig-dots">ลงชื่อ.................................................</div>
+      <div style="margin-bottom:4mm;"></div>
       <div class="sig-name">คุณรวิวรรณ พันสนิท</div>
       <div class="sig-role">( ผู้จัดทำรายงาน )</div>
     </div>
-    <div style="flex:1"></div>
     <div class="sig-box">
       <div class="sig-line"></div>
-      <div style="font-size:11pt;margin-bottom:6mm;">ลงชื่อ.................................................</div>
+      <div class="sig-dots">ลงชื่อ.................................................</div>
+      <div style="margin-bottom:4mm;"></div>
       <div class="sig-name">คุณสุรพล จึงวิวัฒนาภรณ์</div>
       <div class="sig-role">( กรรมการผู้จัดการ )</div>
     </div>
