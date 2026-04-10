@@ -407,7 +407,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 ════════════════════════════════════ -->
 <div class="page" id="page-report1">
   <div class="report-filter card">
-    <div class="card-hdr"><h2>🔍 ตัวกรองรายงานรายละเอียดการจอง</h2></div>
+    <div class="card-hdr"><h2>🔍 ตัวกรอง / ค้นหา รายงานรายละเอียดการจอง</h2></div>
     <div class="card-body">
       <div class="filter-row">
         <div class="frow"><label>ฝ่าย</label>
@@ -2035,31 +2035,37 @@ async function runReport1() {
     const d = await callGS(params);
     let rows = d.data || [];
 
-    // ── กรองเดือน (client-side) ──
+    // ── กรองเดือน (client-side) — วันที่ใน Sheet เป็น dd/mm/yyyy ──
     if (month) {
+      const [ym_y, ym_m] = month.split('-');
       rows = rows.filter(r => {
-        const dt = r['วันที่จอง'] || '';
+        const dt = String(r['วันที่จอง'] || '').trim();
+        // รูปแบบ dd/mm/yyyy
         const parts = dt.split('/');
         if (parts.length >= 3) {
-          const ym = parts[2].substring(0,4) + '-' + parts[1].padStart(2,'0');
-          return ym === month;
+          const y = parts[2].substring(0,4);
+          const m = parts[1].padStart(2,'0');
+          return y === ym_y && m === ym_m;
         }
-        return dt.startsWith(month);
+        // รูปแบบ yyyy-mm-dd
+        if (dt.length >= 7) return dt.startsWith(month);
+        return false;
       });
     }
 
     // ── กรองวันที่เริ่ม-สิ้นสุด (client-side) ──
     if (dateFrom) {
-      const from = parseThDate(formatThDate(dateFrom).replace(/\//g,'/'));
+      const fromTs = new Date(dateFrom).getTime();
       rows = rows.filter(r => {
-        const t = parseThDate(r['วันที่จอง']);
-        return t && t >= new Date(dateFrom).getTime();
+        const t = parseThDate(String(r['วันที่จอง']||'').trim());
+        return t && t >= fromTs;
       });
     }
     if (dateTo) {
+      const toTs = new Date(dateTo + 'T23:59:59').getTime();
       rows = rows.filter(r => {
-        const t = parseThDate(r['วันที่จอง']);
-        return t && t <= new Date(dateTo + 'T23:59:59').getTime();
+        const t = parseThDate(String(r['วันที่จอง']||'').trim());
+        return t && t <= toTs;
       });
     }
 
