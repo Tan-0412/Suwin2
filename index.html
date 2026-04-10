@@ -2027,6 +2027,8 @@ async function runReport1() {
   const params = { action:'getBookings' };
   if (dept1)  params.dept = dept1;
   if (sc)     params.sc = sc;
+  // ไม่ส่ง month/dateFrom/dateTo ไป API เพราะกรองฝั่ง client แทน
+  // (API กรองปีเป็น ค.ศ. แต่บางเครื่องส่ง พ.ศ. ทำให้ผิด)
   if (status) params.status = status;
 
   document.getElementById('r1Body').innerHTML =
