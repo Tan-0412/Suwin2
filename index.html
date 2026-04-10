@@ -1579,12 +1579,13 @@ function renderSCChart() {
       ทีม: s['ทีม']||'',
       ลำดับ: parseInt(s['ลำดับ']||99),
       ชื่อเล่น: s['ชื่อเล่น']||name,
+      'ที่ปรึกษาการขาย': name,
     };
   });
 
   filteredBookings.forEach(r => {
     const sc = r['ที่ปรึกษาการขาย'];
-    if (!scData[sc]) scData[sc] = {bk:0,rs:0,ers:0,bkModels:[],rsModels:[],ersModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc};
+    if (!scData[sc]) scData[sc] = {bk:0,rs:0,ers:0,bkModels:[],rsModels:[],ersModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc,'ที่ปรึกษาการขาย':sc};
     if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
     if (isRS(r['สถานะ']))  { scData[sc].rs++;  scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
     if (isERS(r['สถานะ'])) { scData[sc].ers++; scData[sc].ersModels.push(r['รุ่นรถ']||'—'); }
@@ -2382,7 +2383,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
 
     members.forEach((sc, idx) => {
       const name = sc['ที่ปรึกษาการขาย'];
-      const nickname = sc['ชื่อเล่น']||name;
+      const nickname = name;
       const p = pivot[name] || { bkTotal:0, rsTotal:0 };
 
       const safeN2 = name.replace(/"/g,'&quot;');
@@ -2703,7 +2704,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       const safeN = d.name.replace(/"/g,'&quot;');
       const tip = (field) => `style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','${field}')" onmouseleave="hideDscTip()"`;
       html += `<tr>
-        <td class="name">${d.ชื่อเล่น}</td>
+        <td class="name">${d.ที่ปรึกษาการขาย||d.ชื่อเล่น}</td>
         <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
         <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
