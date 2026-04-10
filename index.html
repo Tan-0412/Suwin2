@@ -2584,7 +2584,6 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
         <th class="online-hdr" colspan="${sources.length}">Online</th>
-        <th class="rs-hdr" rowspan="2">จองและปล่อย<br>เดือนนี้</th>
         <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
         <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
@@ -2614,7 +2613,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         return `<td class="num ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
           ${v||0}</td>`;
       }).join('');
-      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk; tRsM+=d.rsMonth;
+      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk;
       tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
 
       const safeN = d.name.replace(/"/g,'&quot;');
@@ -2625,7 +2624,6 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
         <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
         ${srcCells}
-        <td class="num rs ${d.rsMonth?'':'zero'}" ${d.rsMonth?tip('rs'):''}>${d.rsMonth||0}</td>
         <td class="num bk" style="background:#EEF4FF;cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','total')" onmouseleave="hideDscTip()">${d.total||0}</td>
         <td class="num ebk ${d.ers?'':'zero'}" ${d.ers?tip('ers'):''}>${d.ers||0}</td>
         <td class="num rs ${d.rsTotal?'':'zero'}" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
@@ -2641,14 +2639,13 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       <td class="num">${tEbk}</td>
       <td class="num">${tBk}</td>
       ${tSrcCells}
-      <td class="num">${tRsM}</td>
       <td class="num">${tTotal}</td>
       <td class="num">${tErs}</td>
       <td class="num">${tRsT}</td>
       <td class="num">${tCl}</td>
     </tr>`;
 
-    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk; gRsM+=tRsM;
+    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk;
     gTotal+=tTotal; gErs+=tErs; gRsT+=tRsT; gCl+=tCl;
   });
 
@@ -2662,7 +2659,6 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="num">${gEbk}</td>
         <td class="num">${gBk}</td>
         ${gSrcCells}
-        <td class="num">${gRsM}</td>
         <td class="num">${gTotal}</td>
         <td class="num">${gErs}</td>
         <td class="num">${gRsT}</td>
