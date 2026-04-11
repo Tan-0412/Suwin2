@@ -2644,7 +2644,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     };
 
     return { name, carry, ebk, bk, onlineBySource, rsMonth, total, ers, rsTotal, cl,
-      ทีม: sc['ทีม']||'', ชื่อเล่น: sc['ชื่อเล่น']||name };
+      ทีม: sc['ทีม']||'', ชื่อเล่น: name, 'ที่ปรึกษาการขาย': name };
   };
 
   // กลุ่มตามทีม
@@ -2704,7 +2704,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       const safeN = d.name.replace(/"/g,'&quot;');
       const tip = (field) => `style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','${field}')" onmouseleave="hideDscTip()"`;
       html += `<tr>
-        <td class="name">${d.ที่ปรึกษาการขาย||d.ชื่อเล่น}</td>
+        <td class="name">${d['ที่ปรึกษาการขาย']||d.ชื่อเล่น}</td>
         <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
         <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
@@ -3187,33 +3187,40 @@ function printReleaseReport(r) {
   const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
   const monthLabel = thMonthYear(curYM);
 
-  const customer  = document.getElementById('rl-rcv-customer')?.value || r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
-  const model     = document.getElementById('rl-model-full')?.value   || r['ชื่อรุ่นรถ']  || r['รายละเอียดรถ'] || '';
-  const engine    = document.getElementById('rl-engine')?.value   || r['เลขเครื่อง'] || '';
-  const chassis   = document.getElementById('rl-chassis')?.value  || r['เลขแชสซีส์'] || '';
-  const finance   = document.getElementById('rl-finance')?.value  || r['ไฟแนนซ์'] || '';
-  const plate     = document.getElementById('rl-plate')?.value    || r['เลขทะเบียน'] || '';
-  const delivery  = document.getElementById('rl-delivery')?.value || r['เลขส่งมอบ'] || '';
-  const po        = document.getElementById('rl-po')?.value       || r['เลข PO'] || '';
-  const sc        = document.getElementById('rl-sc')?.value       || r['ที่ปรึกษาการขาย'] || '';
+  // หาวันที่ปล่อยของรถคันที่กดปุ่ม (ใช้เป็น key สำหรับ filter)
+  const relDateKey = r['วันที่ปล่อย'] ? fmtDate(String(r['วันที่ปล่อย']).trim()) : fmtDate(rDate.toISOString());
 
-  // สร้าง 10 แถว โดยแถวแรกใส่ข้อมูล
-  const rows = Array.from({length:10}, (_,i) => {
-    const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
-    if (i === 0) return `
-      <tr>
-        <td style="${tdBase}font-size:11pt;">${finance}</td>
-        <td style="${tdBase}">${model}</td>
-        <td style="${tdBase}">${engine}</td>
-        <td style="${tdBase}">${chassis}</td>
-        <td style="${tdBase}font-size:10.5pt;">${customer}</td>
-        <td class="plate-col" style="${tdBase}font-size:11pt;">${plate}</td>
-        <td style="${tdBase}font-size:10.5pt;">${delivery}</td>
-        <td style="${tdBase}font-size:10.5pt;">${po}</td>
-        <td style="${tdBase}">${sc}</td>
-      </tr>`;
-    return `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
-  }).join('');
+  // รวบรวมรถทุกคันที่ปล่อยวันเดียวกัน
+  const sameDay = (allBookings || []).filter(b => {
+    if (!b['วันที่ปล่อย']) return false;
+    return fmtDate(String(b['วันที่ปล่อย']).trim()) === relDateKey;
+  });
+
+  // ถ้าหาไม่เจอเลย ให้ใช้รถคันปัจจุบันแทน
+  const releaseList = sameDay.length > 0 ? sameDay : [r];
+
+  const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
+
+  // สร้างแถวจากรถทุกคัน แล้วเติมแถวว่างให้ครบอย่างน้อย 10 แถว
+  const dataRows = releaseList.map(b => `
+    <tr>
+      <td style="${tdBase}font-size:11pt;">${b['ไฟแนนซ์']||''}</td>
+      <td style="${tdBase}">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||''}</td>
+      <td style="${tdBase}">${b['เลขเครื่อง']||''}</td>
+      <td style="${tdBase}">${b['เลขแชสซีส์']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||''}</td>
+      <td class="plate-col" style="${tdBase}font-size:11pt;">${b['เลขทะเบียน']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลขส่งมอบ']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลข PO']||''}</td>
+      <td style="${tdBase}">${b['ที่ปรึกษาการขาย']||''}</td>
+    </tr>`).join('');
+
+  const emptyCount = Math.max(0, 10 - releaseList.length);
+  const emptyRows = Array.from({length: emptyCount}, () =>
+    `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+  ).join('');
+
+  const rows = dataRows + emptyRows;
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
