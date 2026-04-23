@@ -755,12 +755,25 @@ function addBooking(p) {
   if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
   const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
+  // แปลง STATUS code → ภาษาไทยก่อนบันทึก (เหมือน updateBooking)
+  if (p['สถานะ']) {
+    const statusMap = getStatusMap();
+    p['สถานะ'] = statusMap[p['สถานะ']] || p['สถานะ'];
+  }
+  // บันทึกเบอร์โทรเป็น Text เพื่อรักษาเลข 0 นำหน้า
+  const phoneIdx = hdrs.indexOf('เบอร์');
   const newRow = Array(Math.max(hdrs.length, COLS.length)).fill('');
   COLS.forEach(col => {
     const idx = hdrs.indexOf(col);
     if (idx >= 0 && p[col] !== undefined) newRow[idx] = p[col];
   });
   sh.appendRow(newRow);
+  // Force คอลัมเบอร์โทรให้เป็น PlainText เพื่อป้องกัน 0 หาย
+  if (phoneIdx >= 0 && p['เบอร์']) {
+    const lastRow = sh.getLastRow();
+    sh.getRange(lastRow, phoneIdx + 1).setNumberFormat('@STRING@');
+    sh.getRange(lastRow, phoneIdx + 1).setValue(p['เบอร์']);
+  }
   return { ok:true, row: sh.getLastRow() };
 }
 
@@ -779,11 +792,17 @@ function updateBooking(p) {
     p['สถานะ'] = statusMap[p['สถานะ']] || p['สถานะ'];
   }
 
+  const phoneIdx = hdrs.indexOf('เบอร์');
   COLS.forEach(col => {
     const idx = hdrs.indexOf(col);
     if (idx >= 0 && p[col] !== undefined) existing[idx] = p[col];
   });
   sh.getRange(rowNum,1,1,hdrs.length).setValues([existing]);
+  // Force คอลัมเบอร์โทรให้เป็น PlainText เพื่อป้องกัน 0 หาย
+  if (phoneIdx >= 0 && p['เบอร์']) {
+    sh.getRange(rowNum, phoneIdx + 1).setNumberFormat('@STRING@');
+    sh.getRange(rowNum, phoneIdx + 1).setValue(p['เบอร์']);
+  }
   return { ok:true };
 }
 
@@ -1946,9 +1965,16 @@ function setSelectValue(id, val) {
 
 function closeModal() {
   document.getElementById('bookingModal').classList.remove('open');
+  _isSaving = false;
+  const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
 }
 
+let _isSaving = false;
+
 async function saveBooking() {
+  if (_isSaving) { toast('⏳ กำลังบันทึกข้อมูลอยู่ กรุณารอสักครู่...', 'warn'); return; }
+
   const date    = document.getElementById('mDate').value;
   const name    = document.getElementById('mName').value.trim();
   const sc      = document.getElementById('mSC').value;
@@ -1958,8 +1984,11 @@ async function saveBooking() {
     toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return;
   }
 
-  // แปลง status code → ภาษาไทยตามที่ชีทเก็บจริง (ถ้า Apps Script เก็บเป็นภาษาไทย)
-  // ส่งทั้ง STATUS code ตรงๆ — Apps Script ฝั่ง updateBooking รับ p['สถานะ'] ตรงๆ
+  // ป้องกันบันทึกซ้ำ — disable ปุ่มและตั้ง flag
+  _isSaving = true;
+  const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
+
   const params = {
     'วันที่จอง':       formatThDate(date),
     'ชื่อลูกค้า':      name,
@@ -1975,10 +2004,12 @@ async function saveBooking() {
   try {
     let r;
     if (editingRow) {
-      // ตรวจสอบให้แน่ใจว่า _row เป็นตัวเลขที่ถูกต้อง
       const rowNum = parseInt(editingRow);
       if (!rowNum || rowNum < 2) {
-        toast('❌ เลขแถวไม่ถูกต้อง (' + editingRow + ')', 'err'); return;
+        toast('❌ เลขแถวไม่ถูกต้อง (' + editingRow + ')', 'err');
+        _isSaving = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+        return;
       }
       r = await callGS({ action: 'updateBooking', _row: rowNum, ...params });
     } else {
@@ -1991,7 +2022,12 @@ async function saveBooking() {
     } else {
       throw new Error((r && r.error) || 'ไม่สำเร็จ — ตรวจสอบ Apps Script');
     }
-  } catch(e) { toast('❌ ' + e.message, 'err'); }
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    _isSaving = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+  }
 }
 
 function confirmDelete(i) {
@@ -2912,8 +2948,9 @@ function closeConfirm() {
   confirmCallback = null;
 }
 function confirmOk() {
+  const cb = confirmCallback;
   closeConfirm();
-  if (confirmCallback) confirmCallback();
+  if (cb) cb();
 }
 
 // ════════════════════════════════════════
