@@ -755,11 +755,8 @@ function addBooking(p) {
   if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
   const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
   const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
-  // แปลง STATUS code → ภาษาไทยก่อนบันทึก (เหมือน updateBooking)
-  if (p['สถานะ']) {
-    const statusMap = getStatusMap();
-    p['สถานะ'] = statusMap[p['สถานะ']] || p['สถานะ'];
-  }
+  // แปลง STATUS code → ภาษาไทยก่อนบันทึก เผื่อ client ส่ง code มา (BK→จอง ฯลฯ)
+  if (p['สถานะ']) { const sm=getStatusMap(); p['สถานะ']=sm[p['สถานะ']]||p['สถานะ']; }
   // บันทึกเบอร์โทรเป็น Text เพื่อรักษาเลข 0 นำหน้า
   const phoneIdx = hdrs.indexOf('เบอร์');
   const newRow = Array(Math.max(hdrs.length, COLS.length)).fill('');
@@ -786,11 +783,8 @@ function updateBooking(p) {
   const existing = sh.getRange(rowNum,1,1,hdrs.length).getValues()[0];
   const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
 
-  // แปลง STATUS code → ภาษาไทยก่อนบันทึก
-  if (p['สถานะ']) {
-    const statusMap = getStatusMap();
-    p['สถานะ'] = statusMap[p['สถานะ']] || p['สถานะ'];
-  }
+  // แปลง STATUS code → ภาษาไทยก่อนบันทึก เผื่อ client ส่ง code มา (BK→จอง ฯลฯ)
+  if (p['สถานะ']) { const sm=getStatusMap(); p['สถานะ']=sm[p['สถานะ']]||p['สถานะ']; }
 
   const phoneIdx = hdrs.indexOf('เบอร์');
   COLS.forEach(col => {
@@ -1989,13 +1983,17 @@ async function saveBooking() {
   const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
 
+  // แปลง STATUS code → ภาษาไทย (BK→จอง, RS→ปล่อย ฯลฯ) ก่อนส่ง
+  const statusFound = (meta.status || []).find(s => s['STATUS'] === status);
+  const statusThai = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
+
   const params = {
     'วันที่จอง':       formatThDate(date),
     'ชื่อลูกค้า':      name,
     'เบอร์':           document.getElementById('mPhone').value.trim(),
     'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
     'รุ่นรถ':          model,
-    'สถานะ':           status,
+    'สถานะ':           statusThai,
     'วันที่ปล่อย':     formatThDate(document.getElementById('mRelDate').value),
     'ที่ปรึกษาการขาย': sc,
     'ที่มาลูกค้า':     document.getElementById('mSource').value,
