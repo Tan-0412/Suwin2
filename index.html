@@ -219,28 +219,30 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .target-badge{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;
   color:#c05000;background:#fff3e0;padding:6px 16px;border-radius:20px;
   border:2px solid #ffb74d;display:inline-flex;align-items:center;gap:6px;}
-.dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
-.dsc-table{width:100%;border-collapse:collapse;font-size:13px;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:15px;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:15px;}
 .dsc-table th{padding:8px 9px;text-align:center;
-  font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
+  font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
 .dsc-table th.left{text-align:left;background:#6b7fa8;}
-.dsc-table td{padding:8px 10px;border:1px solid #e8edf5;text-align:center;vertical-align:middle;font-size:13px;}
+.dsc-table td{padding:8px 10px;border:1px solid #e8edf5;text-align:center;vertical-align:middle;font-size:15px;}
 .dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;color:#1a2d45;}
-.dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;}
+.dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:18px;}
 .dsc-table td.bk{color:#3b6fd4;}
 .dsc-table td.rs{color:#1a8a55;}
 .dsc-table td.ebk{color:#d4720a;}
 .dsc-table td.cl{color:#c0392b;}
 .dsc-table td.zero{color:#c8d0dc;}
 .dsc-table tr.team-total td{background:#eef3ff;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
-.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:12px;border-top:2px solid #f0c060;color:#5a3e00;}
-.dsc-table tr.team-sep td{background:#e8edf8;font-size:10px;font-weight:700;
+.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:14px;border-top:2px solid #f0c060;color:#5a3e00;}
+.dsc-table tr.team-sep td{background:#e8edf8;font-size:12px;font-weight:700;
   color:#3b5080;padding:5px 10px;border-top:2px solid #a0b4e0;letter-spacing:.5px;}
+/* online columns — แคบลง */
+.dsc-table th.online-hdr{background:#c44d8a;max-width:60px;width:60px;}
+.dsc-table td.online-col{max-width:60px;width:60px;}
 /* header สีโทนอ่อนหวาน */
 .dsc-table th.carry{background:#8b6bb1;}
 .dsc-table th.ebk-hdr{background:#e07820;}
 .dsc-table th.bk-hdr{background:#4a7fd4;}
-.dsc-table th.online-hdr{background:#c44d8a;}
 .dsc-table th.rs-hdr{background:#2e9e6a;}
 .dsc-table th.cl-hdr{background:#d45050;}
 .pivot-table td.has-val{color:var(--primary);font-weight:700;}
@@ -2734,7 +2736,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         const v = d.onlineBySource[s]||0;
         tSrc[s]+=v; gSrc[s]+=v;
         const safeS = s.replace(/'/g,"\'");
-        return `<td class="num ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
+        return `<td class="num online-col ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
           ${v||0}</td>`;
       }).join('');
       tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk;
@@ -2756,7 +2758,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     });
 
     // team total row
-    const tSrcCells = sources.map(s => `<td class="num">${tSrc[s]||0}</td>`).join('');
+    const tSrcCells = sources.map(s => `<td class="num online-col">${tSrc[s]||0}</td>`).join('');
     html += `<tr class="team-total">
       <td class="name">รวม ทีม ${team}</td>
       <td class="num">${tCarry}</td>
@@ -2774,7 +2776,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   });
 
   // grand total
-  const gSrcCells = sources.map(s => `<td class="num">${gSrc[s]||0}</td>`).join('');
+  const gSrcCells = sources.map(s => `<td class="num online-col">${gSrc[s]||0}</td>`).join('');
   html += `</tbody>
     <tfoot>
       <tr class="grand-total">
