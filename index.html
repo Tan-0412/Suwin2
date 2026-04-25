@@ -1049,6 +1049,7 @@ function testUpdate() {
             <option>BAY</option>
             <option>AYCAL</option>
             <option>MTL</option>
+            <option>ICBC</option>
             <option>เงินสด</option>
           </select>
         </div>
@@ -3275,6 +3276,7 @@ async function saveAndPrintRelease() {
   if (!r) return;
 
   const extra = {
+    'สถานะ':       'RS',
     'เลขเครื่อง':  document.getElementById('rl-engine').value.trim(),
     'เลขแชสซีส์': document.getElementById('rl-chassis').value.trim(),
     'ไฟแนนซ์':    document.getElementById('rl-finance').value,
