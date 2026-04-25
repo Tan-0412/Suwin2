@@ -1019,8 +1019,13 @@ function testUpdate() {
           <input type="text" id="rl-model">
         </div>
         <div class="frow">
-          <label>ชื่อรุ่นรถ (เต็ม เช่น TFR41JCANCTM)</label>
-          <input type="text" id="rl-model-full">
+          <label>ชื่อรุ่นการจำหน่าย <span style="font-size:10px;color:#888;">(จากชีท Model)</span></label>
+          <select id="rl-model-full" onchange="onRlModelFullChange()">
+            <option value="">-- เลือกรุ่น --</option>
+          </select>
+          <div id="rl-model-full-custom-wrap" style="display:none;margin-top:6px;">
+            <input type="text" id="rl-model-full-custom" placeholder="พิมพ์ชื่อรุ่นการจำหน่ายเอง เช่น TFR41GWAHCTM" style="font-size:12px;">
+          </div>
         </div>
         <div class="frow">
           <label>เลขเครื่อง</label>
@@ -3156,6 +3161,62 @@ function changeReportDate(target) {
 // ════════════════════════════════════════
 let _releaseRowIdx = null;
 
+function populateRlModelDropdown() {
+  const sel = document.getElementById('rl-model-full');
+  // เก็บค่าเดิมไว้ก่อน re-populate
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรุ่น --</option>';
+  if (meta.model && meta.model.length) {
+    meta.model.forEach(m => {
+      const ppv  = (m['ชื่อรุ่นการจำหน่าย'] || m['PPV'] || '').trim();
+      const desc = (m['รายละเอียด'] || '').trim();
+      const code = (m['รหัสรุ่นรถ'] || '').trim();
+      if (!ppv) return;
+      const o = document.createElement('option');
+      o.value = ppv;
+      o.textContent = ppv + (desc ? '  — ' + desc : '') + (code ? '  [' + code + ']' : '');
+      sel.appendChild(o);
+    });
+  }
+  // option พิมพ์เอง
+  const oCustom = document.createElement('option');
+  oCustom.value = '__custom__';
+  oCustom.textContent = '✏️ พิมพ์เอง (ไม่มีในรายการ)';
+  sel.appendChild(oCustom);
+  // restore ค่าเดิม
+  if (prev) sel.value = prev;
+}
+
+function onRlModelFullChange() {
+  const sel = document.getElementById('rl-model-full');
+  const wrap = document.getElementById('rl-model-full-custom-wrap');
+  wrap.style.display = sel.value === '__custom__' ? '' : 'none';
+  if (sel.value !== '__custom__') {
+    document.getElementById('rl-model-full-custom').value = '';
+  }
+}
+
+function getRlModelFullValue() {
+  const sel = document.getElementById('rl-model-full');
+  if (sel.value === '__custom__') {
+    return document.getElementById('rl-model-full-custom').value.trim();
+  }
+  return sel.value.trim();
+}
+
+function lookupModelPPV(r) {
+  // พยายาม match จาก meta.model โดยใช้ รายละเอียดรถ หรือ รหัสรุ่นรถ
+  if (!meta.model || !meta.model.length) return '';
+  const detail = (r['รายละเอียดรถ'] || '').trim().toLowerCase();
+  const code   = (r['รุ่นรถ'] || '').trim().toLowerCase();
+  // ลอง match รายละเอียด exact ก่อน
+  let found = meta.model.find(m => (m['รายละเอียด']||'').trim().toLowerCase() === detail);
+  // ถ้าไม่ได้ ลอง match รหัสรุ่นรถ
+  if (!found && code) found = meta.model.find(m => (m['รหัสรุ่นรถ']||'').trim().toLowerCase() === code);
+  if (found) return (found['ชื่อรุ่นการจำหน่าย'] || found['PPV'] || '').trim();
+  return '';
+}
+
 function openReleaseReport(i) {
   const r = filteredBookings[i];
   if (!r) return;
@@ -3170,7 +3231,37 @@ function openReleaseReport(i) {
   document.getElementById('rl-po').value       = r['เลข PO'] || '';
   document.getElementById('rl-sc').value           = r['ที่ปรึกษาการขาย'] || '';
   document.getElementById('rl-rcv-customer').value  = r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
-  document.getElementById('rl-model-full').value    = r['ชื่อรุ่นรถ'] || r['รายละเอียดรถ'] || '';
+
+  // populate dropdown ล่าสุดจาก meta ทุกครั้ง
+  populateRlModelDropdown();
+
+  // หาค่าที่ถูกต้อง: ถ้าเคยบันทึก ชื่อรุ่นรถ ไว้แล้วให้ใช้ก่อน ถ้าไม่มี ให้ lookup จาก meta
+  const saved = (r['ชื่อรุ่นรถ'] || '').trim();
+  const looked = lookupModelPPV(r);
+  const targetVal = saved || looked;
+
+  const sel = document.getElementById('rl-model-full');
+  const wrap = document.getElementById('rl-model-full-custom-wrap');
+  const customInput = document.getElementById('rl-model-full-custom');
+
+  if (targetVal) {
+    // ลอง set ค่าใน dropdown
+    sel.value = targetVal;
+    if (sel.value !== targetVal) {
+      // ไม่มีใน dropdown → เปิด custom input
+      sel.value = '__custom__';
+      customInput.value = targetVal;
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+      customInput.value = '';
+    }
+  } else {
+    sel.value = '';
+    wrap.style.display = 'none';
+    customInput.value = '';
+  }
+
   document.getElementById('releaseModal').classList.add('open');
 }
 
@@ -3191,7 +3282,7 @@ async function saveAndPrintRelease() {
     'เลขส่งมอบ':  document.getElementById('rl-delivery').value.trim(),
     'เลข PO':     document.getElementById('rl-po').value.trim(),
     'ลูกค้ารับรถ': document.getElementById('rl-rcv-customer').value.trim(),
-    'ชื่อรุ่นรถ':  document.getElementById('rl-model-full').value.trim(),
+    'ชื่อรุ่นรถ':  getRlModelFullValue(),
   };
 
   // บันทึกลง Sheet
