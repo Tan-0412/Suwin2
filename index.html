@@ -2391,10 +2391,10 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
 
   // headers
   const modelBkHeaders = models.map(m =>
-    `<th style="background:#5b8dd9;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;text-align:center;">${m}</th>`
+    `<th style="background:#5b8dd9;color:#fff;font-size:12px;white-space:nowrap;padding:7px 6px;text-align:center;">${m}</th>`
   ).join('');
   const modelRsHeaders = models.map(m =>
-    `<th style="background:#3aaa74;color:#fff;font-size:9px;white-space:nowrap;padding:6px 5px;text-align:center;">${m}</th>`
+    `<th style="background:#3aaa74;color:#fff;font-size:12px;white-space:nowrap;padding:7px 6px;text-align:center;">${m}</th>`
   ).join('');
 
   // group by team
@@ -2433,7 +2433,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
         const v = p[m]?.bk||0;
         tBkCols[m]+=v; gBkCols[m]+=v;
         const safeM = m.replace(/"/g,'&quot;');
-        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;
           color:${v?'var(--primary2)':'#ccc'};${v?'cursor:pointer;':''}"
           ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','bk','${safeM}')" onmouseleave="hideDscTip()"`:''}>
           ${v||0}</td>`;
@@ -2443,7 +2443,7 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
         const v = p[m]?.rs||0;
         tRsCols[m]+=v; gRsCols[m]+=v;
         const safeM = m.replace(/"/g,'&quot;');
-        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;
           color:${v?'var(--green)':'#ccc'};${v?'cursor:pointer;':''}"
           ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','rs','${safeM}')" onmouseleave="hideDscTip()"`:''}>
           ${v||0}</td>`;
@@ -2453,62 +2453,62 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
       tRsTotal += p.rsTotal||0;
 
       tbody += `<tr style="${idx%2===1?'background:#f5f8ff;':'background:#fff;'}">
-        <td style="text-align:left;font-weight:600;padding:7px 10px;color:#1a3060;" class="name">${nickname}</td>
+        <td style="text-align:left;font-weight:600;padding:8px 10px;color:#1a3060;font-size:15px;" class="name">${nickname}</td>
         ${bkCells}
-        <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;"
+        <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;font-size:18px;font-family:'IBM Plex Mono',monospace;"
           onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
         ${rsCells}
-        <td style="text-align:center;font-weight:700;color:#1a8a55;background:#e6f5ee;cursor:pointer;"
+        <td style="text-align:center;font-weight:700;color:#1a8a55;background:#e6f5ee;cursor:pointer;font-size:18px;font-family:'IBM Plex Mono',monospace;"
           onmouseenter="showModelTip(event,'${name}','rs')" onmouseleave="hideDscTip()">${p.rsTotal||0}</td>
       </tr>`;
     });
 
     // team total
-    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tBkCols[m]||0}</td>`).join('');
-    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${tRsCols[m]||0}</td>`).join('');
+    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tBkCols[m]||0}</td>`).join('');
+    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tRsCols[m]||0}</td>`).join('');
     tbody += `<tr style="background:#eef3ff;border-top:1.5px solid #a0b4e0;">
-      <td style="text-align:left;font-weight:700;padding:7px 10px;color:#2a4080;">รวม ทีม ${team}</td>
+      <td style="text-align:left;font-weight:700;padding:8px 10px;color:#2a4080;font-size:15px;">รวม ทีม ${team}</td>
       ${tBkColCells}
-      <td style="text-align:center;font-weight:700;color:var(--primary2);">${tBkTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tBkTotal}</td>
       ${tRsColCells}
-      <td style="text-align:center;font-weight:700;color:var(--green);">${tRsTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tRsTotal}</td>
     </tr>`;
 
     gBkTotal += tBkTotal; gRsTotal += tRsTotal;
   });
 
   // grand total
-  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${gBkCols[m]||0}</td>`).join('');
-  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;">${gRsCols[m]||0}</td>`).join('');
+  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gBkCols[m]||0}</td>`).join('');
+  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gRsCols[m]||0}</td>`).join('');
 
   bodyEl.innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:600px;">
+    <table style="width:100%;border-collapse:collapse;font-size:15px;min-width:600px;">
       <thead>
         <tr>
           <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
-            min-width:100px;">ที่ปรึกษาการขาย SC</th>
-          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:8px;text-align:center;">
+            min-width:100px;font-size:14px;">ที่ปรึกษาการขาย SC</th>
+          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:8px;text-align:center;font-size:14px;">
             ยอดจอง</th>
-          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:8px;text-align:center;">
+          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:8px;text-align:center;font-size:14px;">
             ยอดปล่อย</th>
         </tr>
         <tr>
           ${modelBkHeaders}
-          <th style="background:#1565C0;color:#fff;font-size:9px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
+          <th style="background:#1565C0;color:#fff;font-size:12px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
           ${modelRsHeaders}
-          <th style="background:#1a7a4a;color:#fff;font-size:9px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
+          <th style="background:#1a7a4a;color:#fff;font-size:12px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
         </tr>
       </thead>
       <tbody>${tbody}</tbody>
       <tfoot>
         <tr style="background:#fef6e4;">
-          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;">รวมทั้งหมด</td>
+          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;font-size:15px;">รวมทั้งหมด</td>
           ${gBkColCells}
           <td style="text-align:center;font-weight:700;color:#3b6fd4;border-top:2px solid #f0c060;
-            font-size:13px;">${gBkTotal}</td>
+            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gBkTotal}</td>
           ${gRsColCells}
           <td style="text-align:center;font-weight:700;color:#1a8a55;border-top:2px solid #f0c060;
-            font-size:13px;">${gRsTotal}</td>
+            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gRsTotal}</td>
         </tr>
       </tfoot>
     </table>`;
@@ -2699,21 +2699,21 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
   // สร้าง header
   const srcHeaders = sources.map(s =>
-    `<th class="online-hdr" style="font-size:9px;">${s}</th>`
+    `<th class="online-hdr" style="font-size:12px;">${s}</th>`
   ).join('');
 
   let html = `<table class="dsc-table">
     <thead>
       <tr>
-        <th class="left" rowspan="2" style="min-width:140px;">ที่ปรึกษาการขาย SC</th>
-        <th class="carry" rowspan="2">จอง<br>ยกมา</th>
-        <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะจอง</th>
-        <th class="bk-hdr" rowspan="2">จอง<br>เดือนนี้</th>
-        <th class="online-hdr" colspan="${sources.length}">Online</th>
-        <th class="bk-hdr" rowspan="2">รวมจอง<br>ปัจจุบัน</th>
-        <th class="ebk-hdr" rowspan="2">คาดว่า<br>จะปล่อย</th>
-        <th class="rs-hdr" rowspan="2">ยอด<br>ปล่อย</th>
-        <th class="cl-hdr" rowspan="2">ถอน<br>จอง</th>
+        <th class="left" rowspan="2" style="min-width:140px;font-size:14px;">ที่ปรึกษาการขาย SC</th>
+        <th class="carry" rowspan="2" style="font-size:13px;">จอง<br>ยกมา</th>
+        <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะจอง</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">จอง<br>เดือนนี้</th>
+        <th class="online-hdr" colspan="${sources.length}" style="font-size:13px;">Online</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">รวมจอง<br>ปัจจุบัน</th>
+        <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะปล่อย</th>
+        <th class="rs-hdr" rowspan="2" style="font-size:13px;">ยอด<br>ปล่อย</th>
+        <th class="cl-hdr" rowspan="2" style="font-size:13px;">ถอน<br>จอง</th>
       </tr>
       <tr>${srcHeaders}</tr>
     </thead>
