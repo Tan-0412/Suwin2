@@ -237,7 +237,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .dsc-table tr.team-sep td{background:#e8edf8;font-size:12px;font-weight:700;
   color:#3b5080;padding:5px 10px;border-top:2px solid #a0b4e0;letter-spacing:.5px;}
 /* online columns — แคบลง */
-.dsc-table th.online-hdr{background:#c44d8a;max-width:60px;width:60px;}
+.dsc-table th.online-hdr{background:#c44d8a;max-width:60px;width:60px;white-space:normal;word-break:break-word;line-height:1.3;padding:5px 3px;}
 .dsc-table td.online-col{max-width:60px;width:60px;}
 /* header สีโทนอ่อนหวาน */
 .dsc-table th.carry{background:#8b6bb1;}
@@ -2699,7 +2699,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
   // สร้าง header
   const srcHeaders = sources.map(s =>
-    `<th class="online-hdr" style="font-size:12px;">${s}</th>`
+    `<th class="online-hdr" style="font-size:11px;">${s}</th>`
   ).join('');
 
   let html = `<table class="dsc-table">
