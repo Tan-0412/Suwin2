@@ -1,26 +1,3713 @@
-{
-  "name": "ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ",
-  "short_name": "จองรถ",
-  "description": "ระบบบันทึกยอดจองรถ บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด สาขาสุวินทวงศ์",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#1a3a6b",
-  "theme_color": "#1a3a6b",
-  "lang": "th",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="จองรถ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1a3a6b;--primary2:#2451a0;--primary3:#3568c8;
+  --accent:#e8a020;--accent2:#f5c842;
+  --green:#1a7a4a;--green2:#25a866;
+  --red:#c0392b;--red2:#e74c3c;
+  --orange:#e06010;
+  --purple:#6c3fc8;
+  --bg:#f0f4fa;--white:#fff;
+  --gray:#7a8ea8;--gray2:#dde5f0;--gray3:#f5f8fc;
+  --tx:#1a2d45;--tx2:#3d5470;
+  --shadow:0 4px 24px rgba(26,58,107,0.12);
+  --shadow2:0 2px 10px rgba(26,58,107,0.08);
 }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:linear-gradient(135deg,var(--primary) 0%,var(--primary2) 60%,var(--primary3) 100%);
+  padding:0 20px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 3px 20px rgba(0,0,0,0.25);position:sticky;top:0;z-index:300;
+}
+.tb-brand{display:flex;align-items:center;gap:12px;}
+.tb-logo{width:38px;height:38px;background:var(--accent);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.tb-title{color:#fff;font-size:15px;font-weight:700;line-height:1.2;}
+.tb-sub{color:rgba(245,200,66,0.8);font-size:10px;}
+.conn-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.6);}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#666;flex-shrink:0;}
+.conn-dot.ok{background:#2ECC71;box-shadow:0 0 5px #2ECC71;}
+.conn-dot.err{background:#E74C3C;}
+
+/* ── TABS ── */
+.tabs{background:var(--primary);border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;
+  color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;
+  transition:all .2s;font-family:'Sarabun',sans-serif;white-space:nowrap;}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab:hover:not(.active){color:rgba(255,255,255,0.8);}
+
+/* ── PAGES ── */
+.page{display:none;padding:16px;max-width:1200px;margin:0 auto;}
+.page.active{display:block;}
+
+/* ── CARD ── */
+.card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;}
+.card-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:12px 18px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-hdr h2{color:#fff;font-size:13px;font-weight:700;}
+.card-hdr p{color:rgba(245,200,66,0.8);font-size:10px;margin-top:1px;}
+.card-body{padding:16px;}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.frow{display:flex;flex-direction:column;gap:4px;}
+.frow label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
+.frow input,.frow select,.frow textarea{
+  padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;
+  font-size:13px;font-family:'Sarabun',sans-serif;color:var(--tx);
+  background:#fafbfd;outline:none;transition:border-color .2s;width:100%;
+}
+.frow input:focus,.frow select:focus,.frow textarea:focus{border-color:var(--primary3);background:#fff;}
+
+.frow textarea{resize:vertical;min-height:60px;}
+.frow.span2{grid-column:span 2;}
+.frow.span3{grid-column:span 3;}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 18px;border:none;border-radius:9px;font-size:13px;font-weight:700;
+  font-family:'Sarabun',sans-serif;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary2);}
+.btn-accent{background:var(--accent);color:var(--primary);}
+.btn-accent:hover{background:var(--accent2);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:var(--green2);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:var(--red2);}
+.btn-outline{background:transparent;border:1.5px solid var(--gray2);color:var(--tx);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:7px;}
+.btn-full{width:100%;justify-content:center;}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── STATUS BADGES ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-PS {background:#DBEAFE;color:#1D4ED8;}
+.badge-EBK{background:#FCE7F3;color:#9D174D;}
+.badge-BK {background:#FED7AA;color:#9A3412;}
+.badge-ERS{background:#FEF9C3;color:#854D0E;}
+.badge-RS {background:#D1FAE5;color:#065F46;}
+.badge-CL {background:#FEE2E2;color:#991B1B;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px;}
+thead{background:var(--primary);}
+th{padding:10px 10px;text-align:left;color:rgba(255,255,255,0.7);
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+th.r{text-align:right;}th.c{text-align:center;}
+td{padding:9px 10px;border-bottom:1px solid var(--gray2);vertical-align:middle;font-size:13px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f5f8ff;}
+tr.alt td{background:#fafcff;}
+td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;}
+td.r{text-align:right;}td.c{text-align:center;}
+.action-btns{display:flex;gap:4px;justify-content:center;}
+
+/* ── SUMMARY CARDS ── */
+.sum-grid{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sum-card{background:var(--white);border-radius:10px;padding:8px 14px;box-shadow:var(--shadow2);
+  border-left:3px solid var(--primary3);display:flex;align-items:center;gap:10px;flex:1;min-width:100px;}
+.sum-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--primary);line-height:1;}
+.sum-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;line-height:1.3;}
+
+/* ── FILTER ── */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+.filter-row .frow{min-width:130px;flex:1;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:18px;overflow:hidden;width:min(96vw,620px);
+  max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));
+  padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.modal-hdr h3{color:#fff;font-size:14px;font-weight:700;}
+.modal-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:0 6px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:600;align-items:center;justify-content:center;padding:16px;}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:#fff;border-radius:16px;padding:28px 24px;width:min(94vw,380px);text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.confirm-icon{font-size:40px;margin-bottom:12px;}
+.confirm-title{font-size:16px;font-weight:700;color:var(--tx);margin-bottom:8px;}
+.confirm-msg{font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--primary);color:#fff;padding:10px 22px;border-radius:12px;
+  font-size:13px;font-weight:600;z-index:999;display:none;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.warn{background:var(--orange);}
+
+/* ── LOADER ── */
+.loader{text-align:center;padding:40px;color:var(--gray);}
+.loader-spin{display:inline-block;width:28px;height:28px;border:3px solid var(--gray2);
+  border-top-color:var(--primary3);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes connPulse{from{opacity:.4;}to{opacity:1;}}
+.empty{text-align:center;padding:44px;color:var(--gray);font-size:13px;}
+
+/* ── SETUP ── */
+pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
+  font-size:10px;line-height:1.75;overflow-x:auto;font-family:'Courier New',monospace;
+  white-space:pre;max-height:280px;overflow-y:auto;}
+.dvd{border:none;border-top:1px solid var(--gray2);margin:14px 0;}
+.step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.stepn{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--primary);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.stept{font-size:13px;line-height:1.6;}
+
+/* ── RECORD COUNT BADGE ── */
+.rec-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;
+  color:rgba(245,200,66,0.9);background:rgba(232,160,32,0.15);
+  padding:3px 10px;border-radius:12px;border:1px solid rgba(232,160,32,0.3);}
+
+/* ── REPORT STYLES ── */
+.report-filter{background:var(--white);border-radius:14px;padding:16px;
+  box-shadow:var(--shadow2);margin-bottom:14px;}
+
+/* ── PIVOT TABLE ── */
+.pivot-wrap{overflow-x:auto;}
+.pivot-table{width:100%;border-collapse:collapse;font-size:12px;}
+.pivot-table th{background:var(--primary);color:#fff;padding:8px 10px;
+  text-align:center;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,0.2);}
+.pivot-table th.left{text-align:left;}
+.pivot-table td{padding:7px 10px;border:1px solid var(--gray2);text-align:center;}
+.pivot-table td.name{text-align:left;font-weight:600;}
+.pivot-table tr:nth-child(even) td{background:#fafcff;}
+.pivot-table tr.total-row td{background:#f0e8d0;font-weight:700;font-size:13px;border-top:2px solid var(--accent);}
+.pivot-table td.zero{color:#ccc;}
+/* Light card header สำหรับรายงาน */
+.card-hdr-light{background:linear-gradient(135deg,#e8f0ff,#f0f5ff);
+  padding:14px 18px;border-bottom:2px solid #c0d0f0;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-hdr-light h2{color:#1a3a6b;font-size:14px;font-weight:700;}
+.card-hdr-light p{color:#4a6090;font-size:11px;margin-top:2px;}
+.target-badge{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;
+  color:#c05000;background:#fff3e0;padding:6px 16px;border-radius:20px;
+  border:2px solid #ffb74d;display:inline-flex;align-items:center;gap:6px;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:15px;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:15px;}
+.dsc-table th{padding:8px 9px;text-align:center;
+  font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
+.dsc-table th.left{text-align:left;background:#6b7fa8;}
+.dsc-table td{padding:8px 10px;border:1px solid #e8edf5;text-align:center;vertical-align:middle;font-size:15px;}
+.dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;color:#1a2d45;}
+.dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:18px;}
+.dsc-table td.bk{color:#3b6fd4;}
+.dsc-table td.rs{color:#1a8a55;}
+.dsc-table td.ebk{color:#d4720a;}
+.dsc-table td.cl{color:#c0392b;}
+.dsc-table td.zero{color:#c8d0dc;}
+.dsc-table tr.team-total td{background:#eef3ff;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:14px;border-top:2px solid #f0c060;color:#5a3e00;}
+.dsc-table tr.team-sep td{background:#e8edf8;font-size:12px;font-weight:700;
+  color:#3b5080;padding:5px 10px;border-top:2px solid #a0b4e0;letter-spacing:.5px;}
+/* online columns — แคบลง */
+.dsc-table th.online-hdr{background:#c44d8a;max-width:60px;width:60px;white-space:normal;word-break:break-word;line-height:1.3;padding:5px 3px;}
+.dsc-table td.online-col{max-width:60px;width:60px;}
+/* header สีโทนอ่อนหวาน */
+.dsc-table th.carry{background:#8b6bb1;}
+.dsc-table th.ebk-hdr{background:#e07820;}
+.dsc-table th.bk-hdr{background:#4a7fd4;}
+.dsc-table th.rs-hdr{background:#2e9e6a;}
+.dsc-table th.cl-hdr{background:#d45050;}
+.pivot-table td.has-val{color:var(--primary);font-weight:700;}
+.pivot-table th.out-hdr{background:var(--green);}
+.pivot-table th.in-hdr{background:var(--primary2);}
+.date-badge-r2{display:inline-flex;align-items:center;gap:8px;background:#e6f5ee;border-radius:8px;padding:5px 14px;border:1px solid #a8dbc0;}
+.date-badge-r2 .lbl{font-size:11px;color:#1a7a4a;font-weight:600;}
+.date-badge-r2 .val{font-size:16px;font-weight:700;color:#0f5c36;}
+.date-badge-r3{display:inline-flex;align-items:center;gap:8px;background:#e6eeff;border-radius:8px;padding:5px 14px;border:1px solid #a0b8f0;}
+.date-badge-r3 .lbl{font-size:11px;color:#1a3a6b;font-weight:600;}
+.date-badge-r3 .val{font-size:16px;font-weight:700;color:#1a2d80;}
+.datepick-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:700;align-items:center;justify-content:center;}
+.datepick-overlay.open{display:flex;}
+.datepick-box{background:#fff;border-radius:16px;overflow:hidden;width:min(94vw,360px);box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.datepick-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.datepick-hdr h3{color:#fff;font-size:14px;font-weight:700;}
+.datepick-hdr .dp-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:0 4px;}
+.datepick-body{padding:20px;}
+.datepick-body label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
+.datepick-body input[type=date]{width:100%;padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;font-size:14px;font-family:'Sarabun',sans-serif;color:var(--tx);outline:none;}
+.datepick-body input[type=date]:focus{border-color:var(--primary3);}
+.datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
+
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-2{grid-template-columns:1fr;}
+  .frow.span2,.frow.span3{grid-column:span 1;}
+  .sum-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-logo">🚗</div>
+    <div>
+      <div class="tb-title">ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ</div>
+      <div class="tb-sub">สาขาสุวินทวงศ์ · ฝ่ายขายรถเล็ก</div>
+    </div>
+  </div>
+  <div class="conn-badge">
+    <div class="conn-dot" id="connDot"></div>
+    <span id="connLbl">ยังไม่เชื่อมต่อ</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('booking')"  id="tab-booking">📋 รายการจอง</div>
+  <div class="tab" onclick="switchTab('report1')"  id="tab-report1">📄 รายงานจอง</div>
+  <div class="tab" onclick="switchTab('report2')"  id="tab-report2">🚗 จอง-ปล่อยรายวัน</div>
+  <div class="tab" onclick="switchTab('report3')"  id="tab-report3">👤 Daily SC</div>
+  <div class="tab" onclick="switchTab('release')"  id="tab-release">📋 รายงานปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('target')"   id="tab-target">🎯 เป้าจำหน่าย</div>
+  <div class="tab" onclick="switchTab('setup')"    id="tab-setup">⚙️ ตั้งค่า</div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: BOOKING LIST
+════════════════════════════════════ -->
+<div class="page active" id="page-booking">
+
+  <!-- Summary (compact) -->
+  <div class="sum-grid" id="sumGrid">
+    <div class="sum-card" style="border-left-color:var(--primary3);">
+      <div class="sum-val" id="sAll">—</div><div class="sum-lbl">ทั้งหมด</div>
+    </div>
+    <div class="sum-card" style="border-left-color:#9A3412;">
+      <div class="sum-val" id="sBK" style="color:#9A3412;">—</div><div class="sum-lbl">🟠 จอง</div>
+    </div>
+    <div class="sum-card" style="border-left-color:#065F46;">
+      <div class="sum-val" id="sRS" style="color:#065F46;">—</div><div class="sum-lbl">🟢 ปล่อย</div>
+    </div>
+    <div class="sum-card" style="border-left-color:#9D174D;">
+      <div class="sum-val" id="sEBK" style="color:#9D174D;">—</div><div class="sum-lbl">🩷 คาดจอง</div>
+    </div>
+    <div class="sum-card" style="border-left-color:#854D0E;">
+      <div class="sum-val" id="sERS" style="color:#854D0E;">—</div><div class="sum-lbl">🟡 คาดปล่อย</div>
+    </div>
+    <div class="sum-card" style="border-left-color:var(--red);">
+      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">🔴 ยกเลิก</div>
+    </div>
+  </div>
+
+  <!-- Bar Chart -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="padding:10px 16px;">
+      <h2>📊 ยอดจองแต่ละ SC</h2>
+      <div style="display:flex;gap:8px;align-items:center;font-size:10px;">
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#2471c8;display:inline-block;"></span>จอง
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#ca8a04;display:inline-block;"></span>คาดปล่อย
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>ปล่อย
+        </span>
+      </div>
+    </div>
+    <div style="padding:14px 16px;overflow-x:auto;">
+      <div id="scChart" style="min-height:120px;"></div>
+    </div>
+  </div>
+
+  <!-- Filter + Add -->
+  <div class="card">
+    <div class="card-hdr">
+      <div><h2>📋 รายการจองทั้งหมด</h2></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="rec-badge" id="recCount">0 รายการ</span>
+        <button class="btn btn-accent btn-sm" onclick="openAddModal()">+ เพิ่มรายการจอง</button>
+      </div>
+    </div>
+    <div class="card-body" style="padding-bottom:8px;">
+      <div class="filter-row">
+        <div class="frow"><label>ค้นหา</label>
+          <input type="text" id="fSearch" placeholder="ชื่อ / เบอร์ / รายละเอียด..." oninput="filterBooking()">
+        </div>
+        <div class="frow"><label>ฝ่าย</label>
+          <select id="fDept" onchange="onDeptChange('fDept','fSC');filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>ที่ปรึกษา</label>
+          <select id="fSC" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>รุ่นรถ</label>
+          <select id="fModel" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>สถานะ</label>
+          <select id="fStatus" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>เดือนจอง</label>
+          <select id="fMonth" onchange="filterBooking()"><option value="">ทั้งหมด</option></select>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="resetFilter()" style="align-self:flex-end;">✕ ล้าง</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:32px;">#</th>
+          <th>วันที่จอง</th>
+          <th>ชื่อลูกค้า</th>
+          <th>เบอร์</th>
+          <th>รายละเอียดรถ</th>
+          <th>รุ่น</th>
+          <th>สถานะ</th>
+          <th>วันที่ปล่อย</th>
+          <th>SC</th>
+          <th>ที่มา</th>
+          <th class="c">จัดการ</th>
+        </tr></thead>
+        <tbody id="bookingBody">
+          <tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: REPORT 1 — รายละเอียดการจอง
+════════════════════════════════════ -->
+<div class="page" id="page-report1">
+  <div class="report-filter card">
+    <div class="card-hdr"><h2>🔍 ตัวกรอง / ค้นหา รายงานรายละเอียดการจอง</h2></div>
+    <div class="card-body">
+      <div class="filter-row">
+        <div class="frow"><label>ฝ่าย</label>
+          <select id="r1Dept" onchange="onDeptChange('r1Dept','r1SC')"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>ที่ปรึกษาการขาย</label>
+          <select id="r1SC"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>เดือนที่จอง</label>
+          <select id="r1Month"><option value="">ทั้งหมด</option></select>
+        </div>
+        <div class="frow"><label>วันจองที่เริ่มต้น</label>
+          <input type="date" id="r1DateFrom">
+        </div>
+        <div class="frow"><label>วันจองที่สิ้นสุด</label>
+          <input type="date" id="r1DateTo">
+        </div>
+        <div class="frow"><label>สถานะ</label>
+          <select id="r1Status"><option value="">ทั้งหมด</option></select>
+        </div>
+      </div>
+      <div class="filter-row" style="margin-top:8px;">
+        <div class="frow" style="flex:3;min-width:250px;">
+          <label>🔎 ค้นหา (ชื่อลูกค้า / SC / รุ่นรถ / รายละเอียด / วันที่ปล่อย / ที่มา)</label>
+          <input type="text" id="r1Search" placeholder="พิมพ์คำค้นหา...">
+        </div>
+        <div style="display:flex;gap:6px;align-self:flex-end;">
+          <button class="btn btn-primary btn-sm" onclick="runReport1()">🔍 ค้นหา</button>
+          <button class="btn btn-outline btn-sm" onclick="clearReport1()">✕ ล้างตัวกรอง</button>
+          <button class="btn btn-accent btn-sm" onclick="printReport1()">🖨️ พิมพ์</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="r1Card">
+    <div class="card-hdr">
+      <h2 id="r1Title">รายงานรายละเอียดการจอง</h2>
+      <span class="rec-badge" id="r1Count">0 รายการ</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>วันที่จอง</th><th>ชื่อลูกค้า</th><th>เบอร์</th>
+          <th>รายละเอียดรถ</th><th>รุ่น</th><th>สถานะ</th>
+          <th>วันที่ปล่อย</th><th>SC</th><th>ที่มา</th>
+        </tr></thead>
+        <tbody id="r1Body">
+          <tr><td colspan="10"><div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: REPORT 2 — แยกประเภทรถ จอง-ปล่อย รายวัน
+════════════════════════════════════ -->
+<div class="page" id="page-report2">
+  <!-- topbar สีน้ำเงิน แยก card เหมือน Daily SC -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2>📊 รายงานยอดจองและปล่อยรถ</h2>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report2')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport2()">🖨️ พิมพ์</button>
+      </div>
+    </div>
+  </div>
+  <!-- รถเล็ก -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2>
+        <p id="r2SubSmall">—</p>
+      </div>
+      <div id="r2DateBadgeSmall" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r2BodySmall">
+      <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
+    </div>
+  </div>
+  <!-- รถใหญ่ -->
+  <div class="card">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2>
+        <p id="r2SubBig">—</p>
+      </div>
+      <div id="r2DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r2BodyBig">
+      <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: REPORT 3 — Daily SC Performance
+════════════════════════════════════ -->
+<div class="page" id="page-report3">
+  <!-- Header -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2 id="r3MainTitle">👤 Daily SC Performance</h2>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report3')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport3()">🖨️ พิมพ์</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- รถเล็ก -->
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
+        <p id="r3SubSmall" style="display:none;"></p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <span id="r3TargetSmall" style="display:none;"><span id="r3TargetVal"></span></span>
+        <div id="r3DateBadgeSmall"></div>
+      </div>
+    </div>
+    <div class="tbl-wrap" id="r3BodySmall">
+      <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
+    </div>
+  </div>
+
+  <!-- รถใหญ่ -->
+  <div class="card">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div>
+        <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
+        <p id="r3SubBig" style="display:none;"></p>
+      </div>
+      <div id="r3DateBadgeBig" style="flex-shrink:0;"></div>
+    </div>
+    <div class="tbl-wrap" id="r3BodyBig">
+      <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: RELEASE REPORT — รายงานการปล่อยรถ
+════════════════════════════════════ -->
+<div class="page" id="page-release">
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <div>
+        <h2>📋 รายงานการปล่อยรถ</h2>
+        <p>เลือกวันที่ปล่อยรถแล้วกดแสดงรายงาน</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="filter-row" style="align-items:flex-end;gap:12px;">
+        <div class="frow" style="min-width:200px;">
+          <label>วันที่ปล่อยรถ</label>
+          <input type="date" id="releaseReportDate">
+        </div>
+        <button class="btn btn-primary" onclick="runReleaseReportPage()">🔍 แสดงรายงาน</button>
+        <button class="btn btn-accent" id="releaseReportPrintBtn" onclick="doReleaseReportPage()" style="display:none;">🖨️ พิมพ์รายงาน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- preview -->
+  <div class="card" id="releaseReportPreviewCard" style="display:none;">
+    <div class="card-hdr">
+      <div>
+        <h2 id="releaseReportPreviewTitle">รายงานการปล่อยรถ</h2>
+        <p id="releaseReportPreviewSub">—</p>
+      </div>
+      <span class="rec-badge" id="releaseReportCount">0 คัน</span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="releaseReportTable">
+        <thead>
+          <tr>
+            <th style="width:48px;">F/N</th>
+            <th>รุ่นรถ</th>
+            <th>เลขเครื่อง</th>
+            <th>เลขแชสซีส์</th>
+            <th>ชื่อลูกค้า</th>
+            <th style="width:90px;">ทะเบียนป้ายแดง</th>
+            <th style="width:80px;">ใบส่งมอบ</th>
+            <th style="width:80px;">ใบ PO</th>
+            <th>SC</th>
+          </tr>
+        </thead>
+        <tbody id="releaseReportBody">
+          <tr><td colspan="9"><div class="empty">ยังไม่มีข้อมูล</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: TARGET
+════════════════════════════════════ -->
+<div class="page" id="page-target">
+  <div class="card">
+    <div class="card-hdr">
+      <h2>🎯 เป้าการจำหน่ายต่อเดือน</h2>
+      <button class="btn btn-accent btn-sm" onclick="openTargetModal()">+ เพิ่ม/แก้ไขเป้า</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>เดือน</th><th class="r">เป้าการจำหน่าย</th><th class="c">จัดการ</th>
+        </tr></thead>
+        <tbody id="targetBody">
+          <tr><td colspan="4"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: SETUP
+════════════════════════════════════ -->
+<div class="page" id="page-setup">
+  <div style="max-width:600px;margin:0 auto;">
+    <div class="card">
+      <div class="card-hdr"><h2>🔗 เชื่อมต่อ Google Sheets</h2><p>ตั้งค่าครั้งเดียว ใช้ได้ทุกเครื่อง</p></div>
+      <div class="card-body">
+        <div class="step"><div class="stepn">1</div><div class="stept">เปิด Google Sheets "Booking" → <strong>Extensions → Apps Script</strong> → ลบโค้ดเดิมออก</div></div>
+        <div class="step"><div class="stepn">2</div><div class="stept">คัดลอก Script ด้านล่างวางแทน → <strong>Ctrl+S</strong></div></div>
+        <div class="step"><div class="stepn">3</div><div class="stept"><strong>Deploy → New Deployment</strong> · Type: Web app · Execute as: Me · Access: Anyone → Deploy → Authorize</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stept">คัดลอก URL → วางด้านล่าง → กด <strong>เชื่อมต่อ</strong></div></div>
+        <div class="dvd"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:12px;">📄 Apps Script</strong>
+          <button class="btn btn-outline btn-sm" onclick="copyScript()">📋 คัดลอก</button>
+        </div>
+        <pre class="code" id="scriptCode">// ════════════════════════════════════════════
+//  ระบบจองรถ · Google Apps Script v1
+//  Spreadsheet: Booking
+// ════════════════════════════════════════════
+const SHEETS = {
+  customer: 'Customer',
+  sc:       'SC',
+  isuzu:    'ISUZU',
+  model:    'Model',
+  status:   'STATUS',
+  source:   'SOURCE',
+  target:   'TARGET',
+};
+
+function doGet(e) {
+  const p = e.parameter;
+  try {
+    switch(p.action) {
+      case 'ping':        return ok({ pong: true });
+      case 'getMeta':     return ok(getMeta());
+      case 'getBookings': return ok({ status:'ok', data: getBookings(p) });
+      case 'addBooking':  return ok(addBooking(p));
+      case 'updateBooking': return ok(updateBooking(p));
+      case 'deleteBooking': return ok(deleteBooking(p));
+      case 'getTargets':  return ok({ status:'ok', data: getTargets() });
+      case 'saveTarget':  return ok(saveTarget(p));
+      case 'deleteTarget':return ok(deleteTarget(p));
+      default: return ok({ status:'ready' });
+    }
+  } catch(err) { return ok({ status:'error', message: err.message }); }
+}
+
+function ss() { return SpreadsheetApp.getActiveSpreadsheet(); }
+
+function getSheet(name) { return ss().getSheetByName(name); }
+
+function sheetData(name) {
+  const sh = getSheet(name);
+  if (!sh) return [];
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return [];
+  const hdrs = rows[0].map(h => String(h).trim());
+  return rows.slice(1).map(r => {
+    const o = {};
+    hdrs.forEach((h,i) => { o[h] = r[i] !== null && r[i] !== undefined ? String(r[i]).trim() : ''; });
+    return o;
+  }).filter(r => Object.values(r).some(v => v !== ''));
+}
+
+function getMeta() {
+  const sc     = sheetData(SHEETS.sc).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
+  const isuzu  = sheetData(SHEETS.isuzu).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
+  const model  = sheetData(SHEETS.model);
+  const status = sheetData(SHEETS.status).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
+  const source = sheetData(SHEETS.source).sort((a,b) => parseInt(a['ลำดับ']||99)-parseInt(b['ลำดับ']||99));
+  return { sc, isuzu, model, status, source };
+}
+
+function getBookings(p) {
+  const sh = getSheet(SHEETS.customer);
+  if (!sh) return [];
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return [];
+  const hdrs = rows[0].map(h => String(h).trim());
+  let data = rows.slice(1).map((r, i) => {
+    const o = { _row: i + 2 };
+    hdrs.forEach((h, j) => {
+      const v = r[j];
+      if (v instanceof Date) {
+        o[h] = Utilities.formatDate(v, 'Asia/Bangkok', 'dd/MM/yyyy');
+      } else {
+        o[h] = v !== null && v !== undefined ? String(v).trim() : '';
+      }
+    });
+    return o;
+  }).filter(r => r['ชื่อลูกค้า'] || r['วันที่จอง']);
+
+  if (p.dept)   data = data.filter(r => r['ที่ปรึกษาการขาย'] && scDeptMap()[r['ที่ปรึกษาการขาย']] === p.dept);
+  if (p.sc)     data = data.filter(r => r['ที่ปรึกษาการขาย'] === p.sc);
+  if (p.status) {
+    // รองรับทั้ง code (BK) และภาษาไทย (จอง)
+    const statusMap = getStatusMap();
+    data = data.filter(r => {
+      const s = r['สถานะ'];
+      return s === p.status ||
+             (statusMap[p.status] && s === statusMap[p.status]) ||
+             (statusMap[s] && statusMap[s] === p.status);
+    });
+  }
+  if (p.month) {
+    data = data.filter(r => {
+      const d = r['วันที่จอง'];
+      if (!d) return false;
+      const parts = d.split('/');
+      if (parts.length >= 3) return parts[2] + '-' + parts[1].padStart(2,'0') === p.month;
+      return false;
+    });
+  }
+  if (p.dateFrom) {
+    data = data.filter(r => {
+      const d = parseDate(r['วันที่จอง']);
+      return d && d >= new Date(p.dateFrom);
+    });
+  }
+  if (p.dateTo) {
+    data = data.filter(r => {
+      const d = parseDate(r['วันที่จอง']);
+      return d && d <= new Date(p.dateTo + 'T23:59:59');
+    });
+  }
+  // เรียงจากวันที่จองล่าสุดก่อน
+  data.sort((a, b) => {
+    const da = parseDate(a['วันที่จอง']);
+    const db = parseDate(b['วันที่จอง']);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return db - da;
+  });
+  return data;
+}
+
+function getStatusMap() {
+  // map: STATUS code → สถานะภาษาไทย
+  const map = {};
+  const sh = getSheet(SHEETS.status);
+  if (!sh) return map;
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return map;
+  const hdrs = rows[0].map(h => String(h).trim());
+  const ci = hdrs.indexOf('STATUS');
+  const ni = hdrs.indexOf('สถานะ');
+  rows.slice(1).forEach(r => {
+    if (ci >= 0 && ni >= 0) map[String(r[ci]).trim()] = String(r[ni]).trim();
+  });
+  return map;
+}
+
+function scDeptMap() {
+  const map = {};
+  const sh = getSheet(SHEETS.sc);
+  if (!sh) return map;
+  const rows = sh.getDataRange().getValues();
+  if (rows.length < 2) return map;
+  const hdrs = rows[0].map(h => String(h).trim());
+  const ni = hdrs.indexOf('ที่ปรึกษาการขาย');
+  const di = hdrs.indexOf('ฝ่าย');
+  rows.slice(1).forEach(r => {
+    if (ni>=0 && di>=0) map[String(r[ni]).trim()] = String(r[di]).trim();
+  });
+  return map;
+}
+
+function parseDate(s) {
+  if (!s) return null;
+  const p = String(s).split('/');
+  if (p.length >= 3) return new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
+  return null;
+}
+
+function addBooking(p) {
+  const sh = getSheet(SHEETS.customer);
+  if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
+  const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
+  // แปลง STATUS code → ภาษาไทยก่อนบันทึก เผื่อ client ส่ง code มา (BK→จอง ฯลฯ)
+  if (p['สถานะ']) { const sm=getStatusMap(); p['สถานะ']=sm[p['สถานะ']]||p['สถานะ']; }
+  // บันทึกเบอร์โทรเป็น Text เพื่อรักษาเลข 0 นำหน้า
+  const phoneIdx = hdrs.indexOf('เบอร์');
+  const newRow = Array(Math.max(hdrs.length, COLS.length)).fill('');
+  COLS.forEach(col => {
+    const idx = hdrs.indexOf(col);
+    if (idx >= 0 && p[col] !== undefined) newRow[idx] = p[col];
+  });
+  sh.appendRow(newRow);
+  // Force คอลัมเบอร์โทรให้เป็น PlainText เพื่อป้องกัน 0 หาย
+  if (phoneIdx >= 0 && p['เบอร์']) {
+    const lastRow = sh.getLastRow();
+    sh.getRange(lastRow, phoneIdx + 1).setNumberFormat('@STRING@');
+    sh.getRange(lastRow, phoneIdx + 1).setValue(p['เบอร์']);
+  }
+  return { ok:true, row: sh.getLastRow() };
+}
+
+function updateBooking(p) {
+  const sh = getSheet(SHEETS.customer);
+  if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
+  const rowNum = parseInt(p._row);
+  if (!rowNum || rowNum < 2) return { ok:false, error:'row ไม่ถูกต้อง' };
+  const hdrs = sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0].map(h=>String(h).trim());
+  const existing = sh.getRange(rowNum,1,1,hdrs.length).getValues()[0];
+  const COLS = ['วันที่จอง','ชื่อลูกค้า','เบอร์','รายละเอียดรถ','รุ่นรถ','สถานะ','วันที่ปล่อย','ที่ปรึกษาการขาย','ที่มาลูกค้า','เลขเครื่อง','เลขแชสซีส์','ไฟแนนซ์','เลขทะเบียน','เลขส่งมอบ','เลข PO','ลูกค้ารับรถ','ชื่อรุ่นรถ'];
+
+  // แปลง STATUS code → ภาษาไทยก่อนบันทึก เผื่อ client ส่ง code มา (BK→จอง ฯลฯ)
+  if (p['สถานะ']) { const sm=getStatusMap(); p['สถานะ']=sm[p['สถานะ']]||p['สถานะ']; }
+
+  const phoneIdx = hdrs.indexOf('เบอร์');
+  COLS.forEach(col => {
+    const idx = hdrs.indexOf(col);
+    if (idx >= 0 && p[col] !== undefined) existing[idx] = p[col];
+  });
+  sh.getRange(rowNum,1,1,hdrs.length).setValues([existing]);
+  // Force คอลัมเบอร์โทรให้เป็น PlainText เพื่อป้องกัน 0 หาย
+  if (phoneIdx >= 0 && p['เบอร์']) {
+    sh.getRange(rowNum, phoneIdx + 1).setNumberFormat('@STRING@');
+    sh.getRange(rowNum, phoneIdx + 1).setValue(p['เบอร์']);
+  }
+  return { ok:true };
+}
+
+function deleteBooking(p) {
+  const sh = getSheet(SHEETS.customer);
+  if (!sh) return { ok:false, error:'ไม่พบชีท Customer' };
+  const rowNum = parseInt(p._row);
+  if (!rowNum || rowNum < 2) return { ok:false, error:'row ไม่ถูกต้อง' };
+  sh.deleteRow(rowNum);
+  return { ok:true };
+}
+
+function getTargets() {
+  return sheetData(SHEETS.target);
+}
+
+function saveTarget(p) {
+  const sh = getSheet(SHEETS.target);
+  if (!sh) return { ok:false, error:'ไม่พบชีท TARGET' };
+  const rows = sh.getDataRange().getValues();
+  const hdrs = rows[0].map(h=>String(h).trim());
+  const mi = hdrs.indexOf('เดือน');
+  const ti = hdrs.indexOf('เป้าการจำหน่าย');
+  // ถ้ามีเดือนนี้แล้ว update ถ้าไม่มีให้ append
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][mi]).trim() === p['เดือน']) {
+      sh.getRange(i+1, ti+1).setValue(parseInt(p['เป้าการจำหน่าย'])||0);
+      return { ok:true };
+    }
+  }
+  sh.appendRow([p['เดือน'], parseInt(p['เป้าการจำหน่าย'])||0]);
+  return { ok:true };
+}
+
+function deleteTarget(p) {
+  const sh = getSheet(SHEETS.target);
+  if (!sh) return { ok:false, error:'ไม่พบชีท TARGET' };
+  const rowNum = parseInt(p._row);
+  if (!rowNum || rowNum < 2) return { ok:false, error:'row ไม่ถูกต้อง' };
+  sh.deleteRow(rowNum);
+  return { ok:true };
+}
+
+function ok(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function testUpdate() {
+  const p = {
+    _row: '10',
+    'วันที่จอง': '30/3/2026',
+    'สถานะ': 'ERS',
+    'ชื่อลูกค้า': 'ทดสอบ'
+  };
+  const result = updateBooking(p);
+  Logger.log(JSON.stringify(result));
+}</pre>
+        <div id="copyOk" style="font-size:11px;color:var(--green);margin-top:4px;display:none;">✅ คัดลอกแล้ว!</div>
+        <div class="dvd"></div>
+        <div class="frow">
+          <label>Apps Script URL</label>
+          <input type="url" id="gsUrl" placeholder="https://script.google.com/macros/s/xxxx/exec">
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="connectSheet()">🔌 เชื่อมต่อ</button>
+          <button class="btn btn-outline btn-sm" onclick="testConn()">🧪 ทดสอบ</button>
+        </div>
+        <div id="setupStatus" style="font-size:12px;margin-top:8px;min-height:18px;color:var(--green);"></div>
+        <div class="dvd"></div>
+        <button class="btn btn-outline btn-sm" onclick="resetCache()" style="color:var(--red);border-color:#f5c6c6;">🔄 ล้างค่าเก่า / รีเซ็ต</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hdr"><h2>🔗 แชร์ให้ทีม</h2></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--gray);margin-bottom:10px;">คัดลอกลิงค์ให้ทีม เปิดแล้วเชื่อมต่ออัตโนมัติ</p>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="shareUrl" readonly style="flex:1;font-size:11px;font-family:monospace;background:#f5f7fa;">
+          <button class="btn btn-outline btn-sm" onclick="copyShareUrl()">📋</button>
+        </div>
+        <div id="shareOk" style="font-size:11px;color:var(--green);margin-top:4px;display:none;">✅ คัดลอกแล้ว!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ ADD/EDIT MODAL ════════════ -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">➕ เพิ่มรายการจอง</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="frow"><label>วันที่จอง *</label>
+          <input type="date" id="mDate">
+        </div>
+        <div class="frow"><label>ที่ปรึกษาการขาย *</label>
+          <select id="mSC"></select>
+        </div>
+        <div class="frow span2"><label>ชื่อลูกค้า *</label>
+          <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
+        </div>
+        <div class="frow"><label>เบอร์โทร</label>
+          <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
+        </div>
+        <div class="frow"><label>รุ่นรถ *</label>
+          <select id="mModel" onchange="onModelChange()"></select>
+        </div>
+        <!-- dropdown รายละเอียดจากชีท Model — โผล่เมื่อเลือกรุ่นรถ -->
+        <div class="frow span2" id="mDetailModelWrap" style="display:none;">
+          <label>📋 เลือกรายละเอียดจากชีท Model
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เลือกแล้วจะเติมช่องด้านล่างอัตโนมัติ</span>
+          </label>
+          <select id="mDetailModel" onchange="onDetailModelChange()"
+            style="border-color:var(--primary3);background:#f0f5ff;">
+            <option value="">-- เลือกรายละเอียด --</option>
+          </select>
+        </div>
+        <div class="frow span2"><label>รายละเอียดรถ
+          <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">แก้ไขได้</span>
+        </label>
+          <input type="text" id="mDetail" placeholder="เช่น Cab4 2.2 Ddi L AT">
+        </div>
+        <div class="frow"><label>สถานะ *</label>
+          <select id="mStatus"></select>
+        </div>
+        <div class="frow"><label>วันที่ปล่อย</label>
+          <input type="date" id="mRelDate">
+        </div>
+        <div class="frow span2"><label>ที่มาลูกค้า</label>
+          <select id="mSource"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveBooking()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ TARGET MODAL ════════════ -->
+<div class="modal-overlay" id="targetModal">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-hdr">
+      <h3>🎯 บันทึกเป้าการจำหน่าย</h3>
+      <button class="modal-close" onclick="closeTargetModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow" style="margin-bottom:12px;"><label>เดือน</label>
+        <input type="month" id="tMonth">
+      </div>
+      <div class="frow"><label>เป้าการจำหน่าย (คัน)</label>
+        <input type="number" id="tTarget" placeholder="30" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTargetModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTarget()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">ยืนยันการลบ</div>
+    <div class="confirm-msg" id="confirmMsg">คุณแน่ใจหรือไม่?</div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">ยกเลิก</button>
+      <button class="btn btn-red" id="confirmOkBtn" onclick="confirmOk()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<!-- DATE PICKER MODAL -->
+<div class="datepick-overlay" id="datepickOverlay">
+  <div class="datepick-box">
+    <div class="datepick-hdr">
+      <h3 id="datepickTitle">เลือกวันที่สำหรับรายงาน</h3>
+      <button class="dp-close" onclick="closeDatePick()">✕</button>
+    </div>
+    <div class="datepick-body">
+      <label>ณ วันที่</label>
+      <input type="date" id="datepickInput">
+    </div>
+    <div class="datepick-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeDatePick()">ยกเลิก</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmDatePick()">✅ ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════ MODAL: รายงานปล่อยรถ ════ -->
+<div class="modal-overlay" id="releaseModal">
+  <div class="modal-box" style="width:min(96vw,680px);">
+    <div class="modal-hdr">
+      <h3>🚗 รายงานการปล่อยรถ</h3>
+      <button class="modal-close" onclick="closeReleaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="frow">
+          <label>ชื่อลูกค้า</label>
+          <input type="text" id="rl-customer">
+        </div>
+        <div class="frow">
+          <label>ลูกค้ารับรถ <span style="font-size:11px;color:#888;">(อาจต่างจากผู้จอง)</span></label>
+          <input type="text" id="rl-rcv-customer">
+        </div>
+        <div class="frow">
+          <label>รุ่นรถ (สั้น เช่น STD)</label>
+          <input type="text" id="rl-model">
+        </div>
+        <div class="frow">
+          <label>ชื่อรุ่นการจำหน่าย <span style="font-size:10px;color:#888;">(จากชีท Model)</span></label>
+          <select id="rl-model-full" onchange="onRlModelFullChange()">
+            <option value="">-- เลือกรุ่น --</option>
+          </select>
+          <div id="rl-model-full-custom-wrap" style="display:none;margin-top:6px;">
+            <input type="text" id="rl-model-full-custom" placeholder="พิมพ์ชื่อรุ่นการจำหน่ายเอง เช่น TFR41GWAHCTM" style="font-size:12px;">
+          </div>
+        </div>
+        <div class="frow">
+          <label>เลขเครื่อง</label>
+          <input type="text" id="rl-engine">
+        </div>
+        <div class="frow">
+          <label>เลขแชสซีส์</label>
+          <input type="text" id="rl-chassis">
+        </div>
+        <div class="frow">
+          <label>ไฟแนนซ์</label>
+          <select id="rl-finance">
+            <option value="">-- เลือก --</option>
+            <option>TIL</option>
+            <option>TMT</option>
+            <option>TISCO</option>
+            <option>KBANK</option>
+            <option>SCB</option>
+            <option>BBL</option>
+            <option>KTB</option>
+            <option>BAY</option>
+            <option>AYCAL</option>
+            <option>MTL</option>
+            <option>ICBC</option>
+            <option>เงินสด</option>
+          </select>
+        </div>
+        <div class="frow">
+          <label>เลขทะเบียนป้ายแดง</label>
+          <input type="text" id="rl-plate">
+        </div>
+        <div class="frow">
+          <label>เลขที่ใบส่งมอบ</label>
+          <input type="text" id="rl-delivery">
+        </div>
+        <div class="frow">
+          <label>เลขที่ใบ PO</label>
+          <input type="text" id="rl-po">
+        </div>
+        <div class="frow" style="grid-column:span 2;">
+          <label>ที่ปรึกษาการขาย SC</label>
+          <input type="text" id="rl-sc">
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:#fff3cd;border-radius:8px;font-size:12px;color:#7a5800;">
+        💡 ข้อมูลเลขเครื่อง เลขแชสซีส์ ไฟแนนซ์ เลขทะเบียน เลขส่งมอบ เลข PO จะถูกบันทึกลง Sheet ด้วย
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReleaseModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAndPrintRelease()">💾 บันทึก & พิมพ์รายงาน</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let scriptUrl = '';
+let meta = { sc:[], isuzu:[], model:[], status:[], source:[] };
+let allBookings = [];
+let filteredBookings = [];
+let allTargets = [];
+let editingRow = null;   // _row number when editing
+let confirmCallback = null;
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+function init() {
+  // URL ฝังตายตัว
+  const FIXED_URL = 'https://script.google.com/macros/s/AKfycbxr3b1bYEMUlruD3UQNOXXNUtE89iHkwzmJ3V9EFRVDziQq29sOsMSAi3JCpEcXz_tt/exec';
+
+  const saved = localStorage.getItem('booking_app');
+  if (saved) {
+    try {
+      const s = JSON.parse(saved);
+      scriptUrl = s.url || FIXED_URL;
+    } catch(e) { scriptUrl = FIXED_URL; }
+  } else {
+    scriptUrl = FIXED_URL;
+  }
+  // URL param override
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('url')) scriptUrl = decodeURIComponent(params.get('url'));
+
+  document.getElementById('gsUrl').value = scriptUrl;
+  saveSetting();
+  setConn(true);
+  loadAll();
+  updateShareUrl();
+  // Default month = ทั้งหมด (ไม่ set ค่าใดๆ)
+
+
+}
+
+async function loadAll() {
+  // ── Warm-up ping: ปลุก Google Apps Script ก่อนโหลดจริง ──
+  setConn(null); // แสดงสถานะ "กำลังเชื่อมต่อ..."
+  try {
+    await callGS({ action: 'ping' });
+    setConn(true);
+  } catch(e) {
+    setConn(false);
+    console.warn('ping failed:', e.message);
+    // ถ้า ping ไม่ผ่าน ก็ยังพยายามโหลดต่อ
+  }
+
+  try { await loadMeta(); } catch(e) { console.error('loadMeta:', e); }
+  try { await loadBookings(); } catch(e) {
+    console.error('loadBookings:', e);
+    document.getElementById('bookingBody').innerHTML =
+      '<tr><td colspan="11"><div class="empty">❌ โหลดไม่สำเร็จ: ' + e.message + '</div></td></tr>';
+  }
+  try { await loadTargets(); } catch(e) { console.error('loadTargets:', e); }
+  // รีเซ็ต placeholder report2/3 หลัง meta พร้อม
+  ['r2BodySmall','r2BodyBig','r3BodySmall','r3BodyBig'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>';
+  });
+}
+
+// ════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'report2' && scriptUrl) runReport2();
+  if (tab === 'report3' && scriptUrl) runReport3();
+  if (tab === 'release') initReleaseReportPage();
+}
+
+// ════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════
+function connectSheet() {
+  const url = document.getElementById('gsUrl').value.trim();
+  if (!url) { toast('กรุณาใส่ URL', 'err'); return; }
+  scriptUrl = url;
+  saveSetting();
+  setConn(true);
+  loadAll();
+  updateShareUrl();
+  document.getElementById('setupStatus').textContent = '✅ บันทึกแล้ว';
+  toast('✅ เชื่อมต่อแล้ว!', 'ok');
+}
+
+async function testConn() {
+  const url = document.getElementById('gsUrl').value.trim();
+  if (!url) { toast('กรุณาใส่ URL', 'err'); return; }
+  document.getElementById('setupStatus').textContent = '🔄 กำลังทดสอบ...';
+  try {
+    const d = await callGS({ action: 'ping' }, url);
+    if (d.pong) { document.getElementById('setupStatus').textContent = '✅ เชื่อมต่อได้!'; toast('✅ ผ่าน!', 'ok'); }
+    else throw new Error('ไม่ตอบสนอง');
+  } catch(e) { document.getElementById('setupStatus').textContent = '❌ ' + e.message; toast('❌ ไม่ได้', 'err'); }
+}
+
+function saveSetting() { localStorage.setItem('booking_app', JSON.stringify({ url: scriptUrl })); }
+
+function setConn(ok) {
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLbl');
+  if (ok === null) {
+    dot.className = 'conn-dot';
+    dot.style.background = '#f5c842';
+    dot.style.animation = 'connPulse .8s infinite alternate';
+    lbl.textContent = 'กำลังเชื่อมต่อ...';
+  } else {
+    dot.style.animation = '';
+    dot.style.background = '';
+    dot.className = 'conn-dot ' + (ok ? 'ok' : 'err');
+    lbl.textContent = ok ? 'เชื่อมต่อแล้ว' : 'เชื่อมต่อไม่ได้';
+  }
+}
+
+function resetCache() {
+  if (!confirm('ล้างข้อมูล cache ทั้งหมด แล้วรีโหลด?')) return;
+  localStorage.removeItem('booking_app');
+  location.reload();
+}
+
+// ════════════════════════════════════════
+//  META
+// ════════════════════════════════════════
+async function loadMeta() {
+  if (!scriptUrl) return;
+  try {
+    const d = await callGS({ action: 'getMeta' });
+    meta = d;
+    populateDeptFilter();
+    populateSel('fSC',    meta.sc,     'ที่ปรึกษาการขาย', '', 'ทั้งหมด');
+    populateSel('fStatus',meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
+    populateSel('fModel', meta.isuzu,  'รุ่นรถ', '', 'ทั้งหมด');
+    populateSel('mSC',    meta.sc,     'ที่ปรึกษาการขาย');
+    populateIsuzuDropdown('mModel');
+    populateSel('mStatus',meta.status, 'STATUS', 'สถานะ');
+    populateSel('mSource',meta.source, 'ที่มาลูกค้า');
+    ['r1SC','r2SC'].forEach(id => populateSel(id, meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด'));
+    populateSel('r1Status', meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
+  } catch(e) { console.error('loadMeta:', e); }
+}
+
+// populate รุ่นรถ ISUZU
+function populateIsuzuDropdown(id) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรุ่นรถ --</option>';
+  (meta.isuzu || []).forEach(item => {
+    const val = item['รุ่นรถ'] || '';
+    if (!val) return;
+    const o = document.createElement('option');
+    o.value = val; o.textContent = val;
+    sel.appendChild(o);
+  });
+  if (prev) {
+    sel.value = prev;
+    if (sel.value !== prev) {
+      const opt = [...sel.options].find(o => o.value.trim() === prev.trim());
+      if (opt) sel.value = opt.value;
+    }
+  }
+}
+
+function populateSel(id, data, valField, labelField, allLabel) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const prev = sel.value;
+  sel.innerHTML = '';
+  if (allLabel) { const o=document.createElement('option');o.value='';o.textContent=allLabel;sel.appendChild(o); }
+  data.forEach(item => {
+    const val = item[valField] || '';
+    const lbl = labelField ? (item[labelField] || val) : val;
+    if (!val) return;
+    const o=document.createElement('option');o.value=val;o.textContent=lbl||val;sel.appendChild(o);
+  });
+  // restore ค่าเดิม — ลอง exact match ก่อน แล้ว trimmed match
+  if (prev) {
+    sel.value = prev;
+    if (sel.value !== prev) {
+      const opt = [...sel.options].find(o => o.value.trim() === prev.trim());
+      if (opt) sel.value = opt.value;
+    }
+  }
+}
+
+// ════════════════════════════════════════
+//  BOOKINGS
+// ════════════════════════════════════════
+async function loadBookings() {
+  if (!scriptUrl) return;
+  document.getElementById('bookingBody').innerHTML =
+    '<tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
+  try {
+    const d = await callGS({ action: 'getBookings' });
+    // normalize วันที่จอง → dd/MM/yyyy เสมอ ก่อน sort
+    allBookings = (d.data || []).map(r => {
+      ['วันที่จอง','วันที่ปล่อย'].forEach(col => {
+        if (r[col]) {
+          const t = parseThDate(String(r[col]));
+          if (t) {
+            const dt = new Date(t);
+            const dd = String(dt.getDate()).padStart(2,'0');
+            const mm = String(dt.getMonth()+1).padStart(2,'0');
+            const yyyy = dt.getFullYear();
+            r[col] = `${dd}/${mm}/${yyyy}`;
+          }
+        }
+      });
+      return r;
+    }).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
+    populateMonthFilter();
+    filterBooking();
+  } catch(e) {
+    document.getElementById('bookingBody').innerHTML =
+      `<tr><td colspan="11"><div class="empty">❌ ${e.message}</div></td></tr>`;
+  }
+}
+
+function populateDeptFilter() {
+  // รวบรวมฝ่ายทั้งหมดจาก meta.sc
+  const depts = [...new Set(meta.sc.map(s => s['ฝ่าย']).filter(Boolean))].sort();
+  ['fDept','r1Dept'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">ทั้งหมด</option>';
+    depts.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = d; sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  });
+}
+
+function onDeptChange(deptId, scId) {
+  const dept = document.getElementById(deptId)?.value || '';
+  const scSel = document.getElementById(scId);
+  if (!scSel) return;
+  const prev = scSel.value;
+  scSel.innerHTML = '<option value="">ทั้งหมด</option>';
+  const filtered = dept
+    ? meta.sc.filter(s => s['ฝ่าย'] === dept)
+    : meta.sc;
+  filtered.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    if (!name) return;
+    const o = document.createElement('option');
+    o.value = name; o.textContent = name; scSel.appendChild(o);
+  });
+  if (prev && [...scSel.options].some(o => o.value === prev)) scSel.value = prev;
+}
+
+function populateMonthFilter() {
+  // รวบรวมเดือนจากข้อมูลจริง
+  const months = new Set();
+  allBookings.forEach(r => {
+    const d = r['วันที่จอง'];
+    if (!d) return;
+    const p = String(d).split('/');
+    if (p.length >= 3) {
+        const y = p[2].length === 4 ? p[2] : '20'+p[2];
+        months.add(y + '-' + p[1].padStart(2,'0'));
+      }
+  });
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  // populate ทุก select เดือน
+  ['fMonth','r1Month'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">ทั้งหมด</option>';
+    [...months].sort().reverse().forEach(ym => {
+      const [y, m] = ym.split('-');
+      const o = document.createElement('option');
+      o.value = ym;
+      o.textContent = TH[parseInt(m)] + ' ' + y;
+      sel.appendChild(o);
+    });
+    if (prev) sel.value = prev;
+  });
+}
+
+function filterBooking() {
+  const q      = document.getElementById('fSearch').value.toLowerCase();
+  const dept   = document.getElementById('fDept').value;
+  const sc     = document.getElementById('fSC').value;
+  const model  = document.getElementById('fModel').value;
+  const status = document.getElementById('fStatus').value;
+  const month  = document.getElementById('fMonth').value;
+
+  filteredBookings = allBookings.filter(r => {
+    if (dept   && (meta.sc.find(s=>s['ที่ปรึกษาการขาย']===r['ที่ปรึกษาการขาย'])||{})['ฝ่าย'] !== dept) return false;
+    if (sc     && r['ที่ปรึกษาการขาย'] !== sc)    return false;
+    if (model  && r['รุ่นรถ'] !== model)          return false;
+    if (status && r['สถานะ'] !== status && !(meta.status.find(s=>s['STATUS']===status && s['สถานะ']===r['สถานะ']))) return false;
+    if (month  && !dateMatchMonth(r['วันที่จอง'], month)) return false;
+    if (q && !Object.values(r).some(v => String(v).toLowerCase().includes(q))) return false;
+    return true;
+  }).sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
+  renderBookings();
+  updateSummary();
+}
+
+function resetFilter() {
+  document.getElementById('fSearch').value = '';
+  document.getElementById('fDept').value = '';
+  onDeptChange('fDept','fSC');
+  document.getElementById('fSC').value = '';
+  document.getElementById('fModel').value = '';
+  document.getElementById('fStatus').value = '';
+  document.getElementById('fMonth').value = '';
+  filterBooking();
+}
+
+function renderBookings() {
+  document.getElementById('recCount').textContent = filteredBookings.length + ' รายการ';
+  if (filteredBookings.length === 0) {
+    document.getElementById('bookingBody').innerHTML =
+      '<tr><td colspan="11"><div class="empty">📭 ไม่พบข้อมูล</div></td></tr>';
+    return;
+  }
+  document.getElementById('bookingBody').innerHTML = filteredBookings.map((r,i) => {
+    const sc_code = statusCode(r['สถานะ']);
+    const statusBadge = `<span class="badge badge-${sc_code||'BK'}">${statusLabel(r['สถานะ'])}</span>`;
+    const alt = i%2===1?'alt':'';
+    return `<tr class="${alt}">
+      <td style="color:var(--gray);font-size:10px;">${i+1}</td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
+      <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
+      <td style="font-size:11px;max-width:160px;">${r['รายละเอียดรถ']||'—'}</td>
+      <td><span style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</span></td>
+      <td>${statusBadge}</td>
+      <td class="mono" style="font-size:11px;">${r['วันที่ปล่อย']||'—'}</td>
+      <td style="font-size:11px;">${r['ที่ปรึกษาการขาย']||'—'}</td>
+      <td style="font-size:11px;">${r['ที่มาลูกค้า']||'—'}</td>
+      <td class="c">
+        <div class="action-btns">
+          <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})" title="แก้ไข">✏️</button>
+          <button class="btn btn-outline btn-sm"
+            style="color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray)'};border-color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray2)'};cursor:${r['วันที่ปล่อย']?'pointer':'not-allowed'};opacity:${r['วันที่ปล่อย']?'1':'0.35'};"
+            onclick="${r['วันที่ปล่อย']?'openReleaseReport('+i+')':''}"
+            title="${r['วันที่ปล่อย']?'พิมพ์รายงานปล่อยรถ':'ต้องบันทึกวันที่ปล่อยก่อน'}">🚗</button>
+          <button class="btn btn-red btn-sm" onclick="confirmDelete(${i})" title="ลบ">🗑️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function isBK(s)  { return s==='BK'  || s==='จอง'; }
+function isEBK(s) { return s==='EBK' || s==='คาดจอง'; }
+function isRS(s)  { return s==='RS'  || s==='ปล่อย'; }
+function isERS(s) { return s==='ERS' || s==='คาดปล่อย'; }
+function isCL(s)  { return s==='CL'  || s==='ยกเลิกจอง'; }
+function isPS(s)  { return s==='PS'  || s==='มุ่งหวัง'; }
+
+function updateSummary() {
+  const all = filteredBookings.length;
+  const bk  = filteredBookings.filter(r => isBK(r['สถานะ'])).length;
+  const ebk = filteredBookings.filter(r => isEBK(r['สถานะ'])).length;
+  const rs  = filteredBookings.filter(r => isRS(r['สถานะ'])).length;
+  const ers = filteredBookings.filter(r => isERS(r['สถานะ'])).length;
+  const cl  = filteredBookings.filter(r => isCL(r['สถานะ'])).length;
+  document.getElementById('sAll').textContent = all;
+  document.getElementById('sBK').textContent  = bk;
+  document.getElementById('sEBK').textContent = ebk;
+  document.getElementById('sRS').textContent  = rs;
+  document.getElementById('sERS').textContent = ers;
+  document.getElementById('sCL').textContent  = cl;
+  renderSCChart();
+}
+
+// ── Chart Tooltip ──
+let chartTooltip = null;
+// กรองรายการจองจากการคลิกแท่งกราฟ
+let _activeBarSC = null;
+function filterByBar(scName) {
+  hideChartTooltip();
+  // ถ้าคลิก SC เดิม = ล้างตัวกรอง
+  if (_activeBarSC === scName) {
+    _activeBarSC = null;
+    document.getElementById('fSC').value = '';
+    // reset highlight
+    document.querySelectorAll('[id^="bar_"]').forEach(el => {
+      el.style.background = '';
+      el.style.opacity = '1';
+    });
+    filterBooking();
+    return;
+  }
+  _activeBarSC = scName;
+  // set fSC dropdown
+  const sel = document.getElementById('fSC');
+  if (sel) sel.value = scName;
+  // highlight bar ที่เลือก, หรี่อันอื่น
+  document.querySelectorAll('[id^="bar_"]').forEach(el => {
+    const isSelected = el.id === `bar_${scName.replace(/"/g,'&quot;')}`;
+    el.style.background = isSelected ? 'rgba(232,160,32,0.2)' : '';
+    el.style.opacity    = isSelected ? '1' : '0.4';
+  });
+  filterBooking();
+  // scroll ลงไปที่ตาราง
+  setTimeout(() => {
+    document.querySelector('.card:has(#bookingBody)')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }, 100);
+}
+
+function onBarEnter(e, el) {
+  const sc = decodeURIComponent(el.dataset.sc || '');
+  const bkModels = JSON.parse(decodeURIComponent(el.dataset.bk || '[]'));
+  const rsModels = JSON.parse(decodeURIComponent(el.dataset.rs || '[]'));
+  showChartTooltip(e, sc, bkModels, rsModels);
+}
+
+function showChartTooltip(e, sc, bkModels, rsModels) {
+  hideChartTooltip();
+  const tip = document.createElement('div');
+  tip.id = 'chartTip';
+  tip.style.cssText = `
+    position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;
+    max-width:260px;min-width:180px;line-height:1.6;
+  `;
+
+  let html = `<div style="font-weight:700;font-size:13px;color:var(--accent2);margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">
+    🧑‍💼 ${sc}
+  </div>`;
+
+  if (bkModels.length) {
+    const counts = {};
+    bkModels.forEach(m => counts[m] = (counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">📋 จอง (${bkModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c]) => {
+      html += `<div style="display:flex;justify-content:space-between;gap:12px;">
+        <span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (rsModels.length) {
+    const counts = {};
+    rsModels.forEach(m => counts[m] = (counts[m]||0)+1);
+    html += `<div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🚗 ปล่อย (${rsModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c]) => {
+      html += `<div style="display:flex;justify-content:space-between;gap:12px;">
+        <span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (!bkModels.length && !rsModels.length) {
+    html += `<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>`;
+  }
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  chartTooltip = tip;
+  positionTooltip(e, tip);
+}
+
+function positionTooltip(e, tip) {
+  const margin = 12;
+  let x = e.clientX + margin;
+  let y = e.clientY + margin;
+  const tw = tip.offsetWidth || 200;
+  const th = tip.offsetHeight || 100;
+  if (x + tw > window.innerWidth - margin) x = e.clientX - tw - margin;
+  if (y + th > window.innerHeight - margin) y = e.clientY - th - margin;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+}
+
+function hideChartTooltip() {
+  if (chartTooltip) { chartTooltip.remove(); chartTooltip = null; }
+}
+
+document.addEventListener('mousemove', e => {
+  if (chartTooltip) positionTooltip(e, chartTooltip);
+});
+document.addEventListener('mouseleave', () => hideChartTooltip());
+
+function renderSCChart() {
+  const chartEl = document.getElementById('scChart');
+  if (!chartEl || !meta.sc.length) return;
+
+  // สร้าง lookup สำหรับ tooltip
+  window._chartData = {};
+
+  const scData = {};
+  meta.sc.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    scData[name] = {
+      bk:0, rs:0, ers:0, bkModels:[], rsModels:[], ersModels:[],
+      ฝ่าย: s['ฝ่าย']||'',
+      ทีม: s['ทีม']||'',
+      ลำดับ: parseInt(s['ลำดับ']||99),
+      ชื่อเล่น: s['ชื่อเล่น']||name,
+      'ที่ปรึกษาการขาย': name,
+    };
+  });
+
+  filteredBookings.forEach(r => {
+    const sc = r['ที่ปรึกษาการขาย'];
+    if (!scData[sc]) scData[sc] = {bk:0,rs:0,ers:0,bkModels:[],rsModels:[],ersModels:[],ฝ่าย:'',ทีม:'',ลำดับ:99,ชื่อเล่น:sc,'ที่ปรึกษาการขาย':sc};
+    if (isBK(r['สถานะ'])||isEBK(r['สถานะ'])) { scData[sc].bk++; scData[sc].bkModels.push(r['รุ่นรถ']||'—'); }
+    if (isRS(r['สถานะ']))  { scData[sc].rs++;  scData[sc].rsModels.push(r['รุ่นรถ']||'—'); }
+    if (isERS(r['สถานะ'])) { scData[sc].ers++; scData[sc].ersModels.push(r['รุ่นรถ']||'—'); }
+  });
+
+  // เก็บ data ไว้ใน window object — หลีกเลี่ยงปัญหา HTML attribute encoding
+  window._chartData = scData;
+
+  const sorted = Object.entries(scData).sort((a,b) => a[1].ลำดับ - b[1].ลำดับ);
+  if (!sorted.length) { chartEl.innerHTML = '<div class="empty">ไม่มีข้อมูล</div>'; return; }
+
+  const maxVal = Math.max(...sorted.map(([,d]) => Math.max(d.bk, d.rs, d.ers||0)), 1);
+
+  const deptGroups = {};
+  sorted.forEach(([sc, d]) => {
+    const dept = d.ฝ่าย || 'ไม่ระบุฝ่าย';
+    if (!deptGroups[dept]) deptGroups[dept] = [];
+    deptGroups[dept].push([sc, d]);
+  });
+
+  let html = '<div style="display:flex;gap:0;align-items:flex-end;min-height:160px;position:relative;width:100%;">';
+
+  // Y-axis
+  html += '<div style="position:absolute;inset:0;pointer-events:none;">';
+  [0.25,0.5,0.75,1].forEach(pct => {
+    const val = Math.round(maxVal * pct);
+    const bottom = pct * 85;
+    html += `<div style="position:absolute;bottom:${bottom}%;left:0;right:0;border-top:1px dashed rgba(26,58,107,0.1);"></div>`;
+    html += `<div style="position:absolute;bottom:${bottom}%;left:0;font-size:9px;color:var(--gray);transform:translateY(50%);width:16px;text-align:right;">${val}</div>`;
+  });
+  html += '</div>';
+
+  html += '<div style="margin-left:20px;display:flex;gap:0;align-items:flex-end;min-height:140px;flex:1;border-bottom:2px solid var(--gray2);border-left:1px solid var(--gray2);padding:0 8px;">';
+
+  Object.entries(deptGroups).forEach(([dept, members], di) => {
+    if (di > 0) html += `<div style="width:2px;background:var(--gray2);align-self:stretch;margin:0 6px;flex-shrink:0;"></div>`;
+
+    html += `<div style="display:flex;flex-direction:column;align-items:stretch;flex:1;">`;
+    html += `<div style="font-size:9px;font-weight:700;color:var(--primary);text-align:center;
+      background:rgba(26,58,107,0.06);border-radius:4px 4px 0 0;padding:2px 6px;white-space:nowrap;">${dept}</div>`;
+    html += `<div style="display:flex;align-items:flex-end;gap:4px;flex:1;justify-content:space-around;padding:4px 2px 0;">`;
+
+    members.forEach(([sc, d], mi) => {
+      if (mi > 0 && d.ทีม !== members[mi-1][1].ทีม) {
+        html += `<div style="width:1px;background:var(--gray2);align-self:stretch;margin:0 2px;"></div>`;
+      }
+      const bkH  = d.bk  > 0 ? Math.max(8, Math.round((d.bk  / maxVal) * 100)) : 0;
+      const ersH = (d.ers||0) > 0 ? Math.max(8, Math.round((d.ers / maxVal) * 100)) : 0;
+      const rsH  = d.rs  > 0 ? Math.max(8, Math.round((d.rs  / maxVal) * 100)) : 0;
+
+      // สีแท่ง BK ตามทีม, ERS = เหลือง, RS = เขียว (คงที่ทุกทีม)
+      const isBigDept = (d.ฝ่าย||'').includes('ใหญ่');
+      let bkColor;
+      if (isBigDept) {
+        bkColor = d.ทีม==='สุวิน' ? '#e05c00' : '#d35400';
+      } else {
+        bkColor = d.ทีม==='A' ? '#2471c8' : d.ทีม==='B' ? '#7c3aed' : '#2471c8';
+      }
+      const ersColor = '#ca8a04'; // เหลืองเข้ม
+      const rsColor  = '#16a34a'; // เขียว
+
+      const safeKey = sc.replace(/"/g,'&quot;');
+
+      html += `<div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;
+        border-radius:6px;padding:2px;transition:background .15s;"
+        id="bar_${safeKey}"
+        onmouseenter="showBarTip(event,'${safeKey}')"
+        onmouseleave="hideChartTooltip()"
+        onclick="filterByBar('${safeKey}')">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:100px;">
+          <div style="width:14px;height:${bkH}px;background:${bkColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${d.bk>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${bkColor};white-space:nowrap;">${d.bk}</span>`:''}
+          </div>
+          <div style="width:14px;height:${ersH}px;background:${ersColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${(d.ers||0)>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${ersColor};white-space:nowrap;">${d.ers}</span>`:''}
+          </div>
+          <div style="width:14px;height:${rsH}px;background:${rsColor};border-radius:3px 3px 0 0;transition:all .3s;position:relative;">
+            ${d.rs>0?`<span style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:${rsColor};white-space:nowrap;">${d.rs}</span>`:''}
+          </div>
+        </div>
+        <div style="font-size:9px;font-weight:600;color:var(--tx);text-align:center;white-space:nowrap;margin-top:3px;">${d.ชื่อเล่น}</div>
+        ${d.ทีม?`<div style="font-size:8px;color:var(--gray);background:${d.ทีม==='A'?'#e8f0ff':'#f0e8ff'};padding:0 4px;border-radius:3px;">ทีม ${d.ทีม}</div>`:''}
+      </div>`;
+    });
+
+    html += '</div></div>';
+  });
+
+  html += '</div></div>';
+  chartEl.innerHTML = html;
+}
+
+// ── DSC Tooltip ──
+let _dscTip = null;
+function showDscTip(e, name, field) {
+  const data = window._dscData && window._dscData[name];
+  if (!data) return;
+  const rows = data[field] || [];
+  const labels = {
+    carry:'📋 จองยกมา', ebk:'🔸 คาดว่าจะจอง', bk:'🆕 จองเดือนนี้',
+    rs:'🚗 จองปล่อยเดือนนี้', total:'📊 รวมจองปัจจุบัน',
+    ers:'⏳ คาดว่าจะปล่อย', rsTotal:'✅ ยอดปล่อย', cl:'❌ ถอนจอง',
+  };
+  const colors = {
+    carry:'#7b5ea7', ebk:'#e06010', bk:'#2451a0',
+    rs:'#1a7a4a', total:'#1565C0',
+    ers:'#e06010', rsTotal:'#1a7a4a', cl:'#c0392b',
+  };
+  // online source fields
+  if (field.startsWith('src_')) {
+    const srcName = field.replace('src_','');
+    _showTipRows(e, `🌐 Online · ${srcName} · ${name}`, '#c2185b', rows);
+    return;
+  }
+  _showTipRows(e, `${labels[field]||field} · ${name}`, colors[field]||'#1a3a6b', rows);
+}
+
+function showModelTipByModel(e, name, field, model) {
+  hideDscTip();
+  const data = window._modelData && window._modelData[name];
+  if (!data) return;
+  let rows = [];
+  if (field === 'bk') {
+    rows = (data.bkRows && data.bkRows[model]) || [];
+  } else {
+    rows = (data.rsRows && data.rsRows[model]) || [];
+  }
+  const label = field==='bk' ? `📋 จอง · ${model} · ${name}` : `🚗 ปล่อย · ${model} · ${name}`;
+  const color = field==='bk' ? '#3b6fd4' : '#2e9e6a';
+  _showTipRows(e, label, color, rows);
+}
+
+function showModelTip(e, name, field) {
+  hideDscTip();
+  const data = window._modelData && window._modelData[name];
+  if (!data) return;
+  let rows = [];
+  if (field === 'bk') {
+    rows = (data.bkRows && data.bkRows['_all']) || [];
+  } else {
+    rows = (data.rsRows && data.rsRows['_all']) || [];
+  }
+  const label = field==='bk' ? `📋 ยอดจอง · ${name}` : `🚗 ยอดปล่อย · ${name}`;
+  const color = field==='bk' ? '#3b6fd4' : '#2e9e6a';
+  _showTipRows(e, label, color, rows);
+}
+
+function _showTipRows(e, label, color, rows) {
+  hideDscTip();
+  const tip = document.createElement('div');
+  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:320px;min-width:200px;
+    max-height:300px;overflow-y:auto;`;
+  let html = `<div style="font-weight:700;color:${color};margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;position:sticky;top:0;
+    background:var(--primary);">${label} (${rows.length})</div>`;
+  if (!rows.length) html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
+  else rows.forEach(r => { html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08);line-height:1.5;">${r}</div>`; });
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  _dscTip = tip;
+  setTimeout(() => {
+    if (!tip.parentNode) return;
+    const margin=12;
+    let x=e.clientX+margin, y=e.clientY+margin;
+    if (x+tip.offsetWidth>window.innerWidth-margin) x=e.clientX-tip.offsetWidth-margin;
+    if (y+tip.offsetHeight>window.innerHeight-margin) y=e.clientY-tip.offsetHeight-margin;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  }, 0);
+}
+
+function hideDscTip() {
+  if (_dscTip) { _dscTip.remove(); _dscTip = null; }
+}
+
+function showBarTip(e, scName) {
+  const d = window._chartData && window._chartData[scName];
+  if (!d) return;
+  showChartTooltipWithHint(e, scName, d.bkModels||[], d.rsModels||[], d.ersModels||[]);
+}
+
+function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
+  hideChartTooltip();
+  const tip = document.createElement('div');
+  tip.id = 'chartTip';
+  tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:260px;min-width:180px;line-height:1.6;`;
+
+  let html = `<div style="font-weight:700;font-size:13px;color:var(--accent2);margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;">🧑‍💼 ${sc}</div>`;
+
+  if (bkModels.length) {
+    const counts = {};
+    bkModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">📋 จอง (${bkModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (rsModels.length) {
+    const counts = {};
+    rsModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🚗 ปล่อย (${rsModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#7fc5c0;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (ersModels && ersModels.length) {
+    const counts = {};
+    ersModels.forEach(m => counts[m]=(counts[m]||0)+1);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;">🟡 คาดปล่อย (${ersModels.length})</div>`;
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=>{
+      html+=`<div style="display:flex;justify-content:space-between;gap:12px;"><span>${m}</span><span style="font-weight:700;color:#fde68a;">${c} คัน</span></div>`;
+    });
+    html += '</div>';
+  }
+  if (!bkModels.length && !rsModels.length && !(ersModels&&ersModels.length)) {
+    html += `<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>`;
+  }
+  html += `<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.15);
+    font-size:10px;color:rgba(245,200,66,0.8);">👆 คลิกเพื่อกรองรายการจอง</div>`;
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  chartTooltip = tip;
+  positionTooltip(e, tip);
+}
+
+
+// ════════════════════════════════════════
+//  MODEL DROPDOWN LOGIC (ชีท Model)
+// ════════════════════════════════════════
+function onModelChange() {
+  const modelVal = document.getElementById('mModel').value;
+  const wrap     = document.getElementById('mDetailModelWrap');
+  const detSel   = document.getElementById('mDetailModel');
+
+  // ล้าง detail ที่เคยเลือกไว้
+  document.getElementById('mDetail').value = '';
+  detSel.innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
+
+  if (!modelVal || !meta.model || meta.model.length === 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  // กรอง meta.model ด้วยชื่อรุ่นรถที่เลือก
+  // ชีท Model มีคอลัมน์: รหัสรุ่นรถ, ชื่อรุ่นการจำหน่าย (PPV), รายละเอียด
+  // ใช้ modelVal (เช่น "Mu-X", "D-MAX", "STD") จับคู่กับคอลัมน์ รายละเอียด
+  const kw = modelVal.toLowerCase().replace(/[-\s]/g, '');
+
+  const rows = meta.model.filter(r => {
+    const desc = (r['รายละเอียด'] || '').toLowerCase().replace(/[-\s]/g, '');
+    const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
+    // ถ้า modelVal ตรงกับคำในรายละเอียด หรือ รหัสรุ่นรถ
+    return desc.includes(kw) || kw.includes(desc.split(' ')[0]) || code.includes(kw);
+  });
+
+  // ถ้าไม่ match เลย — แสดงทั้งหมดให้เลือกเอง
+  const displayRows = rows.length > 0 ? rows : meta.model;
+
+  displayRows.forEach(r => {
+    const desc = r['รายละเอียด'] || '';
+    const code = r['รหัสรุ่นรถ'] || '';
+    const ppv  = r['ชื่อรุ่นการจำหน่าย'] || r['PPV'] || '';
+    if (!desc) return;
+    const o = document.createElement('option');
+    o.value = desc;
+    // แสดง: รายละเอียด [รหัส]
+    o.textContent = desc + (code ? `  [${code}]` : '');
+    detSel.appendChild(o);
+  });
+
+  wrap.style.display = '';
+}
+
+function onDetailModelChange() {
+  const val = document.getElementById('mDetailModel').value;
+  if (val) document.getElementById('mDetail').value = val;
+}
+
+// ════════════════════════════════════════
+//  ADD / EDIT MODAL
+// ════════════════════════════════════════
+function openAddModal() {
+  editingRow = null;
+  document.getElementById('modalTitle').textContent = '➕ เพิ่มรายการจอง';
+  document.getElementById('mDate').value    = formatDateInput(new Date());
+  document.getElementById('mName').value    = '';
+  document.getElementById('mPhone').value   = '';
+  document.getElementById('mDetail').value  = '';
+  document.getElementById('mRelDate').value = '';
+  // reset detail model dropdown
+  document.getElementById('mDetailModelWrap').style.display = 'none';
+  document.getElementById('mDetailModel').innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
+  if (meta.status.length) document.getElementById('mStatus').value = 'BK';
+  document.getElementById('bookingModal').classList.add('open');
+}
+
+function openEditModal(i) {
+  const r = filteredBookings[i];
+  if (!r) { toast('ไม่พบข้อมูลแถวนี้', 'err'); return; }
+  editingRow = r._row || null;
+  if (!editingRow) { toast('❌ ไม่พบเลขแถว (_row) ไม่สามารถแก้ไขได้', 'err'); return; }
+
+  document.getElementById('modalTitle').textContent = '✏️ แก้ไขรายการจอง';
+  document.getElementById('mDate').value    = thToInputDate(r['วันที่จอง']);
+  document.getElementById('mName').value    = r['ชื่อลูกค้า'] || '';
+  document.getElementById('mPhone').value   = r['เบอร์'] || '';
+  document.getElementById('mDetail').value  = r['รายละเอียดรถ'] || '';
+  document.getElementById('mRelDate').value = thToInputDate(r['วันที่ปล่อย'] || '');
+
+  // SC
+  setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
+  // Model → trigger onModelChange เพื่อ populate detail dropdown
+  setSelectValue('mModel', r['รุ่นรถ'] || '');
+  onModelChange();
+  // restore รายละเอียดรถเดิม
+  const savedDetail = r['รายละเอียดรถ'] || '';
+  document.getElementById('mDetail').value = savedDetail;
+  if (savedDetail) {
+    const detSel = document.getElementById('mDetailModel');
+    const matchOpt = [...detSel.options].find(o => o.value === savedDetail);
+    if (matchOpt) detSel.value = savedDetail;
+  }
+  // Status — ข้อมูลใน sheet อาจเก็บเป็น STATUS code (BK) หรือภาษาไทย (จอง) ก็ได้
+  const rawStatus = r['สถานะ'] || '';
+  // หา STATUS code ที่ตรงกับค่าที่เก็บในชีท
+  const statusMatch = meta.status.find(s =>
+    s['STATUS'] === rawStatus || s['สถานะ'] === rawStatus
+  );
+  const statusVal = statusMatch ? statusMatch['STATUS'] : rawStatus;
+  setSelectValue('mStatus', statusVal);
+  // Source
+  setSelectValue('mSource', r['ที่มาลูกค้า'] || '');
+
+  document.getElementById('bookingModal').classList.add('open');
+}
+
+// ตั้งค่า select — ถ้าไม่พบ option จะ fallback เป็นค่าว่าง
+function setSelectValue(id, val) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.value = val;
+  // ถ้าไม่พบให้ลอง trim
+  if (sel.value !== val) {
+    const opt = [...sel.options].find(o => o.value.trim() === val.trim());
+    if (opt) sel.value = opt.value;
+  }
+}
+
+function closeModal() {
+  document.getElementById('bookingModal').classList.remove('open');
+  _isSaving = false;
+  const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+}
+
+let _isSaving = false;
+
+async function saveBooking() {
+  if (_isSaving) { toast('⏳ กำลังบันทึกข้อมูลอยู่ กรุณารอสักครู่...', 'warn'); return; }
+
+  const date    = document.getElementById('mDate').value;
+  const name    = document.getElementById('mName').value.trim();
+  const sc      = document.getElementById('mSC').value;
+  const model   = document.getElementById('mModel').value;
+  const status  = document.getElementById('mStatus').value;
+  if (!date || !name || !sc || !model || !status) {
+    toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return;
+  }
+
+  // ป้องกันบันทึกซ้ำ — disable ปุ่มและตั้ง flag
+  _isSaving = true;
+  const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
+
+  // แปลง STATUS code → ภาษาไทย (BK→จอง, RS→ปล่อย ฯลฯ) ก่อนส่ง
+  const statusFound = (meta.status || []).find(s => s['STATUS'] === status);
+  const statusThai = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
+
+  const params = {
+    'วันที่จอง':       formatThDate(date),
+    'ชื่อลูกค้า':      name,
+    'เบอร์':           document.getElementById('mPhone').value.trim(),
+    'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
+    'รุ่นรถ':          model,
+    'สถานะ':           statusThai,
+    'วันที่ปล่อย':     formatThDate(document.getElementById('mRelDate').value),
+    'ที่ปรึกษาการขาย': sc,
+    'ที่มาลูกค้า':     document.getElementById('mSource').value,
+  };
+
+  try {
+    let r;
+    if (editingRow) {
+      const rowNum = parseInt(editingRow);
+      if (!rowNum || rowNum < 2) {
+        toast('❌ เลขแถวไม่ถูกต้อง (' + editingRow + ')', 'err');
+        _isSaving = false;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+        return;
+      }
+      r = await callGS({ action: 'updateBooking', _row: rowNum, ...params });
+    } else {
+      r = await callGS({ action: 'addBooking', ...params });
+    }
+    if (r && r.ok) {
+      toast(editingRow ? '✅ แก้ไขสำเร็จ!' : '✅ เพิ่มรายการสำเร็จ!', 'ok');
+      closeModal();
+      await loadBookings();
+    } else {
+      throw new Error((r && r.error) || 'ไม่สำเร็จ — ตรวจสอบ Apps Script');
+    }
+  } catch(e) {
+    toast('❌ ' + e.message, 'err');
+  } finally {
+    _isSaving = false;
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
+  }
+}
+
+function confirmDelete(i) {
+  const r = filteredBookings[i];
+  showConfirm('🗑️','ยืนยันการลบ',
+    `ลบรายการจองของ "${r['ชื่อลูกค้า']}" ใช่ไหม? ไม่สามารถกู้คืนได้`,
+    async () => {
+      try {
+        const d = await callGS({ action:'deleteBooking', _row: r._row });
+        if (d.ok) { toast('✅ ลบแล้ว', 'ok'); await loadBookings(); }
+        else throw new Error(d.error||'ไม่สำเร็จ');
+      } catch(e) { toast('❌ '+e.message, 'err'); }
+    }
+  );
+}
+
+// ════════════════════════════════════════
+//  TARGETS
+// ════════════════════════════════════════
+async function loadTargets() {
+  if (!scriptUrl) return;
+  try {
+    const d = await callGS({ action: 'getTargets' });
+    allTargets = d.data || [];
+    renderTargets();
+  } catch(e) {}
+}
+
+function renderTargets() {
+  if (allTargets.length === 0) {
+    document.getElementById('targetBody').innerHTML =
+      '<tr><td colspan="4"><div class="empty">📭 ยังไม่มีข้อมูลเป้า</div></td></tr>';
+    return;
+  }
+  document.getElementById('targetBody').innerHTML = allTargets.map((r,i) => `
+    <tr class="${i%2===1?'alt':''}">
+      <td style="color:var(--gray);font-size:10px;">${i+1}</td>
+      <td style="font-weight:600;">${r['เดือน']||'—'}</td>
+      <td class="r" style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--primary);">${parseInt(r['เป้าการจำหน่าย']||0).toLocaleString()}</td>
+      <td class="c">
+        <div class="action-btns">
+          <button class="btn btn-red btn-sm" onclick="confirmDeleteTarget(${i})">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function openTargetModal() {
+  const now = new Date();
+  document.getElementById('tMonth').value = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('tTarget').value = '';
+  document.getElementById('targetModal').classList.add('open');
+}
+
+function closeTargetModal() {
+  document.getElementById('targetModal').classList.remove('open');
+}
+
+async function saveTarget() {
+  const month  = document.getElementById('tMonth').value;
+  const target = document.getElementById('tTarget').value;
+  if (!month || !target) { toast('กรุณากรอกข้อมูลให้ครบ', 'err'); return; }
+  // Convert yyyy-mm to Thai month label
+  const [y, m] = month.split('-');
+  const TH_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const label = `${TH_MONTHS[parseInt(m)]} ${parseInt(y)}`;
+  try {
+    const r = await callGS({ action:'saveTarget', 'เดือน': label, 'เป้าการจำหน่าย': target });
+    if (r.ok) { toast('✅ บันทึกเป้าแล้ว', 'ok'); closeTargetModal(); await loadTargets(); }
+    else throw new Error(r.error||'ไม่สำเร็จ');
+  } catch(e) { toast('❌ '+e.message, 'err'); }
+}
+
+function confirmDeleteTarget(i) {
+  const r = allTargets[i];
+  showConfirm('🗑️','ยืนยันการลบ',`ลบเป้าเดือน "${r['เดือน']}" ใช่ไหม?`, async () => {
+    try {
+      const d = await callGS({ action:'deleteTarget', _row: r._row || (i+2) });
+      if (d.ok) { toast('✅ ลบแล้ว','ok'); await loadTargets(); }
+      else throw new Error(d.error||'ไม่สำเร็จ');
+    } catch(e) { toast('❌ '+e.message,'err'); }
+  });
+}
+
+// ════════════════════════════════════════
+//  REPORT 1 — รายละเอียด
+// ════════════════════════════════════════
+function clearReport1() {
+  document.getElementById('r1Dept').value     = '';
+  onDeptChange('r1Dept','r1SC');
+  document.getElementById('r1SC').value       = '';
+  document.getElementById('r1Month').value    = '';
+  document.getElementById('r1DateFrom').value = '';
+  document.getElementById('r1DateTo').value   = '';
+  document.getElementById('r1Status').value   = '';
+  const s = document.getElementById('r1Search');
+  if(s) s.value = '';
+  const warnEl = document.getElementById('r1FilterWarning');
+  if(warnEl) warnEl.style.display = 'none';
+  document.getElementById('r1Body').innerHTML =
+    '<tr><td colspan="10"><div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div></td></tr>';
+  document.getElementById('r1Count').textContent = '0 รายการ';
+  document.getElementById('r1Title').textContent = 'รายงานรายละเอียดการจอง';
+  window._r1FilterState = null;
+}
+
+async function runReport1() {
+  const dept1    = document.getElementById('r1Dept').value;
+  const sc       = document.getElementById('r1SC').value;
+  const month    = document.getElementById('r1Month').value;
+  const dateFrom = document.getElementById('r1DateFrom').value;
+  const dateTo   = document.getElementById('r1DateTo').value;
+  const status   = document.getElementById('r1Status').value;
+  const search   = (document.getElementById('r1Search')?.value||'').trim().toLowerCase();
+
+  document.getElementById('r1Body').innerHTML =
+    '<tr><td colspan="10"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
+
+  // ใช้ allBookings ที่ normalize วันที่แล้ว แทนการดึงจาก API ใหม่
+  // ถ้ายังไม่มีข้อมูลให้ดึงใหม่
+  let rows = [...(allBookings || [])];
+  if (rows.length === 0) {
+    try {
+      const d = await callGS({ action: 'getBookings' });
+      rows = (d.data || []).map(r => {
+        ['วันที่จอง','วันที่ปล่อย'].forEach(col => {
+          if (r[col]) {
+            const t = parseThDate(String(r[col]));
+            if (t) {
+              const dt = new Date(t);
+              r[col] = String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+dt.getFullYear();
+            }
+          }
+        });
+        return r;
+      });
+    } catch(e) {
+      document.getElementById('r1Body').innerHTML = `<tr><td colspan="10"><div class="empty">❌ ${e.message}</div></td></tr>`;
+      return;
+    }
+  }
+
+  // ── กรองฝ่าย ──
+  if (dept1) {
+    rows = rows.filter(r => {
+      const scObj = meta.sc.find(s => s['ที่ปรึกษาการขาย'] === r['ที่ปรึกษาการขาย']);
+      return scObj && scObj['ฝ่าย'] === dept1;
+    });
+  }
+
+  // ── กรอง SC ──
+  if (sc) rows = rows.filter(r => r['ที่ปรึกษาการขาย'] === sc);
+
+  // ── กรองสถานะ ──
+  if (status) {
+    rows = rows.filter(r => {
+      const code = statusCode(r['สถานะ']);
+      return code === status || r['สถานะ'] === status;
+    });
+  }
+
+  // ── กรองเดือน (dd/mm/yyyy) ──
+  if (month) {
+    const [ym_y, ym_m] = month.split('-');
+    rows = rows.filter(r => {
+      const parts = String(r['วันที่จอง']||'').split('/');
+      if (parts.length >= 3) {
+        return parts[2].substring(0,4) === ym_y && parts[1].padStart(2,'0') === ym_m;
+      }
+      return false;
+    });
+  }
+
+  // ── กรองวันที่เริ่ม-สิ้นสุด ──
+  if (dateFrom) {
+    const fromTs = new Date(dateFrom).getTime();
+    rows = rows.filter(r => {
+      const t = parseThDate(String(r['วันที่จอง']||''));
+      return t && t >= fromTs;
+    });
+  }
+  if (dateTo) {
+    const toTs = new Date(dateTo + 'T23:59:59').getTime();
+    rows = rows.filter(r => {
+      const t = parseThDate(String(r['วันที่จอง']||''));
+      return t && t <= toTs;
+    });
+  }
+
+  // ── ค้นหา ──
+  if (search) {
+    rows = rows.filter(r => {
+      const hay = [r['ชื่อลูกค้า'],r['ที่ปรึกษาการขาย'],r['รุ่นรถ'],
+        r['รายละเอียดรถ'],r['วันที่ปล่อย'],r['ที่มาลูกค้า'],r['เบอร์']
+      ].join(' ').toLowerCase();
+      return hay.includes(search);
+    });
+  }
+
+  // ── เรียงล่าสุดก่อน ──
+  rows = rows.sort((a,b) => parseThDate(b['วันที่จอง']) - parseThDate(a['วันที่จอง']));
+
+  // ── ชื่อรายงาน ──
+  const TH_M = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const parts2 = [];
+  if (dept1) parts2.push(dept1);
+  if (sc)    parts2.push(sc);
+  if (month) { const [y,m] = month.split('-'); parts2.push(TH_M[parseInt(m)]+' '+y); }
+  if (dateFrom || dateTo) parts2.push((dateFrom?fmtDate(formatThDate(dateFrom)):'')+(dateTo?' ถึง '+fmtDate(formatThDate(dateTo)):''));
+  document.getElementById('r1Title').textContent =
+    'รายงานรายละเอียดการจอง' + (parts2.length ? ' · '+parts2.join(' · ') : '');
+  document.getElementById('r1Count').textContent = rows.length + ' รายการ';
+
+  window._r1FilterState = { dept: dept1, sc, month, dateFrom, dateTo, status, search };
+
+  if (rows.length === 0) {
+    document.getElementById('r1Body').innerHTML = '<tr><td colspan="10"><div class="empty">📭 ไม่พบข้อมูล</div></td></tr>';
+    return;
+  }
+
+  document.getElementById('r1Body').innerHTML = rows.map((r,i) => `
+    <tr class="${i%2===1?'alt':''}">
+      <td style="color:var(--gray);font-size:10px;">${i+1}</td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
+      <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
+      <td style="font-size:11px;">${r['รายละเอียดรถ']||'—'}</td>
+      <td style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</td>
+      <td><span class="badge badge-${statusCode(r['สถานะ'])}">${statusLabel(r['สถานะ'])}</span></td>
+      <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่ปล่อย'])||'—'}</td>
+      <td style="font-size:11px;">${r['ที่ปรึกษาการขาย']||'—'}</td>
+      <td style="font-size:11px;">${r['ที่มาลูกค้า']||'—'}</td>
+    </tr>`).join('');
+}
+
+
+// ════════════════════════════════════════
+//  REPORT 2 — แยกประเภทรถ จอง-ปล่อย (SC × รุ่น)
+// ════════════════════════════════════════
+async function runReport2() {
+  ['r2BodySmall','r2BodyBig'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  });
+
+  try {
+    // ดึงข้อมูลทั้งหมด (ต้องการวันที่ปล่อยจากทุกเดือน)
+    const d = await callGS({ action:'getBookings' });
+    const rows = d.data || [];
+
+    // เดือนปัจจุบัน
+    const now = new Date();
+    const curYM = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+    const today = now.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const monthLabel = thMonth(curYM);
+
+    const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
+    const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
+
+    renderModelReport('small', scSmall, rows, monthLabel, today, curYM);
+    renderModelReport('big',   scBig,   rows, monthLabel, today, curYM);
+
+  } catch(e) {
+    ['r2BodySmall','r2BodyBig'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    });
+  }
+}
+
+function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
+  const suffix = type === 'small' ? 'Small' : 'Big';
+  const bodyEl  = document.getElementById('r2Body' + suffix);
+  const titleEl = document.getElementById('r2Title' + suffix);
+  const subEl   = document.getElementById('r2Sub' + suffix);
+  const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
+
+  const now2 = new Date();
+  const titleMonth = thMonthYear(curYM);
+  const reportDate = window._reportDate || now2;
+  const titleDate  = thDateFull(reportDate);
+
+  titleEl.innerHTML = `รายงานยอดจองและปล่อยรถ ประจำเดือน ${titleMonth} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
+  subEl.textContent = `แยกประเภทตามรุ่นรถ`;
+  const badgeEl = document.getElementById('r2DateBadge' + suffix);
+  if(badgeEl) badgeEl.innerHTML = `<span class="date-badge-r2"><span class="lbl">ณ วันที่</span><span class="val">${titleDate}</span></span>`;
+
+  if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
+
+  // รุ่นรถที่ตรงกับฝ่าย (รถเล็ก/ใหญ่ ตาม กลุ่มรถ)
+  const groupFilter = type === 'small' ? 'รถเล็ก' : 'รถใหญ่';
+  const models = meta.isuzu
+    .filter(m => m['กลุ่มรถ'] === groupFilter)
+    .sort((a,b) => parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99))
+    .map(m => m['รุ่นรถ']).filter(Boolean);
+
+  // sort SC: ทีม → ลำดับ
+  const sorted = [...scList].sort((a,b) => {
+    const ta = a['ทีม']||''; const tb = b['ทีม']||'';
+    if (ta !== tb) return ta.localeCompare(tb);
+    return parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99);
+  });
+
+  // คำนวณ SC × model
+  window._modelData = window._modelData || {};
+  const pivot = {};
+  sorted.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    pivot[name] = { bkTotal:0, rsTotal:0, bkRows:{}, rsRows:{} };
+    models.forEach(m => {
+      pivot[name][m] = { bk:0, rs:0 };
+      pivot[name].bkRows[m] = [];
+      pivot[name].rsRows[m] = [];
+    });
+    pivot[name].bkRows['_all'] = [];
+    pivot[name].rsRows['_all'] = [];
+  });
+
+  rows.forEach(r => {
+    const sc    = r['ที่ปรึกษาการขาย'];
+    const model = r['รุ่นรถ'];
+    if (!pivot[sc]) return;
+    if (isCL(r['สถานะ'])) return;
+
+    if (!pivot[sc][model]) pivot[sc][model] = { bk:0, rs:0 };
+    if (!pivot[sc].bkRows[model]) pivot[sc].bkRows[model] = [];
+    if (!pivot[sc].rsRows[model]) pivot[sc].rsRows[model] = [];
+
+    const relDate  = r['วันที่ปล่อย'] ? String(r['วันที่ปล่อย']).trim() : '';
+    const bookDate = r['วันที่จอง']   ? String(r['วันที่จอง']).trim()   : '';
+    const bookInCur = dateMatchMonth(bookDate, curYM);
+    const relInCur  = relDate && dateMatchMonth(relDate, curYM);
+
+    const line = `${fmtDate(bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+
+    if (bookInCur && !relInCur) {
+      pivot[sc][model].bk++; pivot[sc].bkTotal++;
+      pivot[sc].bkRows[model].push(line);
+      pivot[sc].bkRows['_all'].push(line);
+    }
+
+    if (relInCur) {
+      const lineRs = `${fmtDate(relDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+      pivot[sc][model].rs++; pivot[sc].rsTotal++;
+      pivot[sc].rsRows[model].push(lineRs);
+      pivot[sc].rsRows['_all'].push(lineRs);
+    }
+  });
+  // เก็บใน window สำหรับ tooltip
+  sorted.forEach(s => {
+    const name = s['ที่ปรึกษาการขาย'];
+    window._modelData[name] = pivot[name];
+  });
+
+  // headers
+  const modelBkHeaders = models.map(m =>
+    `<th style="background:#5b8dd9;color:#fff;font-size:12px;white-space:nowrap;padding:7px 6px;text-align:center;">${m}</th>`
+  ).join('');
+  const modelRsHeaders = models.map(m =>
+    `<th style="background:#3aaa74;color:#fff;font-size:12px;white-space:nowrap;padding:7px 6px;text-align:center;">${m}</th>`
+  ).join('');
+
+  // group by team
+  const teams = {};
+  sorted.forEach(sc => {
+    const t = sc['ทีม']||'(ไม่ระบุทีม)';
+    if (!teams[t]) teams[t] = [];
+    teams[t].push(sc);
+  });
+
+  let tbody = '';
+  let gBkCols = {}; let gRsCols = {};
+  let gBkTotal = 0, gRsTotal = 0;
+  models.forEach(m => { gBkCols[m]=0; gRsCols[m]=0; });
+
+  Object.entries(teams).forEach(([team, members]) => {
+    let tBkCols = {}; let tRsCols = {};
+    let tBkTotal = 0, tRsTotal = 0;
+    models.forEach(m => { tBkCols[m]=0; tRsCols[m]=0; });
+
+    // team header row
+    tbody += `<tr style="background:rgba(26,58,107,0.06);">
+      <td colspan="${2 + models.length*2 + 2}" style="font-size:10px;font-weight:700;
+        color:var(--primary);padding:5px 10px;border-top:2px solid var(--primary3);">
+        ทีม ${team}
+      </td>
+    </tr>`;
+
+    members.forEach((sc, idx) => {
+      const name = sc['ที่ปรึกษาการขาย'];
+      const nickname = name;
+      const p = pivot[name] || { bkTotal:0, rsTotal:0 };
+
+      const safeN2 = name.replace(/"/g,'&quot;');
+      const bkCells = models.map(m => {
+        const v = p[m]?.bk||0;
+        tBkCols[m]+=v; gBkCols[m]+=v;
+        const safeM = m.replace(/"/g,'&quot;');
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;
+          color:${v?'var(--primary2)':'#ccc'};${v?'cursor:pointer;':''}"
+          ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','bk','${safeM}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
+      }).join('');
+
+      const rsCells = models.map(m => {
+        const v = p[m]?.rs||0;
+        tRsCols[m]+=v; gRsCols[m]+=v;
+        const safeM = m.replace(/"/g,'&quot;');
+        return `<td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:17px;
+          color:${v?'var(--green)':'#ccc'};${v?'cursor:pointer;':''}"
+          ${v?`onmouseenter="showModelTipByModel(event,'${safeN2}','rs','${safeM}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
+      }).join('');
+
+      tBkTotal += p.bkTotal||0;
+      tRsTotal += p.rsTotal||0;
+
+      tbody += `<tr style="${idx%2===1?'background:#f5f8ff;':'background:#fff;'}">
+        <td style="text-align:left;font-weight:600;padding:8px 10px;color:#1a3060;font-size:15px;" class="name">${nickname}</td>
+        ${bkCells}
+        <td style="text-align:center;font-weight:700;color:#3b6fd4;background:#e8f0ff;cursor:pointer;font-size:18px;font-family:'IBM Plex Mono',monospace;"
+          onmouseenter="showModelTip(event,'${name}','bk')" onmouseleave="hideDscTip()">${p.bkTotal||0}</td>
+        ${rsCells}
+        <td style="text-align:center;font-weight:700;color:#1a8a55;background:#e6f5ee;cursor:pointer;font-size:18px;font-family:'IBM Plex Mono',monospace;"
+          onmouseenter="showModelTip(event,'${name}','rs')" onmouseleave="hideDscTip()">${p.rsTotal||0}</td>
+      </tr>`;
+    });
+
+    // team total
+    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tBkCols[m]||0}</td>`).join('');
+    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tRsCols[m]||0}</td>`).join('');
+    tbody += `<tr style="background:#eef3ff;border-top:1.5px solid #a0b4e0;">
+      <td style="text-align:left;font-weight:700;padding:8px 10px;color:#2a4080;font-size:15px;">รวม ทีม ${team}</td>
+      ${tBkColCells}
+      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tBkTotal}</td>
+      ${tRsColCells}
+      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tRsTotal}</td>
+    </tr>`;
+
+    gBkTotal += tBkTotal; gRsTotal += tRsTotal;
+  });
+
+  // grand total
+  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gBkCols[m]||0}</td>`).join('');
+  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gRsCols[m]||0}</td>`).join('');
+
+  bodyEl.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:15px;min-width:600px;">
+      <thead>
+        <tr>
+          <th rowspan="2" style="background:var(--primary);color:#fff;text-align:left;padding:8px 10px;
+            min-width:100px;font-size:14px;">ที่ปรึกษาการขาย SC</th>
+          <th colspan="${models.length+1}" style="background:#4a7fd4;color:#fff;padding:8px;text-align:center;font-size:14px;">
+            ยอดจอง</th>
+          <th colspan="${models.length+1}" style="background:#2e9e6a;color:#fff;padding:8px;text-align:center;font-size:14px;">
+            ยอดปล่อย</th>
+        </tr>
+        <tr>
+          ${modelBkHeaders}
+          <th style="background:#1565C0;color:#fff;font-size:12px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
+          ${modelRsHeaders}
+          <th style="background:#1a7a4a;color:#fff;font-size:12px;white-space:nowrap;font-weight:700;text-align:center;">รวม</th>
+        </tr>
+      </thead>
+      <tbody>${tbody}</tbody>
+      <tfoot>
+        <tr style="background:#fef6e4;">
+          <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;font-size:15px;">รวมทั้งหมด</td>
+          ${gBkColCells}
+          <td style="text-align:center;font-weight:700;color:#3b6fd4;border-top:2px solid #f0c060;
+            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gBkTotal}</td>
+          ${gRsColCells}
+          <td style="text-align:center;font-weight:700;color:#1a8a55;border-top:2px solid #f0c060;
+            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gRsTotal}</td>
+        </tr>
+      </tfoot>
+    </table>`;
+}
+
+// ════════════════════════════════════════
+//  REPORT 3 — สรุปตาม SC (Pivot)
+// ════════════════════════════════════════
+async function runReport3() {
+  ['r3BodySmall','r3BodyBig'].forEach(id => {
+    document.getElementById(id).innerHTML =
+      '<div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div>';
+  });
+
+  try {
+    // ดึงข้อมูลทั้งหมดใน Customer
+    const dAll = await callGS({ action:'getBookings' });
+    const allRows = dAll.data || [];
+
+    // แยกตามเดือนปัจจุบัน
+    const now2 = new Date();
+    const curYM = now2.getFullYear() + '-' + String(now2.getMonth()+1).padStart(2,'0');
+
+    // จองเดือนนี้ = วันที่จองอยู่ในเดือนปัจจุบัน
+    const curRows = allRows.filter(r => dateMatchMonth(r['วันที่จอง'], curYM));
+    // จองยกมา = วันที่จองก่อนเดือนปัจจุบัน (และยังไม่ปล่อย)
+    const prevRows = allRows.filter(r => !dateMatchMonth(r['วันที่จอง'], curYM));
+
+    // เป้าเดือนปัจจุบัน
+    let targetVal = 0;
+    const TH2 = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+      'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const curLabel = TH2[now2.getMonth()+1] + ' ' + now2.getFullYear();
+    const tgt2 = allTargets.find(t => t['เดือน'] === curLabel);
+    if (tgt2) targetVal = parseInt(tgt2['เป้าการจำหน่าย'])||0;
+
+    const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+    const monthLabel = thMonth(curYM);
+
+    // แยก SC ตามฝ่าย
+    const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
+    const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
+
+    // Online 3 คอลัมน์ตายตัว
+    const onlineSources = ['เพจส่วนตัว', 'เพจบริษัท', 'อื่นๆ'];
+
+    // render แต่ละฝ่าย
+    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal, curYM);
+    renderDSC('big',   scBig,   curRows, prevRows, allRows, onlineSources, monthLabel, today, 0, curYM);
+
+  } catch(e) {
+    ['r3BodySmall','r3BodyBig'].forEach(id => {
+      document.getElementById(id).innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    });
+  }
+}
+
+function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal, curYM) {
+  const suffix = type === 'small' ? 'Small' : 'Big';
+  const bodyEl = document.getElementById('r3Body' + suffix);
+  const titleEl = document.getElementById('r3Title' + suffix);
+  const subEl  = document.getElementById('r3Sub' + suffix);
+  const tgtEl  = document.getElementById('r3Target' + suffix);
+
+  const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
+  const reportDate3 = window._reportDate || new Date();
+  const titleDate3  = thDateFull(reportDate3);
+  const titleMonth3 = thMonthYear(curYM);
+
+  titleEl.innerHTML = `รายงานยอดจองสะสมและยอดปล่อยรถ ประจำเดือน ${titleMonth3} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
+  if(subEl) subEl.style.display = 'none';
+  if(tgtEl) tgtEl.style.display = 'none';
+  const badgeEl3 = document.getElementById('r3DateBadge' + suffix);
+  if(badgeEl3) badgeEl3.innerHTML = `<span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${titleDate3}</span></span>`;
+
+  if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
+
+  // sort: ทีม → ลำดับ
+  const sorted = [...scList].sort((a,b) => {
+    const ta = a['ทีม']||''; const tb = b['ทีม']||'';
+    if (ta !== tb) return ta.localeCompare(tb);
+    return parseInt(a['ลำดับ']||99) - parseInt(b['ลำดับ']||99);
+  });
+
+  // เก็บ tooltip data ไว้ใน window
+  window._dscData = window._dscData || {};
+
+  // คำนวณข้อมูลแต่ละ SC
+  const calc = (sc) => {
+    const name = sc['ที่ปรึกษาการขาย'];
+
+    // ── จองยกมา ──
+    // สถานะ "จอง" หรือ "คาดปล่อย" ที่วันจองก่อนเดือนนี้ และยังไม่ยกเลิก
+    const carryRows = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      (isBK(r['สถานะ']) || isERS(r['สถานะ'])) && !isCL(r['สถานะ']));
+    const carry = carryRows.length;
+
+    // ── คาดว่าจะจอง (EBK) ──
+    // สถานะ "คาดจอง" จากทุกเดือน (allRows) — ยอดยกมาไม่กระทบ
+    const ebkRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isEBK(r['สถานะ']));
+    const ebk = ebkRows2.length;
+
+    // ── จองเดือนนี้ (BK) ──
+    // สถานะ "จอง" ที่วันที่จองอยู่ในเดือนนี้
+    const bkThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
+    const bk = bkThisRows.length;
+
+    // ── ONLINE ──
+    // นับจาก allRows ทุกสถานะ (ยกเว้นยกเลิก) ทุกเดือน แยกตามที่มาลูกค้า
+    const allOnlineRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
+    const fixedSources = ['เพจส่วนตัว', 'เพจบริษัท'];
+    const onlineBySource = {};
+    fixedSources.forEach(src => {
+      onlineBySource[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า']===src).length;
+    });
+    onlineBySource['อื่นๆ'] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า'])).length;
+
+    // ── จองและปล่อยเดือนนี้ ──
+    // รายการที่วันที่จองอยู่ในเดือนนี้ + รายการที่วันที่ปล่อยอยู่ในเดือนนี้
+    const bkInMonthRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name);
+    const rsInMonthRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
+    // รวมโดยไม่นับซ้ำ (ใช้ _row เป็น key)
+    const rsMonthMap = new Map();
+    [...bkInMonthRows, ...rsInMonthRows].forEach(r => rsMonthMap.set(r._row, r));
+    const rsMonthRows = [...rsMonthMap.values()];
+    const rsMonth = rsMonthRows.length;
+
+    // ── รวมจองปัจจุบัน ──
+    // carryRows + bkThisRows ที่ยังไม่มีวันที่ปล่อย (ยังไม่ได้ปล่อยรถ)
+    const carryNotReleased = carryRows.filter(r => !r['วันที่ปล่อย']).length;
+    const bkNotReleased = bkThisRows.filter(r => !r['วันที่ปล่อย']).length;
+    const total = carryNotReleased + bkNotReleased;
+
+    // ── คาดว่าจะปล่อย (ERS) ──
+    // สถานะ "คาดปล่อย" จากทุกเดือน (allRows)
+    const ersRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isERS(r['สถานะ']));
+    const ers = ersRows.length;
+
+    // ── ยอดปล่อย ──
+    // รายการที่มีวันที่ปล่อยอยู่ในเดือนนี้
+    const rsTotalRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
+    const rsTotal = rsTotalRows.length;
+
+    // ── ถอนจอง (CL) ──
+    // สถานะ "ยกเลิกจอง" จากทุกเดือน (allRows)
+    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ']));
+    const cl = clRows2.length;
+
+    // เก็บ detail สำหรับ tooltip
+    const fmt = r => `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
+    const fmtRel = r => `${fmtDate(r['วันที่ปล่อย'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
+
+    // Online แยก source
+    const srcRowsMap = {};
+    sources.forEach(src => {
+      if (src === 'อื่นๆ') {
+        srcRowsMap[src] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']));
+      } else {
+        srcRowsMap[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า'] === src);
+      }
+    });
+
+    window._dscData[name] = {
+      carry:   carryRows.map(fmt),
+      ebk:     ebkRows2.map(fmt),
+      bk:      bkThisRows.map(fmt),
+      rs:      rsMonthRows.map(fmt),
+      total:   [...carryRows, ...bkThisRows].map(fmt),
+      ers:     ersRows.map(fmt),
+      rsTotal: rsTotalRows.map(fmtRel),
+      cl:      clRows2.map(fmt),
+      ...Object.fromEntries(sources.map(s => [`src_${s}`, srcRowsMap[s].map(fmt)])),
+    };
+
+    return { name, carry, ebk, bk, onlineBySource, rsMonth, total, ers, rsTotal, cl,
+      ทีม: sc['ทีม']||'', ชื่อเล่น: name, 'ที่ปรึกษาการขาย': name };
+  };
+
+  // กลุ่มตามทีม
+  const teams = {};
+  sorted.forEach(sc => {
+    const t = sc['ทีม']||'(ไม่ระบุทีม)';
+    if (!teams[t]) teams[t] = [];
+    teams[t].push(calc(sc));
+  });
+
+  // สร้าง header
+  const srcHeaders = sources.map(s =>
+    `<th class="online-hdr" style="font-size:11px;">${s}</th>`
+  ).join('');
+
+  let html = `<table class="dsc-table">
+    <thead>
+      <tr>
+        <th class="left" rowspan="2" style="min-width:140px;font-size:14px;">ที่ปรึกษาการขาย SC</th>
+        <th class="carry" rowspan="2" style="font-size:13px;">จอง<br>ยกมา</th>
+        <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะจอง</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">จอง<br>เดือนนี้</th>
+        <th class="online-hdr" colspan="${sources.length}" style="font-size:13px;">Online</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">รวมจอง<br>ปัจจุบัน</th>
+        <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะปล่อย</th>
+        <th class="rs-hdr" rowspan="2" style="font-size:13px;">ยอด<br>ปล่อย</th>
+        <th class="cl-hdr" rowspan="2" style="font-size:13px;">ถอน<br>จอง</th>
+      </tr>
+      <tr>${srcHeaders}</tr>
+    </thead>
+    <tbody>`;
+
+  // grand total
+  let gCarry=0,gEbk=0,gBk=0,gTotal=0,gErs=0,gRsT=0,gCl=0;
+  const gSrc = {}; sources.forEach(s=>gSrc[s]=0);
+
+  Object.entries(teams).forEach(([team, members]) => {
+    // team separator
+    html += `<tr class="team-sep"><td colspan="${4+sources.length}">ทีม ${team}</td></tr>`;
+
+    // team totals
+    let tCarry=0,tEbk=0,tBk=0,tTotal=0,tErs=0,tRsT=0,tCl=0;
+    const tSrc = {}; sources.forEach(s=>tSrc[s]=0);
+
+    members.forEach((d, idx) => {
+      const srcCells = sources.map(s => {
+        const v = d.onlineBySource[s]||0;
+        tSrc[s]+=v; gSrc[s]+=v;
+        const safeS = s.replace(/'/g,"\'");
+        return `<td class="num online-col ${v?'bk':'zero'}" ${v?`style="cursor:pointer;" onmouseenter="showDscTip(event,'${d.name.replace(/"/g,'&quot;')}','src_${safeS}')" onmouseleave="hideDscTip()"`:''}>
+          ${v||0}</td>`;
+      }).join('');
+      tCarry+=d.carry; tEbk+=d.ebk; tBk+=d.bk;
+      tTotal+=d.total; tErs+=d.ers; tRsT+=d.rsTotal; tCl+=d.cl;
+
+      const safeN = d.name.replace(/"/g,'&quot;');
+      const tip = (field) => `style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','${field}')" onmouseleave="hideDscTip()"`;
+      html += `<tr>
+        <td class="name">${d['ที่ปรึกษาการขาย']||d.ชื่อเล่น}</td>
+        <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
+        <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
+        <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
+        ${srcCells}
+        <td class="num bk" style="background:#EEF4FF;cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','total')" onmouseleave="hideDscTip()">${d.total||0}</td>
+        <td class="num ebk ${d.ers?'':'zero'}" ${d.ers?tip('ers'):''}>${d.ers||0}</td>
+        <td class="num rs ${d.rsTotal?'':'zero'}" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
+        <td class="num cl ${d.cl?'':'zero'}" ${d.cl?tip('cl'):''}>${d.cl||0}</td>
+      </tr>`;
+    });
+
+    // team total row
+    const tSrcCells = sources.map(s => `<td class="num online-col">${tSrc[s]||0}</td>`).join('');
+    html += `<tr class="team-total">
+      <td class="name">รวม ทีม ${team}</td>
+      <td class="num">${tCarry}</td>
+      <td class="num">${tEbk}</td>
+      <td class="num">${tBk}</td>
+      ${tSrcCells}
+      <td class="num">${tTotal}</td>
+      <td class="num">${tErs}</td>
+      <td class="num">${tRsT}</td>
+      <td class="num">${tCl}</td>
+    </tr>`;
+
+    gCarry+=tCarry; gEbk+=tEbk; gBk+=tBk;
+    gTotal+=tTotal; gErs+=tErs; gRsT+=tRsT; gCl+=tCl;
+  });
+
+  // grand total
+  const gSrcCells = sources.map(s => `<td class="num online-col">${gSrc[s]||0}</td>`).join('');
+  html += `</tbody>
+    <tfoot>
+      <tr class="grand-total">
+        <td class="name">รวมทั้งหมด</td>
+        <td class="num">${gCarry}</td>
+        <td class="num">${gEbk}</td>
+        <td class="num">${gBk}</td>
+        ${gSrcCells}
+        <td class="num">${gTotal}</td>
+        <td class="num">${gErs}</td>
+        <td class="num">${gRsT}</td>
+        <td class="num">${gCl}</td>
+      </tr>
+    </tfoot>
+  </table>`;
+
+  bodyEl.innerHTML = html;
+}
+
+// ════════════════════════════════════════
+//  PRINT FUNCTIONS
+// ════════════════════════════════════════
+function printReport1() {
+  const title = document.getElementById('r1Title').textContent;
+  const tbody = document.getElementById('r1Body').innerHTML;
+  const today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  const f = window._r1FilterState || {};
+
+  // สร้าง filter summary chips
+  const chips = [];
+  if(f.dept)     chips.push(`ฝ่าย: <b>${f.dept}</b>`);
+  if(f.sc)       chips.push(`SC: <b>${f.sc}</b>`);
+  if(f.month)    chips.push(`เดือน: <b>${thMonth(f.month)}</b>`);
+  if(f.dateFrom) chips.push(`ตั้งแต่: <b>${fmtDate(formatThDate(f.dateFrom))}</b>`);
+  if(f.dateTo)   chips.push(`ถึง: <b>${fmtDate(formatThDate(f.dateTo))}</b>`);
+  if(f.status)   chips.push(`สถานะ: <b>${statusLabel(f.status)}</b>`);
+  if(f.search)   chips.push(`ค้นหา: <b>"${f.search}"</b>`);
+
+  const filterBar = ''; // ซ่อน filter chips — มีในหัวรายงานแล้ว
+
+  const countEl = document.getElementById('r1Count');
+  const countBar = `<div style="text-align:right;font-size:8pt;color:#666;margin-bottom:6px;">${countEl?.textContent||''}</div>`;
+
+  openPrint(title, today, filterBar + countBar + `
+    <table style="width:100%;border-collapse:collapse;font-size:9pt;">
+      <thead>
+        <tr>
+          <th style="padding:6px 8px;text-align:center;">#</th>
+          <th style="padding:6px 8px;">วันที่จอง</th>
+          <th style="padding:6px 8px;text-align:left;">ชื่อลูกค้า</th>
+          <th style="padding:6px 8px;">เบอร์</th>
+          <th style="padding:6px 8px;text-align:left;">รายละเอียดรถ</th>
+          <th style="padding:6px 8px;">รุ่น</th>
+          <th style="padding:6px 8px;">สถานะ</th>
+          <th style="padding:6px 8px;">วันที่ปล่อย</th>
+          <th style="padding:6px 8px;text-align:left;">ที่ปรึกษาการขาย SC</th>
+          <th style="padding:6px 8px;text-align:left;">ที่มา</th>
+        </tr>
+      </thead>
+      <tbody>${tbody}</tbody>
+    </table>`
+  );
+}
+
+function printReport2() {
+  openDatePick('report2', 'รายงานยอดจองและปล่อยรถ');
+}
+function doPrintReport2() {
+  const rDate = window._reportDate || new Date();
+  const today = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const title = `รายงานยอดจองและปล่อยรถ ประจำเดือน ${thMonthYear(curYM)}`;
+  const bodySmall = document.getElementById('r2BodySmall')?.innerHTML || '';
+  const bodyBig   = document.getElementById('r2BodyBig')?.innerHTML || '';
+  const html = `<h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>${bodySmall}
+    <div style="margin-top:20px;"></div>
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>${bodyBig}`;
+  openPrint(title, today, html);
+}
+
+function printReport3() {
+  openDatePick('report3', 'Daily SC Performance');
+}
+function doPrintReport3() {
+  const rDate = window._reportDate || new Date();
+  const today = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const title = `รายงานยอดจองสะสมและยอดปล่อยรถ ประจำเดือน ${thMonthYear(curYM)}`;
+  const bodySmall = document.getElementById('r3BodySmall')?.innerHTML || '';
+  const bodyBig   = document.getElementById('r3BodyBig')?.innerHTML || '';
+  const html = `<h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถเล็ก</h3>${bodySmall}
+    <div style="margin-top:16px;"></div>
+    <h3 style="margin:0 0 8px;color:#1a3a6b;">📊 ฝ่ายขายรถใหญ่</h3>${bodyBig}`;
+  openPrint(title, today, html);
+}
+
+function openPrint(title, today, bodyHtml) {
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>${title}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Sarabun',sans-serif;font-size:10pt;background:#fff;color:#111;padding:10mm;}
+    .ctrl{background:#1a3a6b;padding:8px 16px;display:flex;gap:10px;margin:-10mm -10mm 10mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:6px 18px;font-size:12px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
+    .hdr{text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #1a3a6b;}
+    .hdr h1{font-size:14pt;font-weight:800;color:#1a3a6b;}
+    .hdr p{font-size:9pt;color:#555;margin-top:3px;}
+    /* ── ตาราง ── */
+    table{width:100%;border-collapse:collapse;}
+    th{background:#1a3a6b!important;color:#fff!important;padding:6px 8px;font-size:8pt;font-weight:700;text-align:center!important;border:1px solid rgba(255,255,255,0.2);}
+    th.left-col{text-align:left!important;}
+    td{padding:5px 8px;border:1px solid #dde;font-size:8.5pt;text-align:center;}
+    td.name{text-align:left!important;font-weight:600;}
+    /* แถว/คอลัม ปกติ */
+    tr:nth-child(even) td{background:#f5f8ff;}
+    /* ── รวมทีม ── */
+    tr.team-total td, tr[style*="eef3ff"] td{background:#eef3ff!important;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+    /* ── รวมทั้งหมด (แถวสุดท้าย) ── */
+    tr.grand-total td, tr[style*="fef6e4"] td, tfoot tr td{background:#fef6e4!important;font-weight:700;font-size:9pt;border-top:2px solid #f0c060;color:#5a3e00;}
+    /* ── header สี ── */
+    .in-hdr{background:#2451a0!important;}
+    .out-hdr{background:#1a7a4a!important;}
+    .carry{background:#8b6bb1!important;}
+    .ebk-hdr{background:#e07820!important;}
+    .bk-hdr{background:#4a7fd4!important;}
+    .online-hdr{background:#c44d8a!important;}
+    .rs-hdr{background:#2e9e6a!important;}
+    .cl-hdr{background:#d45050!important;}
+    /* ── dsc-table ── */
+    .dsc-table{width:100%;border-collapse:collapse;font-size:8.5pt;}
+    .dsc-table th{padding:5px 6px;text-align:center;font-weight:700;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;color:#fff;}
+    .dsc-table th.left{text-align:left;background:#6b7fa8;}
+    .dsc-table td{padding:5px 7px;border:1px solid #e8edf5;text-align:center;}
+    .dsc-table td.name{text-align:left;font-weight:600;background:#f8faff;}
+    .dsc-table td.num{font-weight:700;}
+    .dsc-table td.bk{color:#3b6fd4;}.dsc-table td.rs{color:#1a8a55;}
+    .dsc-table td.ebk{color:#d4720a;}.dsc-table td.cl{color:#c0392b;}
+    .dsc-table td.zero{color:#bbb;}
+    .dsc-table tr.team-total td{background:#eef3ff!important;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
+    .dsc-table tr.grand-total td{background:#fef6e4!important;font-weight:700;font-size:9pt;border-top:2px solid #f0c060;color:#5a3e00;}
+    .dsc-table tr.team-sep td{background:#e8edf8;font-size:7.5pt;font-weight:700;color:#3b5080;padding:4px 8px;border-top:2px solid #a0b4e0;}
+    .badge{display:inline-block;padding:1px 7px;border-radius:8px;font-size:7.5pt;font-weight:700;}
+    .has-val{color:#1a3a6b;font-weight:700;}.zero{color:#ccc;}
+    @media print{.ctrl{display:none!important;}body{padding:8mm;}@page{size:A4 landscape;margin:8mm;}}
+  </style></head><body>
+  <div class="ctrl">
+    <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+    <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
+  </div>
+  <div class="hdr">
+    <div style="font-size:8pt;color:#666;margin-bottom:2px;">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด · สาขาสุวินทวงศ์</div>
+    <h1>${title}</h1>
+    <p>ณ วันที่ ${today}</p>
+  </div>
+  ${bodyHtml}
+  </body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════
+//  CONFIRM DIALOG
+// ════════════════════════════════════════
+function showConfirm(icon, title, msg, cb) {
+  document.getElementById('confirmIcon').textContent  = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  confirmCallback = cb;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  confirmCallback = null;
+}
+function confirmOk() {
+  const cb = confirmCallback;
+  closeConfirm();
+  if (cb) cb();
+}
+
+// ════════════════════════════════════════
+//  SHARE / COPY
+// ════════════════════════════════════════
+function updateShareUrl() {
+  if (!scriptUrl) return;
+  document.getElementById('shareUrl').value =
+    window.location.href.split('?')[0] + '?url=' + encodeURIComponent(scriptUrl);
+}
+function copyShareUrl() { copyText(document.getElementById('shareUrl').value, 'shareOk'); }
+function copyScript()   { copyText(document.getElementById('scriptCode').textContent, 'copyOk'); }
+function copyText(txt, feedbackId) {
+  const show = () => { const el=document.getElementById(feedbackId);if(el){el.style.display='';setTimeout(()=>el.style.display='none',2500);} };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(show).catch(()=>fallbackCopy(txt,show));
+  else fallbackCopy(txt,show);
+}
+function fallbackCopy(txt,cb) {
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');if(cb)cb();}catch(e){}document.body.removeChild(ta);
+}
+
+// ════════════════════════════════════════
+//  GS API
+// ════════════════════════════════════════
+async function callGS(params, url) {
+  const base = url || scriptUrl;
+  if (!base) throw new Error('ไม่มี URL');
+  const qs = new URLSearchParams(params).toString();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  try {
+    const res = await fetch(base + '?' + qs, { signal: controller.signal });
+    clearTimeout(timer);
+    return await res.json();
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error('หมดเวลาเชื่อมต่อ (timeout)');
+    throw e;
+  }
+}
+
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+function fmtDate(s) {
+  if (!s) return '—';
+  // ถ้าเป็น dd/MM/yyyy อยู่แล้ว
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
+  // ถ้าเป็น Date string จาก JS เช่น "Mon Mar 02 2026 ..."
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+  return s;
+}
+
+function statusCode(val) {
+  if (!val) return '';
+  const codes = ['PS','EBK','BK','ERS','RS','CL'];
+  if (codes.includes(val)) return val;
+  if (isPS(val))  return 'PS';
+  if (isEBK(val)) return 'EBK';
+  if (isBK(val))  return 'BK';
+  if (isERS(val)) return 'ERS';
+  if (isRS(val))  return 'RS';
+  if (isCL(val))  return 'CL';
+  const found = meta.status.find(s => s['สถานะ'] === val || s['STATUS'] === val);
+  return found ? found['STATUS'] : val;
+}
+
+function statusLabel(val) {
+  if (!val) return '—';
+  const code = statusCode(val);
+  const found = meta.status.find(s => s['STATUS'] === code);
+  if (found) return found['สถานะ'] || found['STATUS'];
+  return val;
+}
+
+function thMonthYear(ym) {
+  // "2026-04" → "เมษายน 2569"
+  if (!ym) return '';
+  const [y, m] = ym.split('-');
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const buddhistYear = parseInt(y) + 543;
+  return `${TH[parseInt(m)]} ${buddhistYear}`;
+}
+
+function thDateFull(date) {
+  // Date → "6 เมษายน 2569"
+  const TH = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const d = date.getDate();
+  const m = date.getMonth() + 1;
+  const y = date.getFullYear() + 543;
+  return `${d} ${TH[m]} ${y}`;
+}
+
+function thMonth(ym) {
+  if (!ym) return '';
+  const [y,m] = ym.split('-');
+  const MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  return `${MONTHS[parseInt(m)]} ${parseInt(y)}`;
+}
+
+function dateMatchMonth(dateStr, ym) {
+  if (!dateStr || !ym) return true;
+  const t = parseThDate(String(dateStr).trim());
+  if (!t) return false;
+  const d = new Date(t);
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  return `${y}-${m}` === ym;
+}
+
+function parseThDate(s) {
+  if (!s) return 0;
+  const str = String(s).trim();
+  // dd/MM/yyyy หรือ d/M/yyyy
+  const slashParts = str.split('/');
+  if (slashParts.length >= 3) {
+    const y = slashParts[2].substring(0,4);
+    const m = slashParts[1].padStart(2,'0');
+    const d = slashParts[0].padStart(2,'0');
+    return new Date(`${y}-${m}-${d}T00:00:00`).getTime() || 0;
+  }
+  // yyyy-MM-dd
+  if (str.includes('-') && str.length >= 8 && str.indexOf('-') === 4) {
+    return new Date(str).getTime() || 0;
+  }
+  // "Mon Mar 02 2026 00:00:00 GMT+0700" หรือ Date string ทั่วไป
+  const t = new Date(str).getTime();
+  return isNaN(t) ? 0 : t;
+}
+
+function compareDates(a, b) {
+  return parseThDate(a) - parseThDate(b);
+}
+
+function formatDateInput(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function formatThDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  if (!y||!m||!d) return '';
+  return `${parseInt(d)}/${parseInt(m)}/${y}`;
+}
+
+function thToInputDate(s) {
+  if (!s) return '';
+  const p = String(s).split('/');
+  if (p.length < 3) return '';
+  return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+}
+
+function toast(msg, type) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast '+(type||'');el.style.display='block';
+  setTimeout(()=>el.style.display='none',2800);
+}
+
+// ════ DATE PICKER ════
+let _datepickTarget = null;
+function openDatePick(target, titleText) {
+  _datepickTarget = target;
+  const now = new Date();
+  document.getElementById('datepickInput').value =
+    now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+  document.getElementById('datepickTitle').textContent = `📅 วันที่รายงาน — ${titleText}`;
+  document.getElementById('datepickOverlay').classList.add('open');
+}
+function closeDatePick() {
+  document.getElementById('datepickOverlay').classList.remove('open');
+  _datepickTarget = null;
+}
+function confirmDatePick() {
+  const val = document.getElementById('datepickInput').value;
+  if (!val) { toast('กรุณาเลือกวันที่', 'err'); return; }
+  const [y,m,d] = val.split('-');
+  window._reportDate = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+  const target = _datepickTarget;
+  closeDatePick();
+  // แค่รีเฟรชรายงานให้ badge วันที่อัปเดต — กดปุ่มพิมพ์เองได้เลย
+  if (target === 'report2') runReport2();
+  else if (target === 'report3') runReport3();
+  toast('✅ เปลี่ยนวันที่แล้ว กดพิมพ์ได้เลย', 'ok');
+}
+
+function changeReportDate(target) {
+  const titleText = target === 'report2' ? 'รายงานยอดจองและปล่อยรถ' : 'Daily SC Performance';
+  openDatePick(target, titleText);
+}
+
+
+// ════════════════════════════════════════
+//  รายงานปล่อยรถ
+// ════════════════════════════════════════
+let _releaseRowIdx = null;
+
+function populateRlModelDropdown() {
+  const sel = document.getElementById('rl-model-full');
+  // เก็บค่าเดิมไว้ก่อน re-populate
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกรุ่น --</option>';
+  if (meta.model && meta.model.length) {
+    meta.model.forEach(m => {
+      const ppv  = (m['ชื่อรุ่นการจำหน่าย'] || m['PPV'] || '').trim();
+      const desc = (m['รายละเอียด'] || '').trim();
+      const code = (m['รหัสรุ่นรถ'] || '').trim();
+      if (!ppv) return;
+      const o = document.createElement('option');
+      o.value = ppv;
+      o.textContent = ppv + (desc ? '  — ' + desc : '') + (code ? '  [' + code + ']' : '');
+      sel.appendChild(o);
+    });
+  }
+  // option พิมพ์เอง
+  const oCustom = document.createElement('option');
+  oCustom.value = '__custom__';
+  oCustom.textContent = '✏️ พิมพ์เอง (ไม่มีในรายการ)';
+  sel.appendChild(oCustom);
+  // restore ค่าเดิม
+  if (prev) sel.value = prev;
+}
+
+function onRlModelFullChange() {
+  const sel = document.getElementById('rl-model-full');
+  const wrap = document.getElementById('rl-model-full-custom-wrap');
+  wrap.style.display = sel.value === '__custom__' ? '' : 'none';
+  if (sel.value !== '__custom__') {
+    document.getElementById('rl-model-full-custom').value = '';
+  }
+}
+
+function getRlModelFullValue() {
+  const sel = document.getElementById('rl-model-full');
+  if (sel.value === '__custom__') {
+    return document.getElementById('rl-model-full-custom').value.trim();
+  }
+  return sel.value.trim();
+}
+
+function lookupModelPPV(r) {
+  // พยายาม match จาก meta.model โดยใช้ รายละเอียดรถ หรือ รหัสรุ่นรถ
+  if (!meta.model || !meta.model.length) return '';
+  const detail = (r['รายละเอียดรถ'] || '').trim().toLowerCase();
+  const code   = (r['รุ่นรถ'] || '').trim().toLowerCase();
+  // ลอง match รายละเอียด exact ก่อน
+  let found = meta.model.find(m => (m['รายละเอียด']||'').trim().toLowerCase() === detail);
+  // ถ้าไม่ได้ ลอง match รหัสรุ่นรถ
+  if (!found && code) found = meta.model.find(m => (m['รหัสรุ่นรถ']||'').trim().toLowerCase() === code);
+  if (found) return (found['ชื่อรุ่นการจำหน่าย'] || found['PPV'] || '').trim();
+  return '';
+}
+
+function openReleaseReport(i) {
+  const r = filteredBookings[i];
+  if (!r) return;
+  _releaseRowIdx = i;
+  document.getElementById('rl-customer').value = r['ชื่อลูกค้า'] || '';
+  document.getElementById('rl-model').value    = r['รุ่นรถ'] || '';
+  document.getElementById('rl-engine').value   = r['เลขเครื่อง'] || '';
+  document.getElementById('rl-chassis').value  = r['เลขแชสซีส์'] || '';
+  document.getElementById('rl-finance').value  = r['ไฟแนนซ์'] || '';
+  document.getElementById('rl-plate').value    = r['เลขทะเบียน'] || '';
+  document.getElementById('rl-delivery').value = r['เลขส่งมอบ'] || '';
+  document.getElementById('rl-po').value       = r['เลข PO'] || '';
+  document.getElementById('rl-sc').value           = r['ที่ปรึกษาการขาย'] || '';
+  document.getElementById('rl-rcv-customer').value  = r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
+
+  // populate dropdown ล่าสุดจาก meta ทุกครั้ง
+  populateRlModelDropdown();
+
+  // หาค่าที่ถูกต้อง: ถ้าเคยบันทึก ชื่อรุ่นรถ ไว้แล้วให้ใช้ก่อน ถ้าไม่มี ให้ lookup จาก meta
+  const saved = (r['ชื่อรุ่นรถ'] || '').trim();
+  const looked = lookupModelPPV(r);
+  const targetVal = saved || looked;
+
+  const sel = document.getElementById('rl-model-full');
+  const wrap = document.getElementById('rl-model-full-custom-wrap');
+  const customInput = document.getElementById('rl-model-full-custom');
+
+  if (targetVal) {
+    // ลอง set ค่าใน dropdown
+    sel.value = targetVal;
+    if (sel.value !== targetVal) {
+      // ไม่มีใน dropdown → เปิด custom input
+      sel.value = '__custom__';
+      customInput.value = targetVal;
+      wrap.style.display = '';
+    } else {
+      wrap.style.display = 'none';
+      customInput.value = '';
+    }
+  } else {
+    sel.value = '';
+    wrap.style.display = 'none';
+    customInput.value = '';
+  }
+
+  document.getElementById('releaseModal').classList.add('open');
+}
+
+function closeReleaseModal() {
+  document.getElementById('releaseModal').classList.remove('open');
+  _releaseRowIdx = null;
+}
+
+async function saveAndPrintRelease() {
+  const r = filteredBookings[_releaseRowIdx];
+  if (!r) return;
+
+  const extra = {
+    'สถานะ':       'RS',
+    'เลขเครื่อง':  document.getElementById('rl-engine').value.trim(),
+    'เลขแชสซีส์': document.getElementById('rl-chassis').value.trim(),
+    'ไฟแนนซ์':    document.getElementById('rl-finance').value,
+    'เลขทะเบียน': document.getElementById('rl-plate').value.trim(),
+    'เลขส่งมอบ':  document.getElementById('rl-delivery').value.trim(),
+    'เลข PO':     document.getElementById('rl-po').value.trim(),
+    'ลูกค้ารับรถ': document.getElementById('rl-rcv-customer').value.trim(),
+    'ชื่อรุ่นรถ':  getRlModelFullValue(),
+  };
+
+  // บันทึกลง Sheet
+  const saveBtn = document.querySelector('#releaseModal .btn-primary');
+  if (saveBtn) { saveBtn.disabled=true; saveBtn.textContent='⏳ กำลังบันทึก...'; }
+  try {
+    if (r._row) {
+      await callGS({ action: 'updateBooking', _row: r._row, ...extra });
+      Object.assign(r, extra);
+      r['ชื่อลูกค้า']       = document.getElementById('rl-customer').value.trim();
+      r['รุ่นรถ']           = document.getElementById('rl-model').value.trim();
+      r['ที่ปรึกษาการขาย'] = document.getElementById('rl-sc').value.trim();
+    }
+  } catch(e) { toast('⚠️ บันทึกไม่สำเร็จ แต่จะเปิดรายงานให้', 'warn'); }
+  if (saveBtn) { saveBtn.disabled=false; saveBtn.textContent='💾 บันทึก & พิมพ์รายงาน'; }
+  closeReleaseModal();
+  toast('✅ บันทึกสำเร็จ กำลังเปิดรายงาน...', 'ok');
+  setTimeout(() => printReleaseReport(r), 600);
+}
+
+function printReleaseReport(r) {
+  // ใช้วันที่ปล่อยรถเป็นหลัก ถ้าไม่มีค่อยใช้วันปัจจุบัน
+  let rDate;
+  if (r && r['วันที่ปล่อย']) {
+    const t = parseThDate(String(r['วันที่ปล่อย']).trim());
+    rDate = t ? new Date(t) : (window._reportDate || new Date());
+  } else {
+    rDate = window._reportDate || new Date();
+  }
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  // หาวันที่ปล่อยของรถคันที่กดปุ่ม (ใช้เป็น key สำหรับ filter)
+  const relDateKey = r['วันที่ปล่อย'] ? fmtDate(String(r['วันที่ปล่อย']).trim()) : fmtDate(rDate.toISOString());
+
+  // รวบรวมรถทุกคันที่ปล่อยวันเดียวกัน
+  const sameDay = (allBookings || []).filter(b => {
+    if (!b['วันที่ปล่อย']) return false;
+    return fmtDate(String(b['วันที่ปล่อย']).trim()) === relDateKey;
+  });
+
+  // ถ้าหาไม่เจอเลย ให้ใช้รถคันปัจจุบันแทน
+  const releaseList = sameDay.length > 0 ? sameDay : [r];
+
+  const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
+
+  // สร้างแถวจากรถทุกคัน แล้วเติมแถวว่างให้ครบอย่างน้อย 10 แถว
+  const dataRows = releaseList.map(b => `
+    <tr>
+      <td style="${tdBase}font-size:11pt;">${b['ไฟแนนซ์']||''}</td>
+      <td style="${tdBase}">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||''}</td>
+      <td style="${tdBase}">${b['เลขเครื่อง']||''}</td>
+      <td style="${tdBase}">${b['เลขแชสซีส์']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||''}</td>
+      <td class="plate-col" style="${tdBase}font-size:11pt;">${b['เลขทะเบียน']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลขส่งมอบ']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลข PO']||''}</td>
+      <td style="${tdBase}">${b['ที่ปรึกษาการขาย']||''}</td>
+    </tr>`).join('');
+
+  const emptyCount = Math.max(0, 10 - releaseList.length);
+  const emptyRows = Array.from({length: emptyCount}, () =>
+    `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+  ).join('');
+
+  const rows = dataRows + emptyRows;
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;height:100%;}
+    body{font-family:'Sarabun',sans-serif;font-size:9.5pt;background:#fff;color:#1a2d45;
+      padding:6mm 8mm;
+      transform-origin:top left;
+    }
+    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;margin:-6mm -8mm 6mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:5px 14px;font-size:11px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
+    .doc-header{text-align:center;margin-bottom:3mm;}
+    .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
+    .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
+    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;}
+    thead tr{background:#b94a00;color:#fff;}
+    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    th.plate-hdr{color:#ffe082;}
+    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
+    tr:nth-child(even) td{background:#fff3e0;}
+    td.plate-col{color:#c0392b!important;font-weight:800;}
+    @media print{
+      thead tr{background:#fff!important;color:#111!important;}
+      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
+      th.plate-hdr{color:#111!important;}
+      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
+      tr:nth-child(even) td{background:#fff!important;}
+      td.plate-col{color:#c0392b!important;}
+    }
+    td.fn-cell{text-align:center;font-weight:800;font-size:11pt;color:#c0392b;width:48px;}
+    td.model-cell{width:190px;font-size:9pt;}
+    td.model-name{font-weight:800;font-size:10pt;}
+    td.eng-chassis{font-size:8.5pt;color:#444;margin-top:2px;}
+    td.cust-cell{font-size:10.5pt;font-weight:600;min-width:140px;}
+    td.plate-cell{text-align:center;color:#c0392b;font-weight:800;font-size:11pt;width:90px;}
+    td.plate-province{display:block;font-size:7.5pt;color:#555;font-weight:400;}
+    td.delivery-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
+    td.po-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
+    td.sc-cell{font-size:10pt;min-width:130px;white-space:nowrap;}
+    td{height:11mm;}
+    .sig-section{display:flex;justify-content:center;gap:60mm;margin-top:8mm;}
+    .sig-box{text-align:center;min-width:140px;}
+    .sig-line{border-bottom:1px solid #333;width:160px;margin:0 auto 5mm;}
+    .sig-dots{font-size:9.5pt;margin-bottom:3mm;}
+    .sig-name{font-size:11pt;font-weight:700;}
+    .sig-role{font-size:9pt;color:#555;margin-top:1mm;}
+    @media print{
+      .ctrl{display:none!important;}
+      body{padding:6mm 8mm;}
+      @page{size:A4 landscape;margin:6mm;}
+    }
+  </style></head><body>
+  <div class="ctrl">
+    <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+    <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
+  </div>
+  <div class="doc-header">
+    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+  </div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:48px;">F/N</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:110px;">เลขเครื่อง</th>
+        <th style="width:130px;">เลขแชสซีส์</th>
+        <th>ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
+        <th style="width:80px;">ใบส่งมอบ</th>
+        <th style="width:80px;">ใบ PO</th>
+        <th style="min-width:120px;">SC</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
+    </div>
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════
+//  RELEASE REPORT PAGE
+// ════════════════════════════════════════
+function initReleaseReportPage() {
+  // ตั้งค่า default วันที่เป็นวันนี้ถ้ายังไม่ได้เลือก
+  const inp = document.getElementById('releaseReportDate');
+  if (inp && !inp.value) {
+    inp.value = formatDateInput(new Date());
+  }
+}
+
+function runReleaseReportPage() {
+  const dateVal = document.getElementById('releaseReportDate').value;
+  if (!dateVal) { toast('กรุณาเลือกวันที่ปล่อยรถ', 'err'); return; }
+
+  // แปลง yyyy-MM-dd → dd/MM/yyyy เพื่อใช้เปรียบเทียบ
+  const [y, m, d] = dateVal.split('-');
+  const targetKey = `${parseInt(d)}/${parseInt(m)}/${y}`;
+
+  // กรองรถที่ปล่อยวันนั้น
+  const list = (allBookings || []).filter(b => {
+    if (!b['วันที่ปล่อย']) return false;
+    return fmtDate(String(b['วันที่ปล่อย']).trim()) === fmtDate(dateVal);
+  });
+
+  // สร้าง date object จากวันที่เลือก
+  const rDate = new Date(`${y}-${m}-${d}T00:00:00`);
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  // อัปเดต preview header
+  document.getElementById('releaseReportPreviewTitle').textContent =
+    `รายงานการปล่อยรถ ประจำเดือน ${monthLabel}`;
+  document.getElementById('releaseReportPreviewSub').textContent =
+    `ประจำวันที่ ${dateStr}`;
+  document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
+
+  // render ตาราง
+  const tbody = document.getElementById('releaseReportBody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่พบรถที่ปล่อยในวันที่เลือก</div></td></tr>';
+  } else {
+    tbody.innerHTML = list.map(b => `
+      <tr>
+        <td class="c" style="font-weight:800;font-size:13px;color:#c0392b;">${b['ไฟแนนซ์']||'—'}</td>
+        <td style="font-weight:600;">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||'—'}</td>
+        <td class="mono" style="font-size:11px;">${b['เลขเครื่อง']||'—'}</td>
+        <td class="mono" style="font-size:11px;">${b['เลขแชสซีส์']||'—'}</td>
+        <td style="font-weight:600;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||'—'}</td>
+        <td class="c" style="font-weight:800;color:#c0392b;">${b['เลขทะเบียน']||'—'}</td>
+        <td class="c">${b['เลขส่งมอบ']||'—'}</td>
+        <td class="c">${b['เลข PO']||'—'}</td>
+        <td>${b['ที่ปรึกษาการขาย']||'—'}</td>
+      </tr>`).join('');
+  }
+
+  // แสดง card และปุ่มพิมพ์
+  document.getElementById('releaseReportPreviewCard').style.display = '';
+  document.getElementById('releaseReportPrintBtn').style.display = '';
+
+  // เก็บ list สำหรับพิมพ์
+  window._releaseReportList = list;
+  window._releaseReportDate = rDate;
+}
+
+function doReleaseReportPage() {
+  const list = window._releaseReportList;
+  const rDate = window._releaseReportDate;
+  if (!list || !rDate) { toast('กรุณาแสดงรายงานก่อน', 'err'); return; }
+
+  // ใช้ printReleaseReport กับรายการทั้งหมด โดยส่ง record แรกพร้อม override วันที่
+  const fakeR = list.length > 0 ? list[0] : {};
+  // Override _reportDate เพื่อให้ printReleaseReport ใช้วันที่ถูกต้อง
+  // แต่เราจะเรียก printReleaseReport โดยตรงพร้อม r ที่มี วันที่ปล่อย
+  printReleaseReportFromList(list, rDate);
+}
+
+function printReleaseReportFromList(releaseList, rDate) {
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
+
+  const dataRows = releaseList.map(b => `
+    <tr>
+      <td style="${tdBase}font-size:11pt;">${b['ไฟแนนซ์']||''}</td>
+      <td style="${tdBase}">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||''}</td>
+      <td style="${tdBase}">${b['เลขเครื่อง']||''}</td>
+      <td style="${tdBase}">${b['เลขแชสซีส์']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||''}</td>
+      <td class="plate-col" style="${tdBase}font-size:11pt;">${b['เลขทะเบียน']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลขส่งมอบ']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลข PO']||''}</td>
+      <td style="${tdBase}">${b['ที่ปรึกษาการขาย']||''}</td>
+    </tr>`).join('');
+
+  const emptyCount = Math.max(0, 10 - releaseList.length);
+  const emptyRows = Array.from({length: emptyCount}, () =>
+    `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+  ).join('');
+
+  const rows = dataRows + emptyRows;
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;height:100%;}
+    body{font-family:'Sarabun',sans-serif;font-size:9.5pt;background:#fff;color:#1a2d45;
+      padding:6mm 8mm;
+      transform-origin:top left;
+    }
+    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;margin:-6mm -8mm 6mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:5px 14px;font-size:11px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
+    .doc-header{text-align:center;margin-bottom:3mm;}
+    .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
+    .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
+    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;}
+    thead tr{background:#b94a00;color:#fff;}
+    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    th.plate-hdr{color:#ffe082;}
+    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
+    tr:nth-child(even) td{background:#fff3e0;}
+    td.plate-col{color:#c0392b!important;font-weight:800;}
+    @media print{
+      thead tr{background:#fff!important;color:#111!important;}
+      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
+      th.plate-hdr{color:#111!important;}
+      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
+      tr:nth-child(even) td{background:#fff!important;}
+      td.plate-col{color:#c0392b!important;}
+    }
+    td{height:11mm;}
+    @media print{
+      .ctrl{display:none!important;}
+      body{padding:6mm 8mm;}
+      @page{size:A4 landscape;margin:6mm;}
+    }
+  </style></head><body>
+  <div class="ctrl">
+    <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+    <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
+  </div>
+  <div class="doc-header">
+    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+  </div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:48px;">F/N</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:110px;">เลขเครื่อง</th>
+        <th style="width:130px;">เลขแชสซีส์</th>
+        <th>ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
+        <th style="width:80px;">ใบส่งมอบ</th>
+        <th style="width:80px;">ใบ PO</th>
+        <th style="min-width:120px;">SC</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
+    </div>
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+
+init();
+
+// ── PWA Service Worker ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('SW registered:', r.scope))
+      .catch(e => console.warn('SW error:', e));
+  });
+}
+
+</script>
+</body>
+</html>
