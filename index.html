@@ -2804,7 +2804,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
   Object.entries(teams).forEach(([team, members]) => {
     // team separator
-    html += `<tr class="team-sep"><td colspan="${4+sources.length}">ทีม ${team}</td></tr>`;
+    html += `<tr class="team-sep"><td colspan="${8+sources.length}">ทีม ${team}</td></tr>`;
 
     // team totals
     let tCarry=0,tEbk=0,tBk=0,tTotal=0,tErs=0,tRsT=0,tCl=0;
@@ -3495,8 +3495,8 @@ function printReleaseReport(r) {
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
-  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
-  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
+  <div class="doc-to" style="font-size:12pt;"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to" style="font-size:12pt;"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
   <table>
     <thead>
       <tr>
@@ -3691,8 +3691,8 @@ function printReleaseReportFromList(releaseList, rDate) {
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
-  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
-  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
+  <div class="doc-to" style="font-size:12pt;"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to" style="font-size:12pt;"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
   <table>
     <thead>
       <tr>
