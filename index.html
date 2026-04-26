@@ -128,6 +128,11 @@ td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;}
 td.r{text-align:right;}td.c{text-align:center;}
 .action-btns{display:flex;gap:4px;justify-content:center;}
 
+/* ── RELEASE REPORT PREVIEW TABLE ── */
+#releaseReportTable{table-layout:fixed;min-width:700px;}
+#releaseReportTable th,
+#releaseReportTable td{height:36px;padding:0 8px;box-sizing:border-box;vertical-align:middle;}
+
 /* ── SUMMARY CARDS ── */
 .sum-grid{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .sum-card{background:var(--white);border-radius:10px;padding:8px 14px;box-shadow:var(--shadow2);
@@ -587,10 +592,10 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
       <span class="rec-badge" id="releaseReportCount">0 คัน</span>
     </div>
     <div class="tbl-wrap">
-      <table id="releaseReportTable">
+      <table id="releaseReportTable" style="table-layout:fixed;">
         <thead>
-          <tr>
-            <th style="width:48px;">F/N</th>
+          <tr style="height:36px;">
+            <th style="width:72px;">F/N</th>
             <th>รุ่นรถ</th>
             <th>เลขเครื่อง</th>
             <th>เลขแชสซีส์</th>
@@ -598,7 +603,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
             <th style="width:90px;">ทะเบียนป้ายแดง</th>
             <th style="width:80px;">ใบส่งมอบ</th>
             <th style="width:80px;">ใบ PO</th>
-            <th>SC</th>
+            <th style="width:110px;">SC ที่ปรึกษาการขาย</th>
           </tr>
         </thead>
         <tbody id="releaseReportBody">
@@ -3430,32 +3435,23 @@ function printReleaseReport(r) {
     .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
     .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
     .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
-    table{width:100%;border-collapse:collapse;margin-top:3mm;}
-    thead tr{background:#b94a00;color:#fff;}
-    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;table-layout:fixed;}
+    thead tr{background:#b94a00;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    th{padding:0 6px;height:11mm;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     th.plate-hdr{color:#ffe082;}
-    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
-    tr:nth-child(even) td{background:#fff3e0;}
+    td{padding:0 6px;height:11mm;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    tr:nth-child(even) td{background:#fff3e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     td.plate-col{color:#c0392b!important;font-weight:800;}
-    @media print{
-      thead tr{background:#fff!important;color:#111!important;}
-      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
-      th.plate-hdr{color:#111!important;}
-      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
-      tr:nth-child(even) td{background:#fff!important;}
-      td.plate-col{color:#c0392b!important;}
-    }
-    td.fn-cell{text-align:center;font-weight:800;font-size:11pt;color:#c0392b;width:48px;}
-    td.model-cell{width:190px;font-size:9pt;}
+    td.fn-cell{text-align:center;font-weight:800;font-size:11pt;color:#c0392b;}
+    td.model-cell{font-size:9pt;}
     td.model-name{font-weight:800;font-size:10pt;}
     td.eng-chassis{font-size:8.5pt;color:#444;margin-top:2px;}
-    td.cust-cell{font-size:10.5pt;font-weight:600;min-width:140px;}
-    td.plate-cell{text-align:center;color:#c0392b;font-weight:800;font-size:11pt;width:90px;}
+    td.cust-cell{font-size:10.5pt;font-weight:600;}
+    td.plate-cell{text-align:center;color:#c0392b;font-weight:800;font-size:11pt;}
     td.plate-province{display:block;font-size:7.5pt;color:#555;font-weight:400;}
-    td.delivery-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
-    td.po-cell{text-align:center;font-size:10.5pt;font-weight:600;width:88px;}
-    td.sc-cell{font-size:10pt;min-width:130px;white-space:nowrap;}
-    td{height:11mm;}
+    td.delivery-cell{text-align:center;font-size:10.5pt;font-weight:600;}
+    td.po-cell{text-align:center;font-size:10.5pt;font-weight:600;}
+    td.sc-cell{font-size:10pt;white-space:nowrap;}
     .sig-section{display:flex;justify-content:center;gap:60mm;margin-top:8mm;}
     .sig-box{text-align:center;min-width:140px;}
     .sig-line{border-bottom:1px solid #333;width:160px;margin:0 auto 5mm;}
@@ -3463,6 +3459,7 @@ function printReleaseReport(r) {
     .sig-name{font-size:11pt;font-weight:700;}
     .sig-role{font-size:9pt;color:#555;margin-top:1mm;}
     @media print{
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
       .ctrl{display:none!important;}
       body{padding:6mm 8mm;}
       @page{size:A4 landscape;margin:6mm;}
@@ -3481,7 +3478,7 @@ function printReleaseReport(r) {
   <table>
     <thead>
       <tr>
-        <th style="width:48px;">F/N</th>
+        <th style="width:68px;">F/N</th>
         <th style="width:130px;">รุ่นรถ</th>
         <th style="width:110px;">เลขเครื่อง</th>
         <th style="width:130px;">เลขแชสซีส์</th>
@@ -3489,7 +3486,7 @@ function printReleaseReport(r) {
         <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
         <th style="width:80px;">ใบส่งมอบ</th>
         <th style="width:80px;">ใบ PO</th>
-        <th style="min-width:120px;">SC</th>
+        <th style="width:110px;">SC ที่ปรึกษาการขาย</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -3633,23 +3630,15 @@ function printReleaseReportFromList(releaseList, rDate) {
     .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
     .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
     .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
-    table{width:100%;border-collapse:collapse;margin-top:3mm;}
-    thead tr{background:#b94a00;color:#fff;}
-    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;table-layout:fixed;}
+    thead tr{background:#b94a00;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    th{padding:0 6px;height:11mm;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     th.plate-hdr{color:#ffe082;}
-    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
-    tr:nth-child(even) td{background:#fff3e0;}
+    td{padding:0 6px;height:11mm;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    tr:nth-child(even) td{background:#fff3e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     td.plate-col{color:#c0392b!important;font-weight:800;}
     @media print{
-      thead tr{background:#fff!important;color:#111!important;}
-      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
-      th.plate-hdr{color:#111!important;}
-      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
-      tr:nth-child(even) td{background:#fff!important;}
-      td.plate-col{color:#c0392b!important;}
-    }
-    td{height:11mm;}
-    @media print{
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
       .ctrl{display:none!important;}
       body{padding:6mm 8mm;}
       @page{size:A4 landscape;margin:6mm;}
@@ -3668,7 +3657,7 @@ function printReleaseReportFromList(releaseList, rDate) {
   <table>
     <thead>
       <tr>
-        <th style="width:48px;">F/N</th>
+        <th style="width:68px;">F/N</th>
         <th style="width:130px;">รุ่นรถ</th>
         <th style="width:110px;">เลขเครื่อง</th>
         <th style="width:130px;">เลขแชสซีส์</th>
@@ -3676,7 +3665,7 @@ function printReleaseReportFromList(releaseList, rDate) {
         <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
         <th style="width:80px;">ใบส่งมอบ</th>
         <th style="width:80px;">ใบ PO</th>
-        <th style="min-width:120px;">SC</th>
+        <th style="width:110px;">SC ที่ปรึกษาการขาย</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
