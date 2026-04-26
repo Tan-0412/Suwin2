@@ -297,6 +297,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="tab" onclick="switchTab('report1')"  id="tab-report1">📄 รายงานจอง</div>
   <div class="tab" onclick="switchTab('report2')"  id="tab-report2">🚗 จอง-ปล่อยรายวัน</div>
   <div class="tab" onclick="switchTab('report3')"  id="tab-report3">👤 Daily SC</div>
+  <div class="tab" onclick="switchTab('release')"  id="tab-release">📋 รายงานปล่อยรถ</div>
   <div class="tab" onclick="switchTab('target')"   id="tab-target">🎯 เป้าจำหน่าย</div>
   <div class="tab" onclick="switchTab('setup')"    id="tab-setup">⚙️ ตั้งค่า</div>
 </div>
@@ -549,6 +550,61 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
     </div>
     <div class="tbl-wrap" id="r3BodyBig">
       <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+  PAGE: RELEASE REPORT — รายงานการปล่อยรถ
+════════════════════════════════════ -->
+<div class="page" id="page-release">
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr">
+      <div>
+        <h2>📋 รายงานการปล่อยรถ</h2>
+        <p>เลือกวันที่ปล่อยรถแล้วกดแสดงรายงาน</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="filter-row" style="align-items:flex-end;gap:12px;">
+        <div class="frow" style="min-width:200px;">
+          <label>วันที่ปล่อยรถ</label>
+          <input type="date" id="releaseReportDate">
+        </div>
+        <button class="btn btn-primary" onclick="runReleaseReportPage()">🔍 แสดงรายงาน</button>
+        <button class="btn btn-accent" id="releaseReportPrintBtn" onclick="doReleaseReportPage()" style="display:none;">🖨️ พิมพ์รายงาน</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- preview -->
+  <div class="card" id="releaseReportPreviewCard" style="display:none;">
+    <div class="card-hdr">
+      <div>
+        <h2 id="releaseReportPreviewTitle">รายงานการปล่อยรถ</h2>
+        <p id="releaseReportPreviewSub">—</p>
+      </div>
+      <span class="rec-badge" id="releaseReportCount">0 คัน</span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="releaseReportTable">
+        <thead>
+          <tr>
+            <th style="width:48px;">F/N</th>
+            <th>รุ่นรถ</th>
+            <th>เลขเครื่อง</th>
+            <th>เลขแชสซีส์</th>
+            <th>ชื่อลูกค้า</th>
+            <th style="width:90px;">ทะเบียนป้ายแดง</th>
+            <th style="width:80px;">ใบส่งมอบ</th>
+            <th style="width:80px;">ใบ PO</th>
+            <th>SC</th>
+          </tr>
+        </thead>
+        <tbody id="releaseReportBody">
+          <tr><td colspan="9"><div class="empty">ยังไม่มีข้อมูล</div></td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -1163,6 +1219,7 @@ function switchTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'report2' && scriptUrl) runReport2();
   if (tab === 'report3' && scriptUrl) runReport3();
+  if (tab === 'release') initReleaseReportPage();
 }
 
 // ════════════════════════════════════════
@@ -3308,7 +3365,14 @@ async function saveAndPrintRelease() {
 }
 
 function printReleaseReport(r) {
-  const rDate = window._reportDate || new Date();
+  // ใช้วันที่ปล่อยรถเป็นหลัก ถ้าไม่มีค่อยใช้วันปัจจุบัน
+  let rDate;
+  if (r && r['วันที่ปล่อย']) {
+    const t = parseThDate(String(r['วันที่ปล่อย']).trim());
+    rDate = t ? new Date(t) : (window._reportDate || new Date());
+  } else {
+    rDate = window._reportDate || new Date();
+  }
   const dateStr = thDateFull(rDate);
   const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
   const monthLabel = thMonthYear(curYM);
@@ -3398,6 +3462,193 @@ function printReleaseReport(r) {
     .sig-dots{font-size:9.5pt;margin-bottom:3mm;}
     .sig-name{font-size:11pt;font-weight:700;}
     .sig-role{font-size:9pt;color:#555;margin-top:1mm;}
+    @media print{
+      .ctrl{display:none!important;}
+      body{padding:6mm 8mm;}
+      @page{size:A4 landscape;margin:6mm;}
+    }
+  </style></head><body>
+  <div class="ctrl">
+    <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+    <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
+  </div>
+  <div class="doc-header">
+    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+  </div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
+  <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:48px;">F/N</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:110px;">เลขเครื่อง</th>
+        <th style="width:130px;">เลขแชสซีส์</th>
+        <th>ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
+        <th style="width:80px;">ใบส่งมอบ</th>
+        <th style="width:80px;">ใบ PO</th>
+        <th style="min-width:120px;">SC</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
+    </div>
+    <div style="text-align:center;min-width:140px;">
+      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
+      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+
+// ════════════════════════════════════════
+//  RELEASE REPORT PAGE
+// ════════════════════════════════════════
+function initReleaseReportPage() {
+  // ตั้งค่า default วันที่เป็นวันนี้ถ้ายังไม่ได้เลือก
+  const inp = document.getElementById('releaseReportDate');
+  if (inp && !inp.value) {
+    inp.value = formatDateInput(new Date());
+  }
+}
+
+function runReleaseReportPage() {
+  const dateVal = document.getElementById('releaseReportDate').value;
+  if (!dateVal) { toast('กรุณาเลือกวันที่ปล่อยรถ', 'err'); return; }
+
+  // แปลง yyyy-MM-dd → dd/MM/yyyy เพื่อใช้เปรียบเทียบ
+  const [y, m, d] = dateVal.split('-');
+  const targetKey = `${parseInt(d)}/${parseInt(m)}/${y}`;
+
+  // กรองรถที่ปล่อยวันนั้น
+  const list = (allBookings || []).filter(b => {
+    if (!b['วันที่ปล่อย']) return false;
+    return fmtDate(String(b['วันที่ปล่อย']).trim()) === fmtDate(dateVal);
+  });
+
+  // สร้าง date object จากวันที่เลือก
+  const rDate = new Date(`${y}-${m}-${d}T00:00:00`);
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  // อัปเดต preview header
+  document.getElementById('releaseReportPreviewTitle').textContent =
+    `รายงานการปล่อยรถ ประจำเดือน ${monthLabel}`;
+  document.getElementById('releaseReportPreviewSub').textContent =
+    `ประจำวันที่ ${dateStr}`;
+  document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
+
+  // render ตาราง
+  const tbody = document.getElementById('releaseReportBody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่พบรถที่ปล่อยในวันที่เลือก</div></td></tr>';
+  } else {
+    tbody.innerHTML = list.map(b => `
+      <tr>
+        <td class="c" style="font-weight:800;font-size:13px;color:#c0392b;">${b['ไฟแนนซ์']||'—'}</td>
+        <td style="font-weight:600;">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||'—'}</td>
+        <td class="mono" style="font-size:11px;">${b['เลขเครื่อง']||'—'}</td>
+        <td class="mono" style="font-size:11px;">${b['เลขแชสซีส์']||'—'}</td>
+        <td style="font-weight:600;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||'—'}</td>
+        <td class="c" style="font-weight:800;color:#c0392b;">${b['เลขทะเบียน']||'—'}</td>
+        <td class="c">${b['เลขส่งมอบ']||'—'}</td>
+        <td class="c">${b['เลข PO']||'—'}</td>
+        <td>${b['ที่ปรึกษาการขาย']||'—'}</td>
+      </tr>`).join('');
+  }
+
+  // แสดง card และปุ่มพิมพ์
+  document.getElementById('releaseReportPreviewCard').style.display = '';
+  document.getElementById('releaseReportPrintBtn').style.display = '';
+
+  // เก็บ list สำหรับพิมพ์
+  window._releaseReportList = list;
+  window._releaseReportDate = rDate;
+}
+
+function doReleaseReportPage() {
+  const list = window._releaseReportList;
+  const rDate = window._releaseReportDate;
+  if (!list || !rDate) { toast('กรุณาแสดงรายงานก่อน', 'err'); return; }
+
+  // ใช้ printReleaseReport กับรายการทั้งหมด โดยส่ง record แรกพร้อม override วันที่
+  const fakeR = list.length > 0 ? list[0] : {};
+  // Override _reportDate เพื่อให้ printReleaseReport ใช้วันที่ถูกต้อง
+  // แต่เราจะเรียก printReleaseReport โดยตรงพร้อม r ที่มี วันที่ปล่อย
+  printReleaseReportFromList(list, rDate);
+}
+
+function printReleaseReportFromList(releaseList, rDate) {
+  const dateStr = thDateFull(rDate);
+  const curYM = rDate.getFullYear() + '-' + String(rDate.getMonth()+1).padStart(2,'0');
+  const monthLabel = thMonthYear(curYM);
+
+  const tdBase = "text-align:center;font-weight:800;font-size:10pt;white-space:nowrap;vertical-align:middle;";
+
+  const dataRows = releaseList.map(b => `
+    <tr>
+      <td style="${tdBase}font-size:11pt;">${b['ไฟแนนซ์']||''}</td>
+      <td style="${tdBase}">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||''}</td>
+      <td style="${tdBase}">${b['เลขเครื่อง']||''}</td>
+      <td style="${tdBase}">${b['เลขแชสซีส์']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||''}</td>
+      <td class="plate-col" style="${tdBase}font-size:11pt;">${b['เลขทะเบียน']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลขส่งมอบ']||''}</td>
+      <td style="${tdBase}font-size:10.5pt;">${b['เลข PO']||''}</td>
+      <td style="${tdBase}">${b['ที่ปรึกษาการขาย']||''}</td>
+    </tr>`).join('');
+
+  const emptyCount = Math.max(0, 10 - releaseList.length);
+  const emptyRows = Array.from({length: emptyCount}, () =>
+    `<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`
+  ).join('');
+
+  const rows = dataRows + emptyRows;
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{width:100%;height:100%;}
+    body{font-family:'Sarabun',sans-serif;font-size:9.5pt;background:#fff;color:#1a2d45;
+      padding:6mm 8mm;
+      transform-origin:top left;
+    }
+    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;margin:-6mm -8mm 6mm;position:sticky;top:0;z-index:50;}
+    .pbtn{padding:5px 14px;font-size:11px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
+    .doc-header{text-align:center;margin-bottom:3mm;}
+    .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
+    .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
+    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
+    table{width:100%;border-collapse:collapse;margin-top:3mm;}
+    thead tr{background:#b94a00;color:#fff;}
+    th{padding:5px 6px;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;}
+    th.plate-hdr{color:#ffe082;}
+    td{padding:5px 6px;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;}
+    tr:nth-child(even) td{background:#fff3e0;}
+    td.plate-col{color:#c0392b!important;font-weight:800;}
+    @media print{
+      thead tr{background:#fff!important;color:#111!important;}
+      th{border:1.5px solid #333!important;color:#111!important;background:#fff!important;}
+      th.plate-hdr{color:#111!important;}
+      td{background:#fff!important;color:#111!important;border:1px solid #aaa!important;}
+      tr:nth-child(even) td{background:#fff!important;}
+      td.plate-col{color:#c0392b!important;}
+    }
+    td{height:11mm;}
     @media print{
       .ctrl{display:none!important;}
       body{padding:6mm 8mm;}
