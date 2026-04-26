@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ</title>
+<title>ระบบบันทึกการจองและปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -33,16 +33,18 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-h
 
 /* ── TOPBAR ── */
 .topbar{
-  background:linear-gradient(135deg,var(--primary) 0%,var(--primary2) 60%,var(--primary3) 100%);
-  padding:0 20px;height:58px;
+  background:linear-gradient(135deg,#0d2347 0%,#1a3a6b 40%,#2451a0 80%,#1a5276 100%);
+  padding:0 24px;height:64px;
   display:flex;align-items:center;justify-content:space-between;
-  box-shadow:0 3px 20px rgba(0,0,0,0.25);position:sticky;top:0;z-index:300;
+  box-shadow:0 4px 24px rgba(0,0,0,0.35);position:sticky;top:0;z-index:300;
+  border-bottom:2px solid rgba(245,200,66,0.4);
 }
 .tb-brand{display:flex;align-items:center;gap:12px;}
-.tb-logo{width:38px;height:38px;background:var(--accent);border-radius:10px;
-  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.tb-title{color:#fff;font-size:15px;font-weight:700;line-height:1.2;}
-.tb-sub{color:rgba(245,200,66,0.8);font-size:10px;}
+.tb-logo{width:46px;height:46px;background:linear-gradient(135deg,#e8a020,#f5c842);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;
+  box-shadow:0 2px 12px rgba(232,160,32,0.5);}
+.tb-title{color:#fff;font-size:15.5px;font-weight:800;line-height:1.25;letter-spacing:0.2px;}
+.tb-sub{color:rgba(245,200,66,0.95);font-size:10.5px;font-weight:500;letter-spacing:0.3px;margin-top:2px;}
 .conn-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.6);}
 .conn-dot{width:7px;height:7px;border-radius:50%;background:#666;flex-shrink:0;}
 .conn-dot.ok{background:#2ECC71;box-shadow:0 0 5px #2ECC71;}
@@ -237,8 +239,8 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .dsc-table td.ebk{color:#d4720a;}
 .dsc-table td.cl{color:#c0392b;}
 .dsc-table td.zero{color:#c8d0dc;}
-.dsc-table tr.team-total td{background:#eef3ff;font-weight:700;border-top:2px solid #a0b4e0;color:#2a4080;}
-.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:14px;border-top:2px solid #f0c060;color:#5a3e00;}
+.dsc-table tr.team-total td{background:#eef3ff;font-weight:700;font-size:18px;border-top:2px solid #a0b4e0;color:#2a4080;}
+.dsc-table tr.grand-total td{background:#fef6e4;font-weight:700;font-size:18px;border-top:2px solid #f0c060;color:#5a3e00;}
 .dsc-table tr.team-sep td{background:#e8edf8;font-size:12px;font-weight:700;
   color:#3b5080;padding:5px 10px;border-top:2px solid #a0b4e0;letter-spacing:.5px;}
 /* online columns — แคบลง */
@@ -286,8 +288,8 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="tb-brand">
     <div class="tb-logo">🚗</div>
     <div>
-      <div class="tb-title">ระบบจองรถ · อีซูซุคิงส์ยนต์กรุงเทพ</div>
-      <div class="tb-sub">สาขาสุวินทวงศ์ · ฝ่ายขายรถเล็ก</div>
+      <div class="tb-title">ระบบบันทึกการจองและปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
+      <div class="tb-sub">สาขาสุวินทวงศ์</div>
     </div>
   </div>
   <div class="conn-badge">
@@ -298,10 +300,10 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
 <!-- TABS -->
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('booking')"  id="tab-booking">📋 รายการจอง</div>
-  <div class="tab" onclick="switchTab('report1')"  id="tab-report1">📄 รายงานจอง</div>
-  <div class="tab" onclick="switchTab('report2')"  id="tab-report2">🚗 จอง-ปล่อยรายวัน</div>
-  <div class="tab" onclick="switchTab('report3')"  id="tab-report3">👤 Daily SC</div>
+  <div class="tab active" onclick="switchTab('booking')"  id="tab-booking">📋 บันทึกการจองและปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('report1')"  id="tab-report1">📊 รายงานจองและปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('report2')"  id="tab-report2">📊 จอง-ปล่อยรายเดือน</div>
+  <div class="tab" onclick="switchTab('report3')"  id="tab-report3">📊 รวมจอง-ปล่อยรายเดือน</div>
   <div class="tab" onclick="switchTab('release')"  id="tab-release">📋 รายงานปล่อยรถ</div>
   <div class="tab" onclick="switchTab('target')"   id="tab-target">🎯 เป้าจำหน่าย</div>
   <div class="tab" onclick="switchTab('setup')"    id="tab-setup">⚙️ ตั้งค่า</div>
@@ -991,7 +993,7 @@ function testUpdate() {
           <select id="mStatus"></select>
         </div>
         <div class="frow"><label>วันที่ปล่อย</label>
-          <input type="date" id="mRelDate">
+          <input type="date" id="mRelDate" onchange="onRelDateChange()">
         </div>
         <div class="frow span2"><label>ที่มาลูกค้า</label>
           <select id="mSource"></select>
@@ -1064,7 +1066,7 @@ function testUpdate() {
 <div class="modal-overlay" id="releaseModal">
   <div class="modal-box" style="width:min(96vw,680px);">
     <div class="modal-hdr">
-      <h3>🚗 รายงานการปล่อยรถ</h3>
+      <h3>🚗 บันทึกรายละเอียดการปล่อยรถ</h3>
       <button class="modal-close" onclick="closeReleaseModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -1499,9 +1501,9 @@ function renderBookings() {
         <div class="action-btns">
           <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})" title="แก้ไข">✏️</button>
           <button class="btn btn-outline btn-sm"
-            style="color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray)'};border-color:${r['วันที่ปล่อย']?'var(--orange)':'var(--gray2)'};cursor:${r['วันที่ปล่อย']?'pointer':'not-allowed'};opacity:${r['วันที่ปล่อย']?'1':'0.35'};"
-            onclick="${r['วันที่ปล่อย']?'openReleaseReport('+i+')':''}"
-            title="${r['วันที่ปล่อย']?'พิมพ์รายงานปล่อยรถ':'ต้องบันทึกวันที่ปล่อยก่อน'}">🚗</button>
+            style="color:${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'var(--orange)':'var(--gray)'};border-color:${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'var(--orange)':'var(--gray2)'};cursor:${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'pointer':'not-allowed'};opacity:${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'1':'0.35'};"
+            onclick="${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'openReleaseReport('+i+')':''}"
+            title="${(r['วันที่ปล่อย']||r['สถานะ']==='ปล่อย'||r['สถานะ']==='RS')?'บันทึกรายละเอียดการปล่อยรถ':'ต้องบันทึกวันที่ปล่อยหรือสถานะปล่อยก่อน'}">🚗</button>
           <button class="btn btn-red btn-sm" onclick="confirmDelete(${i})" title="ลบ">🗑️</button>
         </div>
       </td>
@@ -2036,6 +2038,20 @@ function closeModal() {
 
 let _isSaving = false;
 
+function onRelDateChange() {
+  const relDate = document.getElementById('mRelDate').value;
+  if (!relDate) return;
+  const statusSel = document.getElementById('mStatus');
+  const cur = statusSel.value;
+  if (cur === 'BK' || cur === 'จอง' || cur === 'ERS' || cur === 'คาดปล่อย') {
+    for (let i = 0; i < statusSel.options.length; i++) {
+      const v = statusSel.options[i].value;
+      const t = statusSel.options[i].text;
+      if (v === 'RS' || t === 'ปล่อย') { statusSel.value = statusSel.options[i].value; break; }
+    }
+  }
+}
+
 async function saveBooking() {
   if (_isSaving) { toast('⏳ กำลังบันทึกข้อมูลอยู่ กรุณารอสักครู่...', 'warn'); return; }
 
@@ -2272,14 +2288,15 @@ async function runReport1() {
 
   // ── กรองวันที่เริ่ม-สิ้นสุด ──
   if (dateFrom) {
-    const fromTs = new Date(dateFrom).getTime();
+    const [fy,fm,fd] = dateFrom.split('-').map(Number);
+    const fromTs = new Date(fy, fm-1, fd, 0, 0, 0).getTime();
     rows = rows.filter(r => {
       const t = parseThDate(String(r['วันที่จอง']||''));
       return t && t >= fromTs;
     });
   }
   if (dateTo) {
-    const toTs = new Date(dateTo + 'T23:59:59').getTime();
+    const [ty,tm,td2] = dateTo.split('-').map(Number); const toTs = new Date(ty, tm-1, td2, 23, 59, 59).getTime();
     rows = rows.filter(r => {
       const t = parseThDate(String(r['วันที่จอง']||''));
       return t && t <= toTs;
@@ -2526,22 +2543,22 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
     });
 
     // team total
-    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tBkCols[m]||0}</td>`).join('');
-    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${tRsCols[m]||0}</td>`).join('');
+    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:1.5px solid #a0b4e0;">${tBkCols[m]||0}</td>`).join('');
+    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:1.5px solid #a0b4e0;">${tRsCols[m]||0}</td>`).join('');
     tbody += `<tr style="background:#eef3ff;border-top:1.5px solid #a0b4e0;">
       <td style="text-align:left;font-weight:700;padding:8px 10px;color:#2a4080;font-size:15px;">รวม ทีม ${team}</td>
       ${tBkColCells}
-      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tBkTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#daeaff;">${tBkTotal}</td>
       ${tRsColCells}
-      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;">${tRsTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#d4f2e4;">${tRsTotal}</td>
     </tr>`;
 
     gBkTotal += tBkTotal; gRsTotal += tRsTotal;
   });
 
   // grand total
-  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gBkCols[m]||0}</td>`).join('');
-  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:17px;font-family:'IBM Plex Mono',monospace;">${gRsCols[m]||0}</td>`).join('');
+  const gBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:2px solid #f0c060;">${gBkCols[m]||0}</td>`).join('');
+  const gRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:2px solid #f0c060;">${gRsCols[m]||0}</td>`).join('');
 
   bodyEl.innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:15px;min-width:600px;">
@@ -2567,10 +2584,10 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
           <td style="text-align:left;font-weight:700;padding:8px 10px;border-top:2px solid #f0c060;color:#5a3e00;font-size:15px;">รวมทั้งหมด</td>
           ${gBkColCells}
           <td style="text-align:center;font-weight:700;color:#3b6fd4;border-top:2px solid #f0c060;
-            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gBkTotal}</td>
+            font-size:18px;font-family:'IBM Plex Mono',monospace;background:#daeaff;">${gBkTotal}</td>
           ${gRsColCells}
           <td style="text-align:center;font-weight:700;color:#1a8a55;border-top:2px solid #f0c060;
-            font-size:18px;font-family:'IBM Plex Mono',monospace;">${gRsTotal}</td>
+            font-size:18px;font-family:'IBM Plex Mono',monospace;background:#d4f2e4;">${gRsTotal}</td>
         </tr>
       </tfoot>
     </table>`;
@@ -2820,14 +2837,14 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     });
 
     // team total row
-    const tSrcCells = sources.map(s => `<td class="num online-col">${tSrc[s]||0}</td>`).join('');
+    const tSrcCells = sources.map(s => `<td class="num online-col" style="border-top:2px solid #a0b4e0;">${tSrc[s]||0}</td>`).join('');
     html += `<tr class="team-total">
       <td class="name">รวม ทีม ${team}</td>
       <td class="num">${tCarry}</td>
       <td class="num">${tEbk}</td>
       <td class="num" style="background:#e8f0ff;">${tBk}</td>
       ${tSrcCells}
-      <td class="num">${tTotal}</td>
+      <td class="num" style="background:#e8f0ff;">${tTotal}</td>
       <td class="num">${tErs}</td>
       <td class="num" style="background:#e8f7f0;">${tRsT}</td>
       <td class="num">${tCl}</td>
@@ -2838,7 +2855,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   });
 
   // grand total
-  const gSrcCells = sources.map(s => `<td class="num online-col">${gSrc[s]||0}</td>`).join('');
+  const gSrcCells = sources.map(s => `<td class="num online-col" style="border-top:2px solid #f0c060;">${gSrc[s]||0}</td>`).join('');
   html += `</tbody>
     <tfoot>
       <tr class="grand-total">
@@ -2847,7 +2864,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="num">${gEbk}</td>
         <td class="num" style="background:#daeaff;">${gBk}</td>
         ${gSrcCells}
-        <td class="num">${gTotal}</td>
+        <td class="num" style="background:#daeaff;">${gTotal}</td>
         <td class="num">${gErs}</td>
         <td class="num" style="background:#d4f2e4;">${gRsT}</td>
         <td class="num">${gCl}</td>
@@ -2988,6 +3005,7 @@ function openPrint(title, today, bodyHtml) {
     @media print{.ctrl{display:none!important;}body{padding:8mm;}@page{size:A4 landscape;margin:8mm;}}
   </style></head><body>
   <div class="ctrl">
+    <span class="ctrl-title">🚗 รายงานการปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</span>
     <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
     <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
   </div>
@@ -3466,41 +3484,45 @@ function printReleaseReport(r) {
     }
   </style></head><body>
   <div class="ctrl">
+    <span class="ctrl-title">🚗 รายงานการปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</span>
     <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
     <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
   </div>
   <div class="doc-header">
-    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
-    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+    <div class="doc-logo">🚗</div>
+    <div class="doc-header-text">
+      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+      <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
+    </div>
   </div>
   <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
   <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
   <table>
     <thead>
       <tr>
-        <th style="width:68px;">F/N</th>
-        <th style="width:130px;">รุ่นรถ</th>
-        <th style="width:110px;">เลขเครื่อง</th>
-        <th style="width:130px;">เลขแชสซีส์</th>
+        <th style="width:52px;">F/N</th>
+        <th style="width:110px;">รุ่นรถ</th>
+        <th style="width:95px;">เลขเครื่อง</th>
+        <th style="width:150px;">เลขแชสซีส์</th>
         <th>ชื่อลูกค้า</th>
-        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
-        <th style="width:80px;">ใบส่งมอบ</th>
-        <th style="width:80px;">ใบ PO</th>
-        <th style="width:110px;">SC ที่ปรึกษาการขาย</th>
+        <th class="plate-hdr" style="width:72px;">ป้ายแดง</th>
+        <th style="width:100px;">ใบส่งมอบ</th>
+        <th style="width:100px;">ใบ PO</th>
+        <th style="width:80px;">SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
-  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
-    <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
-      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
-      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
+  <div class="sig-row">
+    <div class="sig-box">
+      <div class="sig-line">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณรวิวรรณ พันสนิท</div>
+      <div class="sig-role">( ผู้จัดทำรายงาน )</div>
     </div>
-    <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
-      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
-      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
+    <div class="sig-box">
+      <div class="sig-line">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div class="sig-role">( กรรมการผู้จัดการ )</div>
     </div>
   </div>
   </body></html>`);
@@ -3619,67 +3641,84 @@ function printReleaseReportFromList(releaseList, rDate) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     html,body{width:100%;height:100%;}
-    body{font-family:'Sarabun',sans-serif;font-size:9.5pt;background:#fff;color:#1a2d45;
-      padding:6mm 8mm;
-      transform-origin:top left;
-    }
-    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;margin:-6mm -8mm 6mm;position:sticky;top:0;z-index:50;}
+    body{font-family:'Sarabun',sans-serif;font-size:9pt;background:#fff;color:#1a2d45;padding:5mm 7mm;}
+    .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;align-items:center;
+      margin:-5mm -7mm 5mm;position:sticky;top:0;z-index:50;}
+    .ctrl-title{color:rgba(255,255,255,0.8);font-size:10px;font-weight:600;flex:1;}
     .pbtn{padding:5px 14px;font-size:11px;font-family:'Sarabun',sans-serif;border:none;border-radius:6px;cursor:pointer;font-weight:700;}
-    .pbtn-p{background:#e8a020;color:#1a3a6b;}.pbtn-c{background:#546E7A;color:#fff;}
-    .doc-header{text-align:center;margin-bottom:3mm;}
-    .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
-    .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
-    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
-    table{width:100%;border-collapse:collapse;margin-top:3mm;table-layout:fixed;}
+    .pbtn-p{background:#e8a020;color:#1a3a6b;}
+    .pbtn-c{background:#546E7A;color:#fff;}
+    .doc-header{display:flex;align-items:center;justify-content:center;gap:8px;
+      text-align:center;margin-bottom:3mm;padding-bottom:3mm;border-bottom:2px solid #e8a020;}
+    .doc-logo{font-size:22px;flex-shrink:0;}
+    .doc-header-text{text-align:center;}
+    .doc-title{font-size:16pt;font-weight:800;color:#1a3a6b;line-height:1.2;}
+    .doc-company{font-size:10pt;font-weight:600;color:#333;margin-top:1mm;}
+    .doc-to{font-size:9pt;margin-bottom:0.8mm;line-height:1.75;}
+    table{width:100%;border-collapse:collapse;margin-top:2mm;table-layout:fixed;}
     thead tr{background:#b94a00;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    th{padding:0 6px;height:11mm;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    th{padding:0 5px;height:10mm;font-size:8.5pt;font-weight:700;border:1.5px solid #b94a00;
+      text-align:center;white-space:nowrap;vertical-align:middle;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     th.plate-hdr{color:#ffe082;}
-    td{padding:0 6px;height:11mm;font-size:9.5pt;border:1.5px solid #c8903a;vertical-align:middle;background:#fff8f0;color:#111;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    tr:nth-child(even) td{background:#fff3e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    td{padding:0 5px;height:9mm;font-size:9pt;border:1.5px solid #c8903a;
+      vertical-align:middle;color:#111;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    tbody tr:nth-child(odd) td{background:#fff8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    tbody tr:nth-child(even) td{background:#fff3e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     td.plate-col{color:#c0392b!important;font-weight:800;}
+    .sig-row{display:flex;justify-content:space-between;padding:0 40mm;margin-top:8mm;}
+    .sig-box{text-align:center;min-width:150px;}
+    .sig-line{font-size:9.5pt;margin-bottom:2.5mm;color:#555;}
+    .sig-name{font-size:11pt;font-weight:800;color:#1a2d45;}
+    .sig-role{font-size:8.5pt;color:#666;margin-top:1mm;}
     @media print{
       *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
       .ctrl{display:none!important;}
-      body{padding:6mm 8mm;}
-      @page{size:A4 landscape;margin:6mm;}
+      body{padding:5mm 7mm;}
+      @page{size:A4 landscape;margin:5mm;}
     }
   </style></head><body>
   <div class="ctrl">
+    <span class="ctrl-title">🚗 รายงานการปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</span>
     <button class="pbtn pbtn-p" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
     <button class="pbtn pbtn-c" onclick="window.close()">✕ ปิด</button>
   </div>
   <div class="doc-header">
-    <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
-    <div class="doc-company">บริษัท อีซูซุ คิงส์ยนต์ กรุงเทพ จำกัด</div>
+    <div class="doc-logo">🚗</div>
+    <div class="doc-header-text">
+      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+      <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
+    </div>
   </div>
   <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</b></div>
   <div class="doc-to"><b>ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${dateStr}</b></div>
   <table>
     <thead>
       <tr>
-        <th style="width:68px;">F/N</th>
-        <th style="width:130px;">รุ่นรถ</th>
-        <th style="width:110px;">เลขเครื่อง</th>
-        <th style="width:130px;">เลขแชสซีส์</th>
+        <th style="width:52px;">F/N</th>
+        <th style="width:110px;">รุ่นรถ</th>
+        <th style="width:95px;">เลขเครื่อง</th>
+        <th style="width:150px;">เลขแชสซีส์</th>
         <th>ชื่อลูกค้า</th>
-        <th class="plate-hdr" style="width:90px;">ทะเบียนป้ายแดง</th>
-        <th style="width:80px;">ใบส่งมอบ</th>
-        <th style="width:80px;">ใบ PO</th>
-        <th style="width:110px;">SC ที่ปรึกษาการขาย</th>
+        <th class="plate-hdr" style="width:72px;">ป้ายแดง</th>
+        <th style="width:100px;">ใบส่งมอบ</th>
+        <th style="width:100px;">ใบ PO</th>
+        <th style="width:80px;">SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
-  <div style="display:flex;justify-content:space-between;padding:0 51mm;margin-top:14mm;">
-    <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
-      <div style="font-size:11pt;font-weight:700;">คุณรวิวรรณ พันสนิท</div>
-      <div style="font-size:9pt;color:#555;margin-top:1mm;">( ผู้จัดทำรายงาน )</div>
+  <div class="sig-row">
+    <div class="sig-box">
+      <div class="sig-line">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณรวิวรรณ พันสนิท</div>
+      <div class="sig-role">( ผู้จัดทำรายงาน )</div>
     </div>
-    <div style="text-align:center;min-width:140px;">
-      <div style="font-size:10pt;margin-bottom:3mm;">ลงชื่อ.................................................</div>
-      <div style="font-size:11pt;font-weight:700;">คุณสุรพล จึงวิวัฒนาภรณ์</div>
-      <div style="font-size:9pt;color:#555;margin-top:1mm;">( กรรมการผู้จัดการ )</div>
+    <div class="sig-box">
+      <div class="sig-line">ลงชื่อ.................................................</div>
+      <div class="sig-name">คุณสุรพล จึงวิวัฒนาภรณ์</div>
+      <div class="sig-role">( กรรมการผู้จัดการ )</div>
     </div>
   </div>
   </body></html>`);
