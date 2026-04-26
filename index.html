@@ -2768,13 +2768,13 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     <thead>
       <tr>
         <th class="left" rowspan="2" style="min-width:140px;font-size:14px;">ที่ปรึกษาการขาย SC</th>
-        <th class="carry" rowspan="2" style="font-size:13px;">จอง<br>ยกมา</th>
+        <th class="carry" rowspan="2" style="font-size:13px;">ยอดจอง<br>ยกมา</th>
         <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะจอง</th>
-        <th class="bk-hdr" rowspan="2" style="font-size:13px;">จอง<br>เดือนนี้</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">ยอดจอง<br>เดือนนี้</th>
         <th class="online-hdr" colspan="${sources.length}" style="font-size:13px;">Online</th>
-        <th class="bk-hdr" rowspan="2" style="font-size:13px;">รวมจอง<br>ปัจจุบัน</th>
+        <th class="bk-hdr" rowspan="2" style="font-size:13px;">รวมยอดจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะปล่อย</th>
-        <th class="rs-hdr" rowspan="2" style="font-size:13px;">ยอด<br>ปล่อย</th>
+        <th class="rs-hdr" rowspan="2" style="font-size:13px;">ยอดปล่อย<br>เดือนนี้</th>
         <th class="cl-hdr" rowspan="2" style="font-size:13px;">ถอน<br>จอง</th>
       </tr>
       <tr>${srcHeaders}</tr>
@@ -2810,11 +2810,11 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="name">${d['ที่ปรึกษาการขาย']||d.ชื่อเล่น}</td>
         <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
-        <td class="num bk ${d.bk?'':'zero'}" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
+        <td class="num bk ${d.bk?'':'zero'}" style="background:#e8f0ff;" ${d.bk?tip('bk'):''}>${d.bk||0}</td>
         ${srcCells}
         <td class="num bk" style="background:#EEF4FF;cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','total')" onmouseleave="hideDscTip()">${d.total||0}</td>
         <td class="num ebk ${d.ers?'':'zero'}" ${d.ers?tip('ers'):''}>${d.ers||0}</td>
-        <td class="num rs ${d.rsTotal?'':'zero'}" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
+        <td class="num rs ${d.rsTotal?'':'zero'}" style="background:#e8f7f0;" ${d.rsTotal?tip('rsTotal'):''}>${d.rsTotal||0}</td>
         <td class="num cl ${d.cl?'':'zero'}" ${d.cl?tip('cl'):''}>${d.cl||0}</td>
       </tr>`;
     });
@@ -2825,11 +2825,11 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       <td class="name">รวม ทีม ${team}</td>
       <td class="num">${tCarry}</td>
       <td class="num">${tEbk}</td>
-      <td class="num">${tBk}</td>
+      <td class="num" style="background:#e8f0ff;">${tBk}</td>
       ${tSrcCells}
       <td class="num">${tTotal}</td>
       <td class="num">${tErs}</td>
-      <td class="num">${tRsT}</td>
+      <td class="num" style="background:#e8f7f0;">${tRsT}</td>
       <td class="num">${tCl}</td>
     </tr>`;
 
@@ -2845,11 +2845,11 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <td class="name">รวมทั้งหมด</td>
         <td class="num">${gCarry}</td>
         <td class="num">${gEbk}</td>
-        <td class="num">${gBk}</td>
+        <td class="num" style="background:#daeaff;">${gBk}</td>
         ${gSrcCells}
         <td class="num">${gTotal}</td>
         <td class="num">${gErs}</td>
-        <td class="num">${gRsT}</td>
+        <td class="num" style="background:#d4f2e4;">${gRsT}</td>
         <td class="num">${gCl}</td>
       </tr>
     </tfoot>
