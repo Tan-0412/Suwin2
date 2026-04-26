@@ -2543,14 +2543,14 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
     });
 
     // team total
-    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:1.5px solid #a0b4e0;">${tBkCols[m]||0}</td>`).join('');
-    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:1.5px solid #a0b4e0;">${tRsCols[m]||0}</td>`).join('');
-    tbody += `<tr style="background:#eef3ff;border-top:1.5px solid #a0b4e0;">
-      <td style="text-align:left;font-weight:700;padding:8px 10px;color:#2a4080;font-size:15px;">รวม ทีม ${team}</td>
+    const tBkColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:2px solid #a0b4e0;">${tBkCols[m]||0}</td>`).join('');
+    const tRsColCells = models.map(m => `<td style="text-align:center;font-weight:700;font-size:18px;font-family:'IBM Plex Mono',monospace;border-top:2px solid #a0b4e0;">${tRsCols[m]||0}</td>`).join('');
+    tbody += `<tr style="background:#eef3ff;">
+      <td style="text-align:left;font-weight:700;padding:8px 10px;color:#2a4080;font-size:15px;border-top:2px solid #a0b4e0;">รวม ทีม ${team}</td>
       ${tBkColCells}
-      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#daeaff;">${tBkTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--primary2);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#daeaff;border-top:2px solid #a0b4e0;">${tBkTotal}</td>
       ${tRsColCells}
-      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#d4f2e4;">${tRsTotal}</td>
+      <td style="text-align:center;font-weight:700;color:var(--green);font-size:18px;font-family:'IBM Plex Mono',monospace;background:#d4f2e4;border-top:2px solid #a0b4e0;">${tRsTotal}</td>
     </tr>`;
 
     gBkTotal += tBkTotal; gRsTotal += tRsTotal;
@@ -2842,11 +2842,11 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       <td class="name">รวม ทีม ${team}</td>
       <td class="num">${tCarry}</td>
       <td class="num">${tEbk}</td>
-      <td class="num" style="background:#e8f0ff;">${tBk}</td>
+      <td class="num" style="background:#e8f0ff;border-top:2px solid #a0b4e0;">${tBk}</td>
       ${tSrcCells}
-      <td class="num" style="background:#e8f0ff;">${tTotal}</td>
+      <td class="num" style="background:#e8f0ff;border-top:2px solid #a0b4e0;">${tTotal}</td>
       <td class="num">${tErs}</td>
-      <td class="num" style="background:#e8f7f0;">${tRsT}</td>
+      <td class="num" style="background:#e8f7f0;border-top:2px solid #a0b4e0;">${tRsT}</td>
       <td class="num">${tCl}</td>
     </tr>`;
 
@@ -3002,7 +3002,7 @@ function openPrint(title, today, bodyHtml) {
     .dsc-table tr.team-sep td{background:#e8edf8;font-size:7.5pt;font-weight:700;color:#3b5080;padding:4px 8px;border-top:2px solid #a0b4e0;}
     .badge{display:inline-block;padding:1px 7px;border-radius:8px;font-size:7.5pt;font-weight:700;}
     .has-val{color:#1a3a6b;font-weight:700;}.zero{color:#ccc;}
-    @media print{.ctrl{display:none!important;}body{padding:8mm;}@page{size:A4 landscape;margin:8mm;}}
+    @media print{.ctrl{display:none!important;}body{padding:8mm;}@page{size:A4 landscape;margin:8mm 10mm;}}
   </style></head><body>
   <div class="ctrl">
     <span class="ctrl-title">🚗 รายงานการปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</span>
@@ -3452,7 +3452,7 @@ function printReleaseReport(r) {
     .doc-header{text-align:center;margin-bottom:3mm;}
     .doc-title{font-size:17pt;font-weight:800;color:#1a3a6b;margin-bottom:1.5mm;}
     .doc-company{font-size:11pt;font-weight:600;margin-bottom:1mm;}
-    .doc-to{font-size:10pt;margin-bottom:1mm;line-height:1.7;}
+    .doc-to{font-size:12pt;margin-bottom:1.5mm;line-height:1.8;}
     table{width:100%;border-collapse:collapse;margin-top:3mm;table-layout:fixed;}
     thead tr{background:#b94a00;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     th{padding:0 6px;height:11mm;font-size:9pt;font-weight:700;border:1.5px solid #b94a00;text-align:center;white-space:nowrap;vertical-align:middle;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -3500,15 +3500,15 @@ function printReleaseReport(r) {
   <table>
     <thead>
       <tr>
-        <th style="width:52px;">F/N</th>
-        <th style="width:110px;">รุ่นรถ</th>
-        <th style="width:95px;">เลขเครื่อง</th>
-        <th style="width:150px;">เลขแชสซีส์</th>
-        <th>ชื่อลูกค้า</th>
-        <th class="plate-hdr" style="width:72px;">ป้ายแดง</th>
-        <th style="width:100px;">ใบส่งมอบ</th>
-        <th style="width:100px;">ใบ PO</th>
-        <th style="width:80px;">SC</th>
+        <th style="width:48px;">F/N</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:88px;">เลขเครื่อง</th>
+        <th style="width:145px;">เลขแชสซีส์</th>
+        <th style="width:175px;">ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:68px;">ป้ายแดง</th>
+        <th style="width:95px;">ใบส่งมอบ</th>
+        <th style="width:92px;">ใบ PO</th>
+        <th style="width:115px;">SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -3641,7 +3641,7 @@ function printReleaseReportFromList(releaseList, rDate) {
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     html,body{width:100%;height:100%;}
-    body{font-family:'Sarabun',sans-serif;font-size:9pt;background:#fff;color:#1a2d45;padding:5mm 7mm;}
+    body{font-family:'Sarabun',sans-serif;font-size:8.5pt;background:#fff;color:#1a2d45;padding:5mm 7mm;}
     .ctrl{background:#1a3a6b;padding:6px 14px;display:flex;gap:8px;align-items:center;
       margin:-5mm -7mm 5mm;position:sticky;top:0;z-index:50;}
     .ctrl-title{color:rgba(255,255,255,0.8);font-size:10px;font-weight:600;flex:1;}
@@ -3657,17 +3657,17 @@ function printReleaseReportFromList(releaseList, rDate) {
     .doc-to{font-size:9pt;margin-bottom:0.8mm;line-height:1.75;}
     table{width:100%;border-collapse:collapse;margin-top:2mm;table-layout:fixed;}
     thead tr{background:#b94a00;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    th{padding:0 5px;height:10mm;font-size:8.5pt;font-weight:700;border:1.5px solid #b94a00;
+    th{padding:0 5px;height:11mm;font-size:10pt;font-weight:700;border:1.5px solid #b94a00;
       text-align:center;white-space:nowrap;vertical-align:middle;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     th.plate-hdr{color:#ffe082;}
-    td{padding:0 5px;height:9mm;font-size:9pt;border:1.5px solid #c8903a;
-      vertical-align:middle;color:#111;
+    td{padding:0 5px;height:9mm;font-size:8.5pt;border:1.5px solid #c8903a;
+      vertical-align:middle;color:#111;overflow:hidden;
       -webkit-print-color-adjust:exact;print-color-adjust:exact;}
     tbody tr:nth-child(odd) td{background:#fff8f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     tbody tr:nth-child(even) td{background:#fff3e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     td.plate-col{color:#c0392b!important;font-weight:800;}
-    .sig-row{display:flex;justify-content:space-between;padding:0 40mm;margin-top:8mm;}
+    .sig-row{display:flex;justify-content:space-between;padding:0 40mm;margin-top:18mm;}
     .sig-box{text-align:center;min-width:150px;}
     .sig-line{font-size:9.5pt;margin-bottom:2.5mm;color:#555;}
     .sig-name{font-size:11pt;font-weight:800;color:#1a2d45;}
@@ -3696,15 +3696,15 @@ function printReleaseReportFromList(releaseList, rDate) {
   <table>
     <thead>
       <tr>
-        <th style="width:52px;">F/N</th>
-        <th style="width:110px;">รุ่นรถ</th>
-        <th style="width:95px;">เลขเครื่อง</th>
-        <th style="width:150px;">เลขแชสซีส์</th>
-        <th>ชื่อลูกค้า</th>
-        <th class="plate-hdr" style="width:72px;">ป้ายแดง</th>
-        <th style="width:100px;">ใบส่งมอบ</th>
-        <th style="width:100px;">ใบ PO</th>
-        <th style="width:80px;">SC</th>
+        <th style="width:48px;">F/N</th>
+        <th style="width:130px;">รุ่นรถ</th>
+        <th style="width:88px;">เลขเครื่อง</th>
+        <th style="width:145px;">เลขแชสซีส์</th>
+        <th style="width:175px;">ชื่อลูกค้า</th>
+        <th class="plate-hdr" style="width:68px;">ป้ายแดง</th>
+        <th style="width:95px;">ใบส่งมอบ</th>
+        <th style="width:92px;">ใบ PO</th>
+        <th style="width:115px;">SC</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
