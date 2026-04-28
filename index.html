@@ -3437,7 +3437,7 @@ function printReleaseReport(r) {
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
+  <title>รายงานการปล่อยรถ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -3491,7 +3491,7 @@ function printReleaseReport(r) {
   <div class="doc-header">
     <div class="doc-logo">🚗</div>
     <div class="doc-header-text">
-      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+      <div class="doc-title">รายงานการปล่อยรถ</div>
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
@@ -3562,7 +3562,7 @@ function runReleaseReportPage() {
 
   // อัปเดต preview header
   document.getElementById('releaseReportPreviewTitle').textContent =
-    `รายงานการปล่อยรถ ประจำเดือน ${monthLabel}`;
+    `รายงานการปล่อยรถ`;
   document.getElementById('releaseReportPreviewSub').textContent =
     `ประจำวันที่ ${dateStr}`;
   document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
@@ -3636,7 +3636,7 @@ function printReleaseReportFromList(releaseList, rDate) {
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
+  <title>รายงานการปล่อยรถ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -3687,7 +3687,7 @@ function printReleaseReportFromList(releaseList, rDate) {
   <div class="doc-header">
     <div class="doc-logo">🚗</div>
     <div class="doc-header-text">
-      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
+      <div class="doc-title">รายงานการปล่อยรถ</div>
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
