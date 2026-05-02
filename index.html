@@ -972,22 +972,30 @@ function testUpdate() {
           <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
         </div>
         <div class="frow"><label>รุ่นรถ *</label>
-          <select id="mModel" onchange="onModelChange()"></select>
+          <input type="text" id="mModel" placeholder="เช่น STD, SPC, CAB 4" autocomplete="off">
         </div>
-        <!-- dropdown รายละเอียดจากชีท Model — โผล่เมื่อเลือกรุ่นรถ -->
-        <div class="frow span2" id="mDetailModelWrap" style="display:none;">
-          <label>📋 เลือกรายละเอียดจากชีท Model
-            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เลือกแล้วจะเติมช่องด้านล่างอัตโนมัติ</span>
+        <!-- รหัสรุ่นรถ — searchable dropdown จากชีท Model -->
+        <div class="frow span2" style="position:relative;">
+          <label>🔍 รหัสรุ่นรถ
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">พิมพ์เพื่อค้นหา — เลือกแล้วจะเติมช่องอื่นอัตโนมัติ</span>
           </label>
-          <select id="mDetailModel" onchange="onDetailModelChange()"
-            style="border-color:var(--primary3);background:#f0f5ff;">
-            <option value="">-- เลือกรายละเอียด --</option>
-          </select>
+          <input type="text" id="mModelCode" placeholder="พิมพ์รหัส เช่น TFR41 หรือ รายละเอียด เช่น Cab4 2.2..."
+            autocomplete="off" oninput="onModelCodeInput()" onfocus="onModelCodeFocus()" onblur="onModelCodeBlur()">
+          <div id="mModelCodeDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;
+            border:1.5px solid var(--primary3);border-top:none;border-radius:0 0 9px 9px;
+            max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(26,58,107,0.15);">
+          </div>
         </div>
         <div class="frow span2"><label>รายละเอียดรถ
           <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">แก้ไขได้</span>
         </label>
           <input type="text" id="mDetail" placeholder="เช่น Cab4 2.2 Ddi L AT">
+        </div>
+        <div class="frow span2"><label>ชื่อรุ่นรถ (Model Code)
+          <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติจากรหัสรุ่น</span>
+        </label>
+          <input type="text" id="mModelName" placeholder="เช่น TFR41JCMNCTS" readonly
+            style="background:#f5f8fc;color:var(--tx2);">
         </div>
         <div class="frow"><label>สถานะ *</label>
           <select id="mStatus"></select>
@@ -1292,7 +1300,6 @@ async function loadMeta() {
     populateSel('fStatus',meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
     populateSel('fModel', meta.isuzu,  'รุ่นรถ', '', 'ทั้งหมด');
     populateSel('mSC',    meta.sc,     'ที่ปรึกษาการขาย');
-    populateIsuzuDropdown('mModel');
     populateSel('mStatus',meta.status, 'STATUS', 'สถานะ');
     populateSel('mSource',meta.source, 'ที่มาลูกค้า');
     ['r1SC','r2SC'].forEach(id => populateSel(id, meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด'));
@@ -1908,56 +1915,79 @@ function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
 
 
 // ════════════════════════════════════════
-//  MODEL DROPDOWN LOGIC (ชีท Model)
+//  MODEL CODE SEARCH LOGIC (ชีท Model)
 // ════════════════════════════════════════
-function onModelChange() {
-  const modelVal = document.getElementById('mModel').value;
-  const wrap     = document.getElementById('mDetailModelWrap');
-  const detSel   = document.getElementById('mDetailModel');
+let _modelCodeBlurTimer = null;
 
-  // ล้าง detail ที่เคยเลือกไว้
-  document.getElementById('mDetail').value = '';
-  detSel.innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
+function onModelCodeInput() {
+  const q = document.getElementById('mModelCode').value.trim().toLowerCase();
+  renderModelCodeDropdown(q);
+}
 
-  if (!modelVal || !meta.model || meta.model.length === 0) {
-    wrap.style.display = 'none';
-    return;
-  }
+function onModelCodeFocus() {
+  const q = document.getElementById('mModelCode').value.trim().toLowerCase();
+  renderModelCodeDropdown(q);
+}
 
-  // กรอง meta.model ด้วยชื่อรุ่นรถที่เลือก
-  // ชีท Model มีคอลัมน์: รหัสรุ่นรถ, ชื่อรุ่นการจำหน่าย (PPV), รายละเอียด
-  // ใช้ modelVal (เช่น "Mu-X", "D-MAX", "STD") จับคู่กับคอลัมน์ รายละเอียด
-  const kw = modelVal.toLowerCase().replace(/[-\s]/g, '');
+function onModelCodeBlur() {
+  // หน่วงเวลาเพื่อให้คลิก item ได้ก่อน dropdown ปิด
+  _modelCodeBlurTimer = setTimeout(() => {
+    document.getElementById('mModelCodeDropdown').style.display = 'none';
+  }, 200);
+}
 
-  const rows = meta.model.filter(r => {
-    const desc = (r['รายละเอียด'] || '').toLowerCase().replace(/[-\s]/g, '');
-    const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
-    // ถ้า modelVal ตรงกับคำในรายละเอียด หรือ รหัสรุ่นรถ
-    return desc.includes(kw) || kw.includes(desc.split(' ')[0]) || code.includes(kw);
-  });
+function renderModelCodeDropdown(q) {
+  const dd = document.getElementById('mModelCodeDropdown');
+  if (!meta.model || meta.model.length === 0) { dd.style.display = 'none'; return; }
 
-  // ถ้าไม่ match เลย — แสดงทั้งหมดให้เลือกเอง
-  const displayRows = rows.length > 0 ? rows : meta.model;
+  // คอลัมน์ในชีท Model: รหัสรุ่นรถ, ชื่อรุ่นรถ, รายละเอียดรถ, ราคา, รุ่นรถ
+  const rows = q
+    ? meta.model.filter(r => {
+        const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
+        const name = (r['ชื่อรุ่นรถ'] || '').toLowerCase();
+        const desc = (r['รายละเอียดรถ'] || r['รายละเอียด'] || '').toLowerCase();
+        const grp  = (r['รุ่นรถ'] || '').toLowerCase();
+        return code.includes(q) || name.includes(q) || desc.includes(q) || grp.includes(q);
+      })
+    : meta.model.slice(0, 80);
 
-  displayRows.forEach(r => {
-    const desc = r['รายละเอียด'] || '';
+  if (rows.length === 0) { dd.style.display = 'none'; return; }
+
+  dd.innerHTML = rows.map(r => {
     const code = r['รหัสรุ่นรถ'] || '';
-    const ppv  = r['ชื่อรุ่นการจำหน่าย'] || r['PPV'] || '';
-    if (!desc) return;
-    const o = document.createElement('option');
-    o.value = desc;
-    // แสดง: รายละเอียด [รหัส]
-    o.textContent = desc + (code ? `  [${code}]` : '');
-    detSel.appendChild(o);
-  });
-
-  wrap.style.display = '';
+    const name = r['ชื่อรุ่นรถ'] || '';
+    const desc = r['รายละเอียดรถ'] || r['รายละเอียด'] || '';
+    const grp  = r['รุ่นรถ'] || '';
+    return `<div onclick="selectModelCode('${escHtml(code)}','${escHtml(name)}','${escHtml(desc)}','${escHtml(grp)}')"
+      style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #edf0f7;font-size:12px;line-height:1.5;"
+      onmouseenter="this.style.background='#f0f5ff'" onmouseleave="this.style.background=''">
+      <span style="font-weight:700;color:var(--primary);font-family:'IBM Plex Mono',monospace;font-size:11px;">${code}</span>
+      <span style="margin-left:8px;color:var(--tx);">${desc}</span>
+      ${grp ? `<span style="margin-left:6px;font-size:10px;background:#e8f0ff;color:#2451a0;padding:1px 6px;border-radius:8px;">${grp}</span>` : ''}
+    </div>`;
+  }).join('');
+  dd.style.display = '';
 }
 
-function onDetailModelChange() {
-  const val = document.getElementById('mDetailModel').value;
-  if (val) document.getElementById('mDetail').value = val;
+function escHtml(s) {
+  return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
 }
+
+function selectModelCode(code, name, desc, grp) {
+  clearTimeout(_modelCodeBlurTimer);
+  // เติมข้อมูลลงฟิลด์ต่างๆ
+  document.getElementById('mModelCode').value  = code;
+  document.getElementById('mModelName').value  = name;
+  document.getElementById('mDetail').value     = desc || document.getElementById('mDetail').value;
+  // รุ่นรถ — เติมถ้าว่าง
+  const mModelEl = document.getElementById('mModel');
+  if (mModelEl && (!mModelEl.value || mModelEl.value === '')) mModelEl.value = grp;
+  document.getElementById('mModelCodeDropdown').style.display = 'none';
+}
+
+// เก็บค่าเดิม (compat กับโค้ดเก่า)
+function onModelChange() {}
+function onDetailModelChange() {}
 
 // ════════════════════════════════════════
 //  ADD / EDIT MODAL
@@ -1965,14 +1995,15 @@ function onDetailModelChange() {
 function openAddModal() {
   editingRow = null;
   document.getElementById('modalTitle').textContent = '➕ เพิ่มรายการจอง';
-  document.getElementById('mDate').value    = formatDateInput(new Date());
-  document.getElementById('mName').value    = '';
-  document.getElementById('mPhone').value   = '';
-  document.getElementById('mDetail').value  = '';
-  document.getElementById('mRelDate').value = '';
-  // reset detail model dropdown
-  document.getElementById('mDetailModelWrap').style.display = 'none';
-  document.getElementById('mDetailModel').innerHTML = '<option value="">-- เลือกรายละเอียด --</option>';
+  document.getElementById('mDate').value      = formatDateInput(new Date());
+  document.getElementById('mName').value      = '';
+  document.getElementById('mPhone').value     = '';
+  document.getElementById('mModel').value     = '';
+  document.getElementById('mDetail').value    = '';
+  document.getElementById('mModelCode').value = '';
+  document.getElementById('mModelName').value = '';
+  document.getElementById('mRelDate').value   = '';
+  document.getElementById('mModelCodeDropdown').style.display = 'none';
   if (meta.status.length) document.getElementById('mStatus').value = 'BK';
   document.getElementById('bookingModal').classList.add('open');
 }
@@ -1989,23 +2020,27 @@ function openEditModal(i) {
   document.getElementById('mPhone').value   = r['เบอร์'] || '';
   document.getElementById('mDetail').value  = r['รายละเอียดรถ'] || '';
   document.getElementById('mRelDate').value = thToInputDate(r['วันที่ปล่อย'] || '');
+  document.getElementById('mModel').value   = r['รุ่นรถ'] || '';
+
+  // รหัสรุ่นรถ และชื่อรุ่นรถ — คืนค่าจากข้อมูลที่บันทึกไว้
+  const savedCode = r['รหัสรุ่นรถ'] || '';
+  document.getElementById('mModelCode').value = savedCode;
+  // หาชื่อรุ่นรถจาก meta.model ถ้ายังไม่มีใน record
+  const savedName = r['ชื่อรุ่นรถ'] || '';
+  if (savedName) {
+    document.getElementById('mModelName').value = savedName;
+  } else if (savedCode && meta.model) {
+    const found = meta.model.find(m => m['รหัสรุ่นรถ'] === savedCode);
+    document.getElementById('mModelName').value = found ? (found['ชื่อรุ่นรถ'] || '') : '';
+  } else {
+    document.getElementById('mModelName').value = '';
+  }
+  document.getElementById('mModelCodeDropdown').style.display = 'none';
 
   // SC
   setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
-  // Model → trigger onModelChange เพื่อ populate detail dropdown
-  setSelectValue('mModel', r['รุ่นรถ'] || '');
-  onModelChange();
-  // restore รายละเอียดรถเดิม
-  const savedDetail = r['รายละเอียดรถ'] || '';
-  document.getElementById('mDetail').value = savedDetail;
-  if (savedDetail) {
-    const detSel = document.getElementById('mDetailModel');
-    const matchOpt = [...detSel.options].find(o => o.value === savedDetail);
-    if (matchOpt) detSel.value = savedDetail;
-  }
-  // Status — ข้อมูลใน sheet อาจเก็บเป็น STATUS code (BK) หรือภาษาไทย (จอง) ก็ได้
+  // Status
   const rawStatus = r['สถานะ'] || '';
-  // หา STATUS code ที่ตรงกับค่าที่เก็บในชีท
   const statusMatch = meta.status.find(s =>
     s['STATUS'] === rawStatus || s['สถานะ'] === rawStatus
   );
@@ -2079,6 +2114,8 @@ async function saveBooking() {
     'เบอร์':           document.getElementById('mPhone').value.trim(),
     'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
     'รุ่นรถ':          model,
+    'รหัสรุ่นรถ':      document.getElementById('mModelCode').value.trim(),
+    'ชื่อรุ่นรถ':      document.getElementById('mModelName').value.trim(),
     'สถานะ':           statusThai,
     'วันที่ปล่อย':     formatThDate(document.getElementById('mRelDate').value),
     'ที่ปรึกษาการขาย': sc,
@@ -3437,7 +3474,7 @@ function printReleaseReport(r) {
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>รายงานการปล่อยรถ</title>
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -3491,7 +3528,7 @@ function printReleaseReport(r) {
   <div class="doc-header">
     <div class="doc-logo">🚗</div>
     <div class="doc-header-text">
-      <div class="doc-title">รายงานการปล่อยรถ</div>
+      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
@@ -3562,7 +3599,7 @@ function runReleaseReportPage() {
 
   // อัปเดต preview header
   document.getElementById('releaseReportPreviewTitle').textContent =
-    `รายงานการปล่อยรถ`;
+    `รายงานการปล่อยรถ ประจำเดือน ${monthLabel}`;
   document.getElementById('releaseReportPreviewSub').textContent =
     `ประจำวันที่ ${dateStr}`;
   document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
@@ -3636,7 +3673,7 @@ function printReleaseReportFromList(releaseList, rDate) {
 
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>รายงานการปล่อยรถ</title>
+  <title>รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -3687,7 +3724,7 @@ function printReleaseReportFromList(releaseList, rDate) {
   <div class="doc-header">
     <div class="doc-logo">🚗</div>
     <div class="doc-header-text">
-      <div class="doc-title">รายงานการปล่อยรถ</div>
+      <div class="doc-title">รายงานการปล่อยรถ ประจำเดือน ${monthLabel}</div>
       <div class="doc-company">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
     </div>
   </div>
