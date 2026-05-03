@@ -971,31 +971,37 @@ function testUpdate() {
         <div class="frow"><label>เบอร์โทร</label>
           <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
         </div>
-        <div class="frow"><label>รุ่นรถ *</label>
-          <input type="text" id="mModel" placeholder="เช่น STD, SPC, CAB 4" autocomplete="off">
-        </div>
-        <!-- รหัสรุ่นรถ — searchable dropdown จากชีท Model -->
-        <div class="frow span2" style="position:relative;">
-          <label>🔍 รหัสรุ่นรถ
-            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">พิมพ์เพื่อค้นหา — เลือกแล้วจะเติมช่องอื่นอัตโนมัติ</span>
+        <!-- ══ รหัสรุ่นรถ — searchable (บังคับกรอก) ══ -->
+        <div class="frow span2">
+          <label>รหัสรุ่นรถ *
+            <span style="font-size:9px;color:var(--primary3);font-weight:500;margin-left:4px;">พิมพ์เพื่อค้นหา</span>
           </label>
-          <input type="text" id="mModelCode" placeholder="พิมพ์รหัส เช่น TFR41 หรือ รายละเอียด เช่น Cab4 2.2..."
+          <input type="text" id="mModelCode" placeholder="เช่น UNA10, TFR41, Cab4, Spark..."
             autocomplete="off" oninput="onModelCodeInput()" onfocus="onModelCodeFocus()" onblur="onModelCodeBlur()">
-          <div id="mModelCodeDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;
-            border:1.5px solid var(--primary3);border-top:none;border-radius:0 0 9px 9px;
-            max-height:220px;overflow-y:auto;z-index:200;box-shadow:0 8px 24px rgba(26,58,107,0.15);">
-          </div>
         </div>
-        <div class="frow span2"><label>รายละเอียดรถ
-          <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">แก้ไขได้</span>
-        </label>
-          <input type="text" id="mDetail" placeholder="เช่น Cab4 2.2 Ddi L AT">
+        <!-- ══ ชื่อรุ่นรถ — readonly ══ -->
+        <div class="frow">
+          <label>ชื่อรุ่นรถ
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+          </label>
+          <input type="text" id="mModelName" placeholder="—" readonly
+            style="background:#eef2f7;color:var(--tx2);cursor:default;">
         </div>
-        <div class="frow span2"><label>ชื่อรุ่นรถ (Model Code)
-          <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติจากรหัสรุ่น</span>
-        </label>
-          <input type="text" id="mModelName" placeholder="เช่น TFR41JCMNCTS" readonly
-            style="background:#f5f8fc;color:var(--tx2);">
+        <!-- ══ รายละเอียดรถ — readonly ══ -->
+        <div class="frow span2">
+          <label>รายละเอียดรถ
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+          </label>
+          <input type="text" id="mDetail" placeholder="—" readonly
+            style="background:#eef2f7;color:var(--tx2);cursor:default;">
+        </div>
+        <!-- ══ รุ่นรถ — readonly ══ -->
+        <div class="frow span2">
+          <label>รุ่นรถ
+            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+          </label>
+          <input type="text" id="mModel" placeholder="—" readonly
+            style="background:#eef2f7;color:var(--tx2);cursor:default;">
         </div>
         <div class="frow"><label>สถานะ *</label>
           <select id="mStatus"></select>
@@ -1156,6 +1162,15 @@ function testUpdate() {
 
 <div class="toast" id="toast"></div>
 
+<!-- Model Code Dropdown — attach to body เพื่อไม่ถูก overflow:hidden ครอบ -->
+<div id="mModelCodeDropdown" style="
+  display:none;position:fixed;background:#fff;
+  border:1.5px solid var(--primary3);border-radius:9px;
+  max-height:260px;overflow-y:auto;z-index:9000;
+  box-shadow:0 8px 32px rgba(26,58,107,0.18);
+  font-family:'Sarabun',sans-serif;
+"></div>
+
 <script>
 // ════════════════════════════════════════
 //  STATE
@@ -1193,6 +1208,19 @@ function init() {
   setConn(true);
   loadAll();
   updateShareUrl();
+
+  // reposition model code dropdown เมื่อ modal scroll หรือ window resize
+  const modalBox = document.querySelector('#bookingModal .modal-box');
+  if (modalBox) {
+    modalBox.addEventListener('scroll', () => {
+      const dd = document.getElementById('mModelCodeDropdown');
+      if (dd && dd.style.display !== 'none') _positionModelDropdown();
+    });
+  }
+  window.addEventListener('resize', () => {
+    const dd = document.getElementById('mModelCodeDropdown');
+    if (dd && dd.style.display !== 'none') _positionModelDropdown();
+  });
   // Default month = ทั้งหมด (ไม่ set ค่าใดๆ)
 
 
@@ -1919,6 +1947,21 @@ function showChartTooltipWithHint(e, sc, bkModels, rsModels, ersModels) {
 // ════════════════════════════════════════
 let _modelCodeBlurTimer = null;
 
+function _getModelField(r, ...keys) {
+  for (const k of keys) { if (r[k] !== undefined && r[k] !== '') return String(r[k]); }
+  return '';
+}
+
+function _positionModelDropdown() {
+  const inp = document.getElementById('mModelCode');
+  const dd  = document.getElementById('mModelCodeDropdown');
+  if (!inp || !dd) return;
+  const rect = inp.getBoundingClientRect();
+  dd.style.left  = rect.left + 'px';
+  dd.style.top   = (rect.bottom + 2) + 'px';
+  dd.style.width = rect.width + 'px';
+}
+
 function onModelCodeInput() {
   const q = document.getElementById('mModelCode').value.trim().toLowerCase();
   renderModelCodeDropdown(q);
@@ -1930,7 +1973,6 @@ function onModelCodeFocus() {
 }
 
 function onModelCodeBlur() {
-  // หน่วงเวลาเพื่อให้คลิก item ได้ก่อน dropdown ปิด
   _modelCodeBlurTimer = setTimeout(() => {
     document.getElementById('mModelCodeDropdown').style.display = 'none';
   }, 200);
@@ -1940,48 +1982,55 @@ function renderModelCodeDropdown(q) {
   const dd = document.getElementById('mModelCodeDropdown');
   if (!meta.model || meta.model.length === 0) { dd.style.display = 'none'; return; }
 
-  // คอลัมน์ในชีท Model: รหัสรุ่นรถ, ชื่อรุ่นรถ, รายละเอียดรถ, ราคา, รุ่นรถ
   const rows = q
     ? meta.model.filter(r => {
-        const code = (r['รหัสรุ่นรถ'] || '').toLowerCase();
-        const name = (r['ชื่อรุ่นรถ'] || '').toLowerCase();
-        const desc = (r['รายละเอียดรถ'] || r['รายละเอียด'] || '').toLowerCase();
-        const grp  = (r['รุ่นรถ'] || '').toLowerCase();
+        const code = _getModelField(r,'รหัสรุ่นรถ').toLowerCase();
+        const name = _getModelField(r,'ชื่อรุ่นรถ').toLowerCase();
+        const desc = _getModelField(r,'รายละเอียดรถ','รายละเอียด').toLowerCase();
+        const grp  = _getModelField(r,'รุ่นรถ').toLowerCase();
         return code.includes(q) || name.includes(q) || desc.includes(q) || grp.includes(q);
       })
     : meta.model.slice(0, 80);
 
-  if (rows.length === 0) { dd.style.display = 'none'; return; }
+  if (rows.length === 0) {
+    dd.innerHTML = '<div style="padding:10px 14px;color:var(--gray);font-size:12px;">ไม่พบรายการที่ตรงกัน</div>';
+    _positionModelDropdown();
+    dd.style.display = '';
+    return;
+  }
 
+  // แสดงลำดับ: รหัสรุ่นรถ | ชื่อรุ่นรถ | รายละเอียดรถ | [รุ่นรถ]
   dd.innerHTML = rows.map(r => {
-    const code = r['รหัสรุ่นรถ'] || '';
-    const name = r['ชื่อรุ่นรถ'] || '';
-    const desc = r['รายละเอียดรถ'] || r['รายละเอียด'] || '';
-    const grp  = r['รุ่นรถ'] || '';
+    const code = _getModelField(r,'รหัสรุ่นรถ');
+    const name = _getModelField(r,'ชื่อรุ่นรถ');
+    const desc = _getModelField(r,'รายละเอียดรถ','รายละเอียด');
+    const grp  = _getModelField(r,'รุ่นรถ');
     return `<div onclick="selectModelCode('${escHtml(code)}','${escHtml(name)}','${escHtml(desc)}','${escHtml(grp)}')"
-      style="padding:8px 12px;cursor:pointer;border-bottom:1px solid #edf0f7;font-size:12px;line-height:1.5;"
+      style="padding:9px 14px;cursor:pointer;border-bottom:1px solid #edf0f7;line-height:1.5;"
       onmouseenter="this.style.background='#f0f5ff'" onmouseleave="this.style.background=''">
-      <span style="font-weight:700;color:var(--primary);font-family:'IBM Plex Mono',monospace;font-size:11px;">${code}</span>
-      <span style="margin-left:8px;color:var(--tx);">${desc}</span>
-      ${grp ? `<span style="margin-left:6px;font-size:10px;background:#e8f0ff;color:#2451a0;padding:1px 6px;border-radius:8px;">${grp}</span>` : ''}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-weight:700;color:var(--primary);font-family:'IBM Plex Mono',monospace;font-size:11px;flex-shrink:0;">${code}</span>
+        ${name ? `<span style="color:var(--tx2);font-size:11px;flex-shrink:0;">${name}</span>` : ''}
+        ${desc ? `<span style="color:var(--tx);font-size:12px;">${desc}</span>` : ''}
+        ${grp  ? `<span style="font-size:10px;background:#e8f0ff;color:#2451a0;padding:1px 7px;border-radius:8px;flex-shrink:0;">${grp}</span>` : ''}
+      </div>
     </div>`;
   }).join('');
+
+  _positionModelDropdown();
   dd.style.display = '';
 }
 
 function escHtml(s) {
-  return String(s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function selectModelCode(code, name, desc, grp) {
   clearTimeout(_modelCodeBlurTimer);
-  // เติมข้อมูลลงฟิลด์ต่างๆ
-  document.getElementById('mModelCode').value  = code;
-  document.getElementById('mModelName').value  = name;
-  document.getElementById('mDetail').value     = desc || document.getElementById('mDetail').value;
-  // รุ่นรถ — เติมถ้าว่าง
-  const mModelEl = document.getElementById('mModel');
-  if (mModelEl && (!mModelEl.value || mModelEl.value === '')) mModelEl.value = grp;
+  document.getElementById('mModelCode').value = code;
+  document.getElementById('mModelName').value = name;
+  document.getElementById('mDetail').value    = desc;
+  document.getElementById('mModel').value     = grp;
   document.getElementById('mModelCodeDropdown').style.display = 'none';
 }
 
@@ -2066,6 +2115,7 @@ function setSelectValue(id, val) {
 
 function closeModal() {
   document.getElementById('bookingModal').classList.remove('open');
+  document.getElementById('mModelCodeDropdown').style.display = 'none';
   _isSaving = false;
   const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
   if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 บันทึก'; }
@@ -2090,12 +2140,12 @@ function onRelDateChange() {
 async function saveBooking() {
   if (_isSaving) { toast('⏳ กำลังบันทึกข้อมูลอยู่ กรุณารอสักครู่...', 'warn'); return; }
 
-  const date    = document.getElementById('mDate').value;
-  const name    = document.getElementById('mName').value.trim();
-  const sc      = document.getElementById('mSC').value;
-  const model   = document.getElementById('mModel').value;
-  const status  = document.getElementById('mStatus').value;
-  if (!date || !name || !sc || !model || !status) {
+  const date      = document.getElementById('mDate').value;
+  const name      = document.getElementById('mName').value.trim();
+  const sc        = document.getElementById('mSC').value;
+  const modelCode = document.getElementById('mModelCode').value.trim();
+  const status    = document.getElementById('mStatus').value;
+  if (!date || !name || !sc || !modelCode || !status) {
     toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return;
   }
 
@@ -2112,10 +2162,10 @@ async function saveBooking() {
     'วันที่จอง':       formatThDate(date),
     'ชื่อลูกค้า':      name,
     'เบอร์':           document.getElementById('mPhone').value.trim(),
-    'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
-    'รุ่นรถ':          model,
-    'รหัสรุ่นรถ':      document.getElementById('mModelCode').value.trim(),
+    'รหัสรุ่นรถ':      modelCode,
     'ชื่อรุ่นรถ':      document.getElementById('mModelName').value.trim(),
+    'รายละเอียดรถ':    document.getElementById('mDetail').value.trim(),
+    'รุ่นรถ':          document.getElementById('mModel').value.trim(),
     'สถานะ':           statusThai,
     'วันที่ปล่อย':     formatThDate(document.getElementById('mRelDate').value),
     'ที่ปรึกษาการขาย': sc,
