@@ -273,26 +273,6 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .datepick-body input[type=date]:focus{border-color:var(--primary3);}
 .datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
 
-/* ── FINANCE COMBOBOX ── */
-.finance-combo{position:relative;width:100%;}
-.finance-combo input{width:100%;}
-.finance-dropdown{
-  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
-  background:#fff;border:1.5px solid var(--primary3);border-radius:9px;
-  max-height:220px;overflow-y:auto;z-index:9999;
-  box-shadow:0 8px 28px rgba(26,58,107,0.15);
-  font-family:'Sarabun',sans-serif;
-}
-.finance-dropdown.open{display:block;}
-.finance-item{
-  padding:9px 13px;font-size:13px;color:var(--tx);cursor:pointer;
-  border-bottom:1px solid var(--gray2);transition:background .15s;
-}
-.finance-item:last-child{border-bottom:none;}
-.finance-item:hover,.finance-item.active{background:var(--primary3);color:#fff;}
-.finance-item.no-result{color:var(--gray);cursor:default;font-style:italic;}
-.finance-item.no-result:hover{background:transparent;color:var(--gray);}
-
 @media(max-width:600px){
   .form-grid{grid-template-columns:1fr;}
   .form-grid-2{grid-template-columns:1fr;}
@@ -1171,14 +1151,11 @@ function testUpdate() {
         </div>
         <div class="frow">
           <label>ไฟแนนซ์</label>
-          <div class="finance-combo" id="financeComboWrap">
-            <input type="text" id="rl-finance"
-              autocomplete="off"
-              placeholder="พิมพ์หรือเลือกไฟแนนซ์..."
-              oninput="onFinanceInput()"
-              onfocus="showFinanceDropdown()"
-              onblur="hideFinanceDropdown()">
-            <div class="finance-dropdown" id="financeDropdown"></div>
+          <select id="rl-finance" onchange="onFinanceSelectChange()" style="position:relative;">
+            <option value="">-- เลือก --</option>
+          </select>
+          <div id="rl-finance-custom-wrap" style="display:none;margin-top:6px;">
+            <input type="text" id="rl-finance-custom" placeholder="พิมพ์ชื่อไฟแนนซ์เอง..." style="font-size:12px;">
           </div>
         </div>
         <div class="frow">
@@ -3444,12 +3421,14 @@ function openReleaseReport(i) {
   document.getElementById('rl-model').value    = r['รุ่นรถ'] || '';
   document.getElementById('rl-engine').value   = r['เลขเครื่อง'] || '';
   document.getElementById('rl-chassis').value  = r['เลขแชสซีส์'] || '';
-  document.getElementById('rl-finance').value  = r['ไฟแนนซ์'] || '';
   document.getElementById('rl-plate').value    = r['เลขทะเบียน'] || '';
   document.getElementById('rl-delivery').value = r['เลขส่งมอบ'] || '';
   document.getElementById('rl-po').value       = r['เลข PO'] || '';
   document.getElementById('rl-sc').value           = r['ที่ปรึกษาการขาย'] || '';
   document.getElementById('rl-rcv-customer').value  = r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'] || '';
+
+  // populate finance select จาก meta ทุกครั้ง (รองรับค่าที่ไม่มีในรายการ → custom)
+  populateFinanceSelect(r['ไฟแนนซ์'] || '');
 
   // populate dropdown ล่าสุดจาก meta ทุกครั้ง
   populateRlModelDropdown();
@@ -3497,7 +3476,7 @@ async function saveAndPrintRelease() {
     'สถานะ':       'RS',
     'เลขเครื่อง':  document.getElementById('rl-engine').value.trim(),
     'เลขแชสซีส์': document.getElementById('rl-chassis').value.trim(),
-    'ไฟแนนซ์':    document.getElementById('rl-finance').value,
+    'ไฟแนนซ์':    getFinanceValue(),
     'เลขทะเบียน': document.getElementById('rl-plate').value.trim(),
     'เลขส่งมอบ':  document.getElementById('rl-delivery').value.trim(),
     'เลข PO':     document.getElementById('rl-po').value.trim(),
@@ -3862,7 +3841,7 @@ function printReleaseReportFromList(releaseList, rDate) {
 }
 
 // ════════════════════════════════════════
-//  FINANCE COMBOBOX
+//  FINANCE SELECT (native select + พิมพ์เองได้)
 //  ดึงรายการจาก meta.finance (Config sheet)
 //  fallback เป็นรายการ default ถ้า Config ยังไม่มี
 // ════════════════════════════════════════
@@ -3872,44 +3851,54 @@ function getFinanceOptions() {
   return (meta.finance && meta.finance.length) ? meta.finance : FINANCE_FALLBACK;
 }
 
-function renderFinanceDropdown(filter) {
-  const dd = document.getElementById('financeDropdown');
-  const opts = getFinanceOptions();
-  const q = (filter || '').trim().toLowerCase();
-  const matched = q ? opts.filter(f => f.toLowerCase().includes(q)) : opts;
-  if (!matched.length) {
-    dd.innerHTML = `<div class="finance-item no-result">ไม่พบ "${filter}" — กรอกเองได้เลย</div>`;
+function populateFinanceSelect(currentVal) {
+  const sel = document.getElementById('rl-finance');
+  sel.innerHTML = '<option value="">-- เลือก --</option>';
+  getFinanceOptions().forEach(f => {
+    const o = document.createElement('option');
+    o.value = f;
+    o.textContent = f;
+    sel.appendChild(o);
+  });
+  // option พิมพ์เอง
+  const oCustom = document.createElement('option');
+  oCustom.value = '__custom__';
+  oCustom.textContent = '✏️ พิมพ์เอง (ไม่มีในรายการ)';
+  sel.appendChild(oCustom);
+
+  // restore ค่า
+  if (currentVal) {
+    sel.value = currentVal;
+    if (sel.value !== currentVal) {
+      // ค่าไม่มีในรายการ → เปิด custom
+      sel.value = '__custom__';
+      document.getElementById('rl-finance-custom').value = currentVal;
+      document.getElementById('rl-finance-custom-wrap').style.display = '';
+    } else {
+      document.getElementById('rl-finance-custom-wrap').style.display = 'none';
+      document.getElementById('rl-finance-custom').value = '';
+    }
   } else {
-    dd.innerHTML = matched.map(f =>
-      `<div class="finance-item" onmousedown="pickFinance('${f.replace(/'/g,"\\'")}')">
-        ${q ? f.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<b>$1</b>') : f}
-      </div>`
-    ).join('');
+    document.getElementById('rl-finance-custom-wrap').style.display = 'none';
+    document.getElementById('rl-finance-custom').value = '';
   }
 }
 
-function showFinanceDropdown() {
-  const input = document.getElementById('rl-finance');
-  renderFinanceDropdown(input.value);
-  document.getElementById('financeDropdown').classList.add('open');
+function onFinanceSelectChange() {
+  const sel = document.getElementById('rl-finance');
+  const wrap = document.getElementById('rl-finance-custom-wrap');
+  wrap.style.display = sel.value === '__custom__' ? '' : 'none';
+  if (sel.value !== '__custom__') {
+    document.getElementById('rl-finance-custom').value = '';
+  }
 }
 
-function hideFinanceDropdown() {
-  // delay เล็กน้อยเพื่อให้ onmousedown ทำงานก่อน
-  setTimeout(() => {
-    document.getElementById('financeDropdown').classList.remove('open');
-  }, 180);
-}
-
-function onFinanceInput() {
-  const input = document.getElementById('rl-finance');
-  renderFinanceDropdown(input.value);
-  document.getElementById('financeDropdown').classList.add('open');
-}
-
-function pickFinance(val) {
-  document.getElementById('rl-finance').value = val;
-  document.getElementById('financeDropdown').classList.remove('open');
+function getFinanceValue() {
+  const sel = document.getElementById('rl-finance');
+  if (sel.value === '__custom__') {
+    return document.getElementById('rl-finance-custom').value.trim();
+  }
+  return sel.value;
 }
 
 init();
