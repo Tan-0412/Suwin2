@@ -273,6 +273,26 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .datepick-body input[type=date]:focus{border-color:var(--primary3);}
 .datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
 
+/* ── FINANCE COMBOBOX ── */
+.finance-combo{position:relative;width:100%;}
+.finance-combo input{width:100%;}
+.finance-dropdown{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+  background:#fff;border:1.5px solid var(--primary3);border-radius:9px;
+  max-height:220px;overflow-y:auto;z-index:9999;
+  box-shadow:0 8px 28px rgba(26,58,107,0.15);
+  font-family:'Sarabun',sans-serif;
+}
+.finance-dropdown.open{display:block;}
+.finance-item{
+  padding:9px 13px;font-size:13px;color:var(--tx);cursor:pointer;
+  border-bottom:1px solid var(--gray2);transition:background .15s;
+}
+.finance-item:last-child{border-bottom:none;}
+.finance-item:hover,.finance-item.active{background:var(--primary3);color:#fff;}
+.finance-item.no-result{color:var(--gray);cursor:default;font-style:italic;}
+.finance-item.no-result:hover{background:transparent;color:var(--gray);}
+
 @media(max-width:600px){
   .form-grid{grid-template-columns:1fr;}
   .form-grid-2{grid-template-columns:1fr;}
@@ -959,59 +979,94 @@ function testUpdate() {
     </div>
     <div class="modal-body">
       <div class="form-grid">
+
+        <!-- แถว 1: วันที่จอง + สถานะ -->
         <div class="frow"><label>วันที่จอง *</label>
           <input type="date" id="mDate">
-        </div>
-        <div class="frow"><label>ที่ปรึกษาการขาย *</label>
-          <select id="mSC"></select>
-        </div>
-        <div class="frow span2"><label>ชื่อลูกค้า *</label>
-          <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
-        </div>
-        <div class="frow"><label>เบอร์โทร</label>
-          <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
-        </div>
-        <!-- ══ รหัสรุ่นรถ — searchable (บังคับกรอก) ══ -->
-        <div class="frow span2">
-          <label>รหัสรุ่นรถ *
-            <span style="font-size:9px;color:var(--primary3);font-weight:500;margin-left:4px;">พิมพ์เพื่อค้นหา</span>
-          </label>
-          <input type="text" id="mModelCode" placeholder="เช่น UNA10, TFR41, Cab4, Spark..."
-            autocomplete="off" oninput="onModelCodeInput()" onfocus="onModelCodeFocus()" onblur="onModelCodeBlur()">
-        </div>
-        <!-- ══ ชื่อรุ่นรถ — readonly ══ -->
-        <div class="frow">
-          <label>ชื่อรุ่นรถ
-            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
-          </label>
-          <input type="text" id="mModelName" placeholder="—" readonly
-            style="background:#eef2f7;color:var(--tx2);cursor:default;">
-        </div>
-        <!-- ══ รายละเอียดรถ — readonly ══ -->
-        <div class="frow span2">
-          <label>รายละเอียดรถ
-            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
-          </label>
-          <input type="text" id="mDetail" placeholder="—" readonly
-            style="background:#eef2f7;color:var(--tx2);cursor:default;">
-        </div>
-        <!-- ══ รุ่นรถ — readonly ══ -->
-        <div class="frow span2">
-          <label>รุ่นรถ
-            <span style="font-size:9px;color:var(--gray);font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
-          </label>
-          <input type="text" id="mModel" placeholder="—" readonly
-            style="background:#eef2f7;color:var(--tx2);cursor:default;">
         </div>
         <div class="frow"><label>สถานะ *</label>
           <select id="mStatus"></select>
         </div>
+
+        <!-- แถว 2: ชื่อลูกค้า -->
+        <div class="frow span2"><label>ชื่อลูกค้า *</label>
+          <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
+        </div>
+
+        <!-- แถว 3: เบอร์โทร + ที่มาลูกค้า -->
+        <div class="frow"><label>เบอร์โทร</label>
+          <input type="text" id="mPhone" placeholder="0xx-xxx-xxxx">
+        </div>
+        <div class="frow"><label>ที่มาลูกค้า</label>
+          <select id="mSource"></select>
+        </div>
+
+        <!-- แถว 4: ที่ปรึกษาการขาย + วันที่ปล่อย -->
+        <div class="frow"><label>ที่ปรึกษาการขาย *</label>
+          <select id="mSC"></select>
+        </div>
         <div class="frow"><label>วันที่ปล่อย</label>
           <input type="date" id="mRelDate" onchange="onRelDateChange()">
         </div>
-        <div class="frow span2"><label>ที่มาลูกค้า</label>
-          <select id="mSource"></select>
+
+        <!-- ══ กรอบข้อมูลรถ ══ -->
+        <div class="frow span2" style="padding:0;margin-top:4px;">
+          <div style="
+            width:100%;
+            background:linear-gradient(135deg,#f0faf0 0%,#e6f7e6 100%);
+            border:1.5px solid #a8d8a8;
+            border-radius:12px;
+            padding:14px 16px 16px;
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px 16px;
+          ">
+            <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+              <span style="font-size:14px;">🚛</span>
+              <span style="font-size:12px;font-weight:700;color:#2d6a2d;letter-spacing:.3px;">ข้อมูลรถ</span>
+              <span style="font-size:10px;color:#5a9a5a;margin-left:2px;">เลือกรหัสรุ่นรถเพื่อเติมข้อมูลอัตโนมัติ</span>
+            </div>
+
+            <!-- รหัสรุ่นรถ -->
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รหัสรุ่นรถ *
+                <span style="font-size:9px;color:#5a9a5a;font-weight:500;margin-left:4px;">พิมพ์เพื่อค้นหา</span>
+              </label>
+              <input type="text" id="mModelCode" placeholder="เช่น UNA10, TFR41..."
+                autocomplete="off" oninput="onModelCodeInput()" onfocus="onModelCodeFocus()" onblur="onModelCodeBlur()"
+                style="background:#fff;border-color:#a8d8a8;">
+            </div>
+
+            <!-- รุ่นรถ readonly -->
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รุ่นรถ
+                <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+              </label>
+              <input type="text" id="mModel" placeholder="—" readonly
+                style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+
+            <!-- ชื่อรุ่นรถ readonly -->
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">ชื่อรุ่นรถ
+                <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+              </label>
+              <input type="text" id="mModelName" placeholder="—" readonly
+                style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+
+            <!-- รายละเอียดรถ readonly -->
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รายละเอียดรถ
+                <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span>
+              </label>
+              <input type="text" id="mDetail" placeholder="—" readonly
+                style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+
+          </div>
         </div>
+
       </div>
     </div>
     <div class="modal-footer">
@@ -1116,21 +1171,15 @@ function testUpdate() {
         </div>
         <div class="frow">
           <label>ไฟแนนซ์</label>
-          <select id="rl-finance">
-            <option value="">-- เลือก --</option>
-            <option>TIL</option>
-            <option>TMT</option>
-            <option>TISCO</option>
-            <option>KBANK</option>
-            <option>SCB</option>
-            <option>BBL</option>
-            <option>KTB</option>
-            <option>BAY</option>
-            <option>AYCAL</option>
-            <option>MTL</option>
-            <option>ICBC</option>
-            <option>เงินสด</option>
-          </select>
+          <div class="finance-combo" id="financeComboWrap">
+            <input type="text" id="rl-finance"
+              autocomplete="off"
+              placeholder="พิมพ์หรือเลือกไฟแนนซ์..."
+              oninput="onFinanceInput()"
+              onfocus="showFinanceDropdown()"
+              onblur="hideFinanceDropdown()">
+            <div class="finance-dropdown" id="financeDropdown"></div>
+          </div>
         </div>
         <div class="frow">
           <label>เลขทะเบียนป้ายแดง</label>
@@ -3810,6 +3859,57 @@ function printReleaseReportFromList(releaseList, rDate) {
   </div>
   </body></html>`);
   w.document.close();
+}
+
+// ════════════════════════════════════════
+//  FINANCE COMBOBOX
+//  ดึงรายการจาก meta.finance (Config sheet)
+//  fallback เป็นรายการ default ถ้า Config ยังไม่มี
+// ════════════════════════════════════════
+const FINANCE_FALLBACK = ['TIL','TMT','TISCO','KBANK','SCB','BBL','KTB','BAY','AYCAL','MTL','ICBC','เงินสด'];
+
+function getFinanceOptions() {
+  return (meta.finance && meta.finance.length) ? meta.finance : FINANCE_FALLBACK;
+}
+
+function renderFinanceDropdown(filter) {
+  const dd = document.getElementById('financeDropdown');
+  const opts = getFinanceOptions();
+  const q = (filter || '').trim().toLowerCase();
+  const matched = q ? opts.filter(f => f.toLowerCase().includes(q)) : opts;
+  if (!matched.length) {
+    dd.innerHTML = `<div class="finance-item no-result">ไม่พบ "${filter}" — กรอกเองได้เลย</div>`;
+  } else {
+    dd.innerHTML = matched.map(f =>
+      `<div class="finance-item" onmousedown="pickFinance('${f.replace(/'/g,"\\'")}')">
+        ${q ? f.replace(new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<b>$1</b>') : f}
+      </div>`
+    ).join('');
+  }
+}
+
+function showFinanceDropdown() {
+  const input = document.getElementById('rl-finance');
+  renderFinanceDropdown(input.value);
+  document.getElementById('financeDropdown').classList.add('open');
+}
+
+function hideFinanceDropdown() {
+  // delay เล็กน้อยเพื่อให้ onmousedown ทำงานก่อน
+  setTimeout(() => {
+    document.getElementById('financeDropdown').classList.remove('open');
+  }, 180);
+}
+
+function onFinanceInput() {
+  const input = document.getElementById('rl-finance');
+  renderFinanceDropdown(input.value);
+  document.getElementById('financeDropdown').classList.add('open');
+}
+
+function pickFinance(val) {
+  document.getElementById('rl-finance').value = val;
+  document.getElementById('financeDropdown').classList.remove('open');
 }
 
 init();
