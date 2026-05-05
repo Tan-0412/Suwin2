@@ -351,23 +351,35 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- Summary (compact) -->
   <div class="sum-grid" id="sumGrid">
+    <!-- ทั้งหมด -->
     <div class="sum-card" style="border-left-color:var(--primary3);">
-      <div class="sum-val" id="sAll">—</div><div class="sum-lbl">ทั้งหมด</div>
+      <div class="sum-val" id="sAll">—</div>
+      <div class="sum-lbl">🤍 ทั้งหมด</div>
     </div>
-    <div class="sum-card" style="border-left-color:#9A3412;">
-      <div class="sum-val" id="sBK" style="color:#9A3412;">—</div><div class="sum-lbl">🟠 จอง</div>
+    <!-- คาดจอง = เหลือง -->
+    <div class="sum-card" style="border-left-color:#d97706;">
+      <div class="sum-val" id="sEBK" style="color:#d97706;">—</div>
+      <div class="sum-lbl">💛 คาดจอง</div>
     </div>
-    <div class="sum-card" style="border-left-color:#065F46;">
-      <div class="sum-val" id="sRS" style="color:#065F46;">—</div><div class="sum-lbl">🟢 ปล่อย</div>
+    <!-- จอง = ส้ม -->
+    <div class="sum-card" style="border-left-color:#ea6c0a;">
+      <div class="sum-val" id="sBK" style="color:#ea6c0a;">—</div>
+      <div class="sum-lbl">🧡 จอง</div>
     </div>
-    <div class="sum-card" style="border-left-color:#9D174D;">
-      <div class="sum-val" id="sEBK" style="color:#9D174D;">—</div><div class="sum-lbl">🩷 คาดจอง</div>
+    <!-- คาดปล่อย = ชมพู -->
+    <div class="sum-card" style="border-left-color:#db2777;">
+      <div class="sum-val" id="sERS" style="color:#db2777;">—</div>
+      <div class="sum-lbl">🩷 คาดปล่อย</div>
     </div>
-    <div class="sum-card" style="border-left-color:#854D0E;">
-      <div class="sum-val" id="sERS" style="color:#854D0E;">—</div><div class="sum-lbl">🟡 คาดปล่อย</div>
+    <!-- ปล่อย = เขียว -->
+    <div class="sum-card" style="border-left-color:#16a34a;">
+      <div class="sum-val" id="sRS" style="color:#16a34a;">—</div>
+      <div class="sum-lbl">💚 ปล่อย</div>
     </div>
-    <div class="sum-card" style="border-left-color:var(--red);">
-      <div class="sum-val" id="sCL" style="color:var(--red);">—</div><div class="sum-lbl">🔴 ยกเลิก</div>
+    <!-- ยกเลิก = แดง -->
+    <div class="sum-card" style="border-left-color:#dc2626;">
+      <div class="sum-val" id="sCL" style="color:#dc2626;">—</div>
+      <div class="sum-lbl">💔 ยกเลิก</div>
     </div>
   </div>
 
@@ -375,15 +387,18 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   <div class="card" style="margin-bottom:12px;">
     <div class="card-hdr" style="padding:10px 16px;">
       <h2>📊 ยอดจองแต่ละ SC</h2>
-      <div style="display:flex;gap:8px;align-items:center;font-size:10px;">
-        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
-          <span style="width:10px;height:10px;border-radius:2px;background:#2471c8;display:inline-block;"></span>จอง
+      <div style="display:flex;gap:8px;align-items:center;font-size:10px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#d97706;display:inline-block;"></span>💛 คาดจอง
         </span>
-        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
-          <span style="width:10px;height:10px;border-radius:2px;background:#ca8a04;display:inline-block;"></span>คาดปล่อย
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#ea6c0a;display:inline-block;"></span>🧡 จอง
         </span>
-        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.7);">
-          <span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>ปล่อย
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#db2777;display:inline-block;"></span>🩷 คาดปล่อย
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);">
+          <span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>💚 ปล่อย
         </span>
       </div>
     </div>
@@ -1844,16 +1859,10 @@ function renderSCChart() {
       const ersH = (d.ers||0) > 0 ? Math.max(8, Math.round((d.ers / maxVal) * 100)) : 0;
       const rsH  = d.rs  > 0 ? Math.max(8, Math.round((d.rs  / maxVal) * 100)) : 0;
 
-      // สีแท่ง BK ตามทีม, ERS = เหลือง, RS = เขียว (คงที่ทุกทีม)
-      const isBigDept = (d.ฝ่าย||'').includes('ใหญ่');
-      let bkColor;
-      if (isBigDept) {
-        bkColor = d.ทีม==='สุวิน' ? '#e05c00' : '#d35400';
-      } else {
-        bkColor = d.ทีม==='A' ? '#2471c8' : d.ทีม==='B' ? '#7c3aed' : '#2471c8';
-      }
-      const ersColor = '#ca8a04'; // เหลืองเข้ม
-      const rsColor  = '#16a34a'; // เขียว
+      // สี = ตามสถานะ (ทุกทีม/ฝ่ายใช้สีเดียวกัน)
+      const bkColor  = '#ea6c0a'; // 🧡 จอง = ส้ม
+      const ersColor = '#db2777'; // 🩷 คาดปล่อย = ชมพู
+      const rsColor  = '#16a34a'; // 💚 ปล่อย = เขียว
 
       const safeKey = sc.replace(/"/g,'&quot;');
 
