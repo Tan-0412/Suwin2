@@ -2815,12 +2815,18 @@ async function runReport3() {
     const scSmall = meta.sc.filter(s => (s['ฝ่าย']||'').includes('เล็ก'));
     const scBig   = meta.sc.filter(s => (s['ฝ่าย']||'').includes('ใหญ่'));
 
-    // Online 3 คอลัมน์ตายตัว
-    const onlineSources = ['เพจส่วนตัว', 'เพจบริษัท', 'อื่นๆ'];
+    // Online คอลัมน์ตายตัว — เพิ่ม Lead TIS เป็น fixed source แยกจาก อื่นๆ
+    const onlineSources = ['เพจบริษัท', 'เพจส่วนตัว', 'Lead TIS', 'อื่นๆ'];
+
+    // รถใหญ่ใช้คอลัมน์รุ่นรถ1 จาก Model sheet
+    const bigModelCols = [...new Set(
+      (meta.model || []).map(m => m['รุ่นรถ1']).filter(Boolean)
+    )];
+    const bigSources = bigModelCols.length ? bigModelCols : ['2T','3T','6W','10W,12W','T/H'];
 
     // render แต่ละฝ่าย
-    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal, curYM);
-    renderDSC('big',   scBig,   curRows, prevRows, allRows, onlineSources, monthLabel, today, 0, curYM);
+    renderDSC('small', scSmall, curRows, prevRows, allRows, onlineSources, monthLabel, today, targetVal, curYM, false);
+    renderDSC('big',   scBig,   curRows, prevRows, allRows, bigSources,    monthLabel, today, 0, curYM, true);
 
   } catch(e) {
     ['r3BodySmall','r3BodyBig'].forEach(id => {
@@ -2829,7 +2835,7 @@ async function runReport3() {
   }
 }
 
-function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal, curYM) {
+function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel, today, targetVal, curYM, isBigDept=false) {
   const suffix = type === 'small' ? 'Small' : 'Big';
   const bodyEl = document.getElementById('r3Body' + suffix);
   const titleEl = document.getElementById('r3Title' + suffix);
@@ -2882,12 +2888,24 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     // ── ONLINE ──
     // นับจาก allRows ทุกสถานะ (ยกเว้นยกเลิก) ทุกเดือน แยกตามที่มาลูกค้า
     const allOnlineRows = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
-    const fixedSources = ['เพจส่วนตัว', 'เพจบริษัท'];
+    // Fix: เพิ่ม Lead TIS เป็น fixed source
+    const fixedSources = ['เพจบริษัท', 'เพจส่วนตัว', 'Lead TIS'];
     const onlineBySource = {};
-    fixedSources.forEach(src => {
-      onlineBySource[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า']===src).length;
-    });
-    onlineBySource['อื่นๆ'] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า'])).length;
+
+    if (isBigDept) {
+      // รถใหญ่: นับตามรุ่นรถ1 (ฟิลด์รุ่นรถ) จากรายการจองเดือนนี้เท่านั้น
+      const bkThisOnlyRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
+      sources.forEach(model => {
+        onlineBySource[model] = bkThisOnlyRows.filter(r => r['รุ่นรถ'] === model).length;
+      });
+    } else {
+      // รถเล็ก: นับจากรายการจองเดือนนี้เท่านั้น (Fix 3)
+      const srcRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
+      fixedSources.forEach(src => {
+        onlineBySource[src] = srcRows.filter(r => r['ที่มาลูกค้า']===src).length;
+      });
+      onlineBySource['อื่นๆ'] = srcRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']) && r['ที่มาลูกค้า']).length;
+    }
 
     // ── จองและปล่อยเดือนนี้ ──
     // รายการที่วันที่จองอยู่ในเดือนนี้ + รายการที่วันที่ปล่อยอยู่ในเดือนนี้
@@ -2926,15 +2944,23 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     const fmt = r => `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
     const fmtRel = r => `${fmtDate(r['วันที่ปล่อย'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
 
-    // Online แยก source
+    // Online แยก source (tooltip detail)
     const srcRowsMap = {};
-    sources.forEach(src => {
-      if (src === 'อื่นๆ') {
-        srcRowsMap[src] = allOnlineRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']));
-      } else {
-        srcRowsMap[src] = allOnlineRows.filter(r => r['ที่มาลูกค้า'] === src);
-      }
-    });
+    if (isBigDept) {
+      const bkThisOnlyRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
+      sources.forEach(model => {
+        srcRowsMap[model] = bkThisOnlyRows.filter(r => r['รุ่นรถ'] === model);
+      });
+    } else {
+      const srcRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
+      sources.forEach(src => {
+        if (src === 'อื่นๆ') {
+          srcRowsMap[src] = srcRows.filter(r => !fixedSources.includes(r['ที่มาลูกค้า']) && r['ที่มาลูกค้า']);
+        } else {
+          srcRowsMap[src] = srcRows.filter(r => r['ที่มาลูกค้า'] === src);
+        }
+      });
+    }
 
     window._dscData[name] = {
       carry:   carryRows.map(fmt),
@@ -2972,7 +2998,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
         <th class="carry" rowspan="2" style="font-size:13px;">ยอดจอง<br>ยกมา</th>
         <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะจอง</th>
         <th class="bk-hdr" rowspan="2" style="font-size:13px;">ยอดจอง<br>เดือนนี้</th>
-        <th class="online-hdr" colspan="${sources.length}" style="font-size:13px;">Online</th>
+        <th class="online-hdr" colspan="${sources.length}" style="font-size:13px;">${isBigDept ? 'รุ่นรถ (จองเดือนนี้)' : 'แหล่งที่มาลูกค้า (จองเดือนนี้)'}</th>
         <th class="bk-hdr" rowspan="2" style="font-size:13px;">รวมยอดจอง<br>ปัจจุบัน</th>
         <th class="ebk-hdr" rowspan="2" style="font-size:13px;">คาดว่า<br>จะปล่อย</th>
         <th class="rs-hdr" rowspan="2" style="font-size:13px;">ยอดปล่อย<br>เดือนนี้</th>
@@ -2995,6 +3021,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
     const tSrc = {}; sources.forEach(s=>tSrc[s]=0);
 
     members.forEach((d, idx) => {
+      const rowBg = idx % 2 === 0 ? '' : 'style="background:#f4f7fb;"';  // Fix 4: สลับสีขาว-เทาอ่อน
       const srcCells = sources.map(s => {
         const v = d.onlineBySource[s]||0;
         tSrc[s]+=v; gSrc[s]+=v;
@@ -3007,7 +3034,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
 
       const safeN = d.name.replace(/"/g,'&quot;');
       const tip = (field) => `style="cursor:pointer;" onmouseenter="showDscTip(event,'${safeN}','${field}')" onmouseleave="hideDscTip()"`;
-      html += `<tr>
+      html += `<tr ${rowBg}>
         <td class="name">${d['ที่ปรึกษาการขาย']||d.ชื่อเล่น}</td>
         <td class="num carry" ${tip('carry')}>${d.carry||0}</td>
         <td class="num ebk ${d.ebk?'':'zero'}" ${d.ebk?tip('ebk'):''}>${d.ebk||0}</td>
