@@ -4201,7 +4201,7 @@ async function runSummaryReport() {
 
     // รุ่นรถ1 แยกตามฝ่าย — รถเล็ก vs รถใหญ่
     const smallModels = ['STD','SPC','CAB 4','CAB 4 HR','MU-X'];
-    const bigModels   = ['2T','3T','6W','10W,12W','T/H'];
+    const bigModels   = ['2T','3T','6W','10W, 12W','T/H'];
     // ถ้า Model sheet มีข้อมูล ใช้จาก sheet แยกตาม ฝ่าย; fallback ใช้ค่าข้างบน
     const allModel1 = (meta.model||[]).map(m => ({ m1: (m['รุ่นรถ1']||'').trim(), dept: (m['ฝ่าย']||m['dept']||'').toString() })).filter(x => x.m1);
     const smallModelCols = allModel1.length
@@ -4269,7 +4269,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     );
     const bkByModel = {};
     modelCols.forEach(m => {
-      bkByModel[m] = bkThisRows.filter(r => r['รุ่นรถ'] === m).length;
+      bkByModel[m] = bkThisRows.filter(r => (r['รุ่นรถ']||'').trim() === m.trim()).length;
     });
     const bkTotal = bkThisRows.length;
 
@@ -4298,7 +4298,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     );
     const rsByModel = {};
     modelCols.forEach(m => {
-      rsByModel[m] = rsThisRows.filter(r => r['รุ่นรถ'] === m).length;
+      rsByModel[m] = rsThisRows.filter(r => (r['รุ่นรถ']||'').trim() === m.trim()).length;
     });
     const rsTotal = rsThisRows.length;
 
@@ -4528,7 +4528,8 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
         <span class="cl-report-date">ณ วันที่ ${today}</span>
       </div>
       <div class="cl-dept-bar">สาขาสุวินทวงศ์ ${deptName} ( ทีม ${team} )</div>
-      <colgroup>
+        <table class="cl-table">
+        <colgroup>
           <col class="cl-col-sc">
           <col class="cl-col-total">
           <col class="cl-col-date">
@@ -4541,7 +4542,6 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
           <col class="cl-col-model">
           <col class="cl-col-fn">
         </colgroup>
-        <table class="cl-table">
         <thead>
           <tr>
             <th class="cl-th-sc" rowspan="2">ที่ปรึกษา<br>การขาย SC</th>
