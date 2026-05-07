@@ -274,25 +274,32 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 }
 
 /* ── SUMMARY REPORT TABLE ── */
-.sum-table { width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
-.sum-table th, .sum-table td { padding:4px 3px; text-align:center; border:1px solid #d0daea; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sum-table th { font-weight:700; font-size:10px; line-height:1.3; }
-.sum-table td.name-cell { text-align:left; font-weight:500; width:110px; font-size:11px; }
+.sum-table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+.sum-table th, .sum-table td {
+  padding:6px 5px; text-align:center; border:1px solid #d0daea;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.sum-table th {
+  font-weight:700; font-size:11px; line-height:1.4;
+  white-space:normal; word-break:keep-all; vertical-align:middle;
+}
+.sum-table td { white-space:nowrap; vertical-align:middle; }
+.sum-table td.name-cell { text-align:left; font-weight:600; width:140px; font-size:12px; white-space:nowrap; }
 /* หัวคอลัมโทนอ่อน ตัวอักษรเข้ม */
-.sum-table .th-carry  { background:#aed6f1; color:#1a3a6b; width:52px; }
-.sum-table .th-bk     { background:#fad7a0; color:#7d4e00; width:36px; }
-.sum-table .th-src    { background:#f5b7d1; color:#7d1a45; width:38px; }
-.sum-table .th-total  { background:#a9cce3; color:#1a3a6b; width:52px; }
-.sum-table .th-rs     { background:#a9dfbf; color:#0a5c2a; width:36px; }
-.sum-table .th-cl     { background:#f1948a; color:#7b241c; width:36px; }
+.sum-table .th-carry  { background:#aed6f1; color:#1a3a6b; width:60px; }
+.sum-table .th-bk     { background:#fad7a0; color:#7d4e00; width:46px; }
+.sum-table .th-src    { background:#f5b7d1; color:#7d1a45; width:56px; }
+.sum-table .th-total  { background:#a9cce3; color:#1a3a6b; width:72px; }
+.sum-table .th-rs     { background:#a9dfbf; color:#0a5c2a; width:46px; }
+.sum-table .th-cl     { background:#f1948a; color:#7b241c; width:52px; }
 /* คอลัมพิเศษ — สีคงที่ทุกแถว */
-.sum-table .td-carry  { background:#ebf5fb !important; color:#1a5276; font-weight:700; font-size:13px; }
-.sum-table .td-total  { background:#d6eaf8 !important; color:#1a3a8a; font-weight:700; font-size:13px; }
-.sum-table .bk-total-col { background:#f5cba7 !important; color:#6e2c00; font-weight:700; font-size:13px; }
-.sum-table .rs-total-col { background:#a9dfbf !important; color:#0a5c2a; font-weight:700; font-size:13px; }
+.sum-table .td-carry  { background:#ebf5fb !important; color:#1a5276; font-weight:700; font-size:14px; }
+.sum-table .td-total  { background:#d6eaf8 !important; color:#1a3a8a; font-weight:700; font-size:14px; }
+.sum-table .bk-total-col { background:#f5cba7 !important; color:#6e2c00; font-weight:700; font-size:14px; }
+.sum-table .rs-total-col { background:#a9dfbf !important; color:#0a5c2a; font-weight:700; font-size:14px; }
 /* ตัวเลขทั่วไป */
-.sum-table .td-num    { font-family:'IBM Plex Mono',monospace; font-size:12px; }
-.sum-table .td-zero   { color:#ccc; }
+.sum-table .td-num    { font-family:'IBM Plex Mono',monospace; font-size:13px; }
+.sum-table .td-zero   { color:#bbb; }
 /* แถว SC — ขาว/เทาสลับ ทุกคอลัม (ยกเว้น 4 คอลัมพิเศษ) */
 .sum-table tr.row-odd  td:not(.td-carry):not(.bk-total-col):not(.td-total):not(.rs-total-col) { background:#ffffff; }
 .sum-table tr.row-even td:not(.td-carry):not(.bk-total-col):not(.td-total):not(.rs-total-col) { background:#eeeeee; }
@@ -331,11 +338,11 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.25);
   white-space:normal;word-break:keep-all;line-height:1.35;color:#fff;
   vertical-align:middle;overflow:hidden;}
-.dsc-table th.left{text-align:left;background:#5a7099;min-width:120px;width:120px;}
+.dsc-table th.left{text-align:left;background:#5a7099;min-width:140px;width:140px;}
 .dsc-table td{
   padding:6px 5px;border:1px solid #e0e8f0;text-align:center;
   vertical-align:middle;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
-.dsc-table td.name{text-align:left;font-weight:600;background:#f4f8ff;color:#1a2d45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dsc-table td.name{text-align:left;font-weight:600;background:#f4f8ff;color:#1a2d45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:140px;}
 .dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;}
 .dsc-table td.bk{color:#2451a0;}
 .dsc-table td.rs{color:#1a7a4a;}
@@ -349,8 +356,8 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   font-size:12px;font-weight:700;color:#fff;
   padding:6px 12px;border-top:2px solid #a0b4e0;letter-spacing:.3px;}
 /* online/source columns */
-.dsc-table th.online-hdr{background:#b03680;white-space:normal;word-break:keep-all;line-height:1.3;padding:5px 4px;width:52px;}
-.dsc-table td.online-col{width:52px;}
+.dsc-table th.online-hdr{background:#b03680;white-space:normal;word-break:keep-all;line-height:1.3;padding:5px 6px;width:80px;}
+.dsc-table td.online-col{width:80px;}
 /* header สีต่าง ๆ — โทนอ่อนตัวอักษรชัด */
 .dsc-table th.carry  {background:#7b5ea7;}
 .dsc-table th.ebk-hdr{background:#d06818;}
@@ -4333,7 +4340,21 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     : '<th class="th-rs">—</th>';
   const srcHdr = srcCols.map(s => `<th class="th-src" style="font-weight:600;font-size:10px;">${s}</th>`).join('');
 
+  // สร้าง colgroup สำหรับกำหนดความกว้างแต่ละคอลัม
+  const colgroupCols = [
+    `<col style="width:140px;">`,                          // SC name
+    `<col style="width:60px;">`,                           // ยกมา
+    ...modelCols.map(() => `<col style="width:46px;">`),   // จองเดือนนี้ แยกรุ่น
+    `<col style="width:54px;">`,                           // รวมจอง
+    ...srcCols.map(() => `<col style="width:56px;">`),     // แหล่งที่มา
+    `<col style="width:72px;">`,                           // รวมจองปัจจุบัน
+    ...modelCols.map(() => `<col style="width:46px;">`),   // ปล่อยเดือนนี้ แยกรุ่น
+    `<col style="width:54px;">`,                           // รวมปล่อย
+    `<col style="width:52px;">`,                           // ถอน
+  ].join('');
+
   let html = `<table class="sum-table">
+    <colgroup>${colgroupCols}</colgroup>
     <thead>
       <tr>
         <th rowspan="2" class="th-carry" style="text-align:left;">SC</th>
