@@ -244,6 +244,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .cl-col-date  { width:68px;  }   /* วันที่ */
 .cl-col-name  { width:180px; }   /* ชื่อลูกค้า — กว้างขึ้นเป็น 2 เท่า */
 .cl-col-model { width:52px;  }   /* รุ่นรถ */
+.cl-table td.model-cell { font-size:9px; font-weight:600; color:var(--primary2); }
 .cl-col-fn    { width:44px;  }   /* F/N */
 .cl-col-rs    { width:40px;  }   /* ยอดปล่อย */
 /* หัวคอลัม — โทนอ่อน ตัวอักษรเข้ม ชัดเจน */
@@ -4631,23 +4632,23 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
             <td class="cl-td-total" rowspan="${maxRows}">${bkCount||0}</td>
             <td style="${rowBg}">${bkDate}</td>
             <td class="cl-td-name" style="${rowBg}">${bkName}</td>
-            <td style="${rowBg}">${bkModel}</td>
+            <td class="model-cell" style="${rowBg}">${bkModel}</td>
             <td style="${rowBg}">${bkFN}</td>
             <td class="cl-td-rs" rowspan="${maxRows}">${rsCount||0}</td>
             <td style="${rowBg}">${rsDate}</td>
             <td class="cl-td-name" style="${rowBg}">${rsName}</td>
-            <td style="${rowBg}">${rsModel}</td>
+            <td class="model-cell" style="${rowBg}">${rsModel}</td>
             <td style="${rowBg}">${rsFN}</td>
           </tr>`;
         } else {
           html += `<tr>
             <td style="${rowBg}">${bkDate}</td>
             <td class="cl-td-name" style="${rowBg}">${bkName}</td>
-            <td style="${rowBg}">${bkModel}</td>
+            <td class="model-cell" style="${rowBg}">${bkModel}</td>
             <td style="${rowBg}">${bkFN}</td>
             <td style="${rowBg}">${rsDate}</td>
             <td class="cl-td-name" style="${rowBg}">${rsName}</td>
-            <td style="${rowBg}">${rsModel}</td>
+            <td class="model-cell" style="${rowBg}">${rsModel}</td>
             <td style="${rowBg}">${rsFN}</td>
           </tr>`;
         }
