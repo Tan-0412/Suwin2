@@ -332,13 +332,13 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 .target-badge{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;
   color:#c05000;background:#fff3e0;padding:6px 16px;border-radius:20px;
   border:2px solid #ffb74d;display:inline-flex;align-items:center;gap:6px;}
-.dsc-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;}
 .dsc-table th{
-  padding:6px 4px;text-align:center;
-  font-size:11px;font-weight:700;border:1px solid rgba(255,255,255,0.25);
-  white-space:normal;word-break:keep-all;line-height:1.35;color:#fff;
+  padding:7px 6px;text-align:center;
+  font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.25);
+  white-space:nowrap;line-height:1.35;color:#fff;
   vertical-align:middle;overflow:hidden;}
-.dsc-table th.left{text-align:left;background:#5a7099;min-width:140px;width:140px;}
+.dsc-table th.left{text-align:left;background:#5a7099;min-width:140px;}
 .dsc-table td{
   padding:6px 5px;border:1px solid #e0e8f0;text-align:center;
   vertical-align:middle;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
@@ -356,8 +356,8 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   font-size:12px;font-weight:700;color:#fff;
   padding:6px 12px;border-top:2px solid #a0b4e0;letter-spacing:.3px;}
 /* online/source columns */
-.dsc-table th.online-hdr{background:#b03680;white-space:normal;word-break:keep-all;line-height:1.3;padding:5px 6px;width:80px;}
-.dsc-table td.online-col{width:80px;}
+.dsc-table th.online-hdr{background:#b03680;white-space:nowrap;line-height:1.3;padding:7px 6px;min-width:68px;}
+.dsc-table td.online-col{min-width:68px;}
 /* header สีต่าง ๆ — โทนอ่อนตัวอักษรชัด */
 .dsc-table th.carry  {background:#7b5ea7;}
 .dsc-table th.ebk-hdr{background:#d06818;}
@@ -700,10 +700,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         <h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2>
         <p id="r3SubSmall" style="display:none;"></p>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-        <span id="r3TargetSmall" style="display:none;"><span id="r3TargetVal"></span></span>
-        <div id="r3DateBadgeSmall"></div>
-      </div>
+      <div id="r3DateBadgeSmall" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" id="r3BodySmall">
       <div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>
@@ -717,7 +714,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
         <h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2>
         <p id="r3SubBig" style="display:none;"></p>
       </div>
-      <div id="r3DateBadgeBig" style="flex-shrink:0;"></div>
+      <div id="r3DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" id="r3BodyBig">
       <div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div>
@@ -819,11 +816,11 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถเล็ก -->
   <div class="card" id="sumCardSmall">
-    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);">
+    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
-        <h2 id="sumTitleSmall">รายงานยอดจองและยอดปล่อยรถ — ฝ่ายขายรถเล็ก</h2>
-        <p id="sumDateSmall" style="color:rgba(245,200,66,0.9);font-size:11px;"></p>
+        <h2 id="sumTitleSmall">รายงานสรุปยอดจองและยอดปล่อยรถ — ฝ่ายขายรถเล็ก</h2>
       </div>
+      <div id="sumDateSmall" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" style="overflow-x:hidden;">
       <div id="sumBodySmall"><div class="loader"><div class="loader-spin"></div><br>กดแท็บเพื่อโหลด</div></div>
@@ -832,11 +829,11 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
 
   <!-- รถใหญ่ -->
   <div class="card" id="sumCardBig">
-    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);">
+    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
       <div>
-        <h2 id="sumTitleBig">รายงานยอดจองและยอดปล่อยรถ — ฝ่ายขายรถใหญ่</h2>
-        <p id="sumDateBig" style="color:rgba(245,200,66,0.9);font-size:11px;"></p>
+        <h2 id="sumTitleBig">รายงานสรุปยอดจองและยอดปล่อยรถ — ฝ่ายขายรถใหญ่</h2>
       </div>
+      <div id="sumDateBig" style="flex-shrink:0;margin-top:2px;"></div>
     </div>
     <div class="tbl-wrap" style="overflow-x:hidden;">
       <div id="sumBodyBig"><div class="loader"><div class="loader-spin"></div><br>กดแท็บเพื่อโหลด</div></div>
@@ -3029,7 +3026,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
   const titleDate3  = thDateFull(reportDate3);
   const titleMonth3 = thMonthYear(curYM);
 
-  titleEl.innerHTML = `รายงานยอดจองสะสมและยอดปล่อยรถ ประจำเดือน ${titleMonth3} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
+  titleEl.innerHTML = `รายงานสรุปยอดจองและยอดปล่อยรถ ประจำเดือน ${titleMonth3} &nbsp;<span style="font-size:13px;font-weight:700;color:#2a5cb8;">📊 ${deptName}</span>`;
   if(subEl) subEl.style.display = 'none';
   if(tgtEl) tgtEl.style.display = 'none';
   const badgeEl3 = document.getElementById('r3DateBadge' + suffix);
@@ -3536,10 +3533,11 @@ function dateMatchMonth(dateStr, ym) {
 function parseThDate(s) {
   if (!s) return 0;
   const str = String(s).trim();
-  // dd/MM/yyyy หรือ d/M/yyyy
+  // dd/MM/yyyy หรือ d/M/yyyy (รองรับทั้ง ค.ศ. และ พ.ศ.)
   const slashParts = str.split('/');
   if (slashParts.length >= 3) {
-    const y = slashParts[2].substring(0,4);
+    let y = parseInt(slashParts[2].substring(0,4));
+    if (y > 2400) y -= 543; // แปลง พ.ศ. → ค.ศ.
     const m = slashParts[1].padStart(2,'0');
     const d = slashParts[0].padStart(2,'0');
     return new Date(`${y}-${m}-${d}T00:00:00`).getTime() || 0;
@@ -3548,7 +3546,7 @@ function parseThDate(s) {
   if (str.includes('-') && str.length >= 8 && str.indexOf('-') === 4) {
     return new Date(str).getTime() || 0;
   }
-  // "Mon Mar 02 2026 00:00:00 GMT+0700" หรือ Date string ทั่วไป
+  // "Fri May 07 2026 00:00:00 GMT+0700" หรือ Date string ทั่วไป (ปีเป็น ค.ศ. เสมอ)
   const t = new Date(str).getTime();
   return isNaN(t) ? 0 : t;
 }
@@ -4246,8 +4244,8 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   const dateEl   = document.getElementById('sumDate' + suffix);
   const deptName = type === 'small' ? 'ฝ่ายขายรถเล็ก' : 'ฝ่ายขายรถใหญ่';
 
-  titleEl.textContent = `รายงานยอดจองและยอดปล่อยรถ ประจำเดือน ${monthLabel}  —  ${deptName}`;
-  dateEl.textContent  = `ณ วันที่ ${today}`;
+  titleEl.textContent = `รายงานสรุปยอดจองและยอดปล่อยรถ ประจำเดือน ${monthLabel}  —  ${deptName}`;
+  dateEl.innerHTML = `<span class="date-badge-r3"><span class="lbl">ณ วันที่</span><span class="val">${today}</span></span>`;
 
   if (!scList.length) { bodyEl.innerHTML = '<div class="empty">ไม่มี SC ในฝ่ายนี้</div>'; return; }
 
