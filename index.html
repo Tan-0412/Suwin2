@@ -4262,11 +4262,10 @@ function getFinanceValue() {
 // ════════════════════════════════════════
 let _sumTipEl = null;
 
-function showSumTip(e, labelEnc, rowsEnc) {
+function showSumTip(e, labelEnc, dataKey) {
   hideSumTip();
   const label = decodeURIComponent(labelEnc);
-  let rows = [];
-  try { rows = JSON.parse(decodeURIComponent(rowsEnc)); } catch(_) {}
+  const rows  = window[dataKey] || [];
 
   const isCL    = label.startsWith('ถอนจอง');
   const isRS    = label.startsWith('ยอดปล่อย') || label.startsWith('ปล่อยเดือนนี้');
@@ -4475,9 +4474,12 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     });
     const rsTotal = rsThisRows.length;
 
-    // ถอนจอง
+    // ── ถอนจอง: กรองเฉพาะรายการที่วันที่ยกเลิกจองอยู่ในเดือนปัจจุบัน ──
     const clRows = allRows.filter(r =>
-      r['ที่ปรึกษาการขาย'] === name && isCL(r['สถานะ'])
+      r['ที่ปรึกษาการขาย'] === name &&
+      isCL(r['สถานะ']) &&
+      r['วันที่ยกเลิกจอง'] &&
+      dateMatchMonth(r['วันที่ยกเลิกจอง'], curYM)
     );
     const cl = clRows.length;
 
@@ -4535,7 +4537,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
         <th colspan="${sLen}" class="th-src">แหล่งที่มา (จองเดือนนี้)</th>
         <th rowspan="2" class="th-total">รวมจอง<br>ปัจจุบัน</th>
         <th colspan="${mLen + 1}" class="th-rs">ปล่อยเดือนนี้</th>
-        <th rowspan="2" class="th-cl">ถอน</th>
+        <th rowspan="2" class="th-cl">ถอนจอง</th>
       </tr>
       <tr>
         ${modelBkHdr}<th class="th-bk bk-total-col" style="color:#7a4000;font-weight:800;">รวมจอง</th>
@@ -4566,14 +4568,13 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
       const key = type + '_' + d.name;
       window._sumData[key] = d;
 
-      // helper: สร้าง td คลิกได้ถ้ามีค่า > 0
+      // helper: สร้าง td คลิกได้ถ้ามีค่า > 0 — เก็บ data ไว้ใน _sumRows แทนการ encode ใน HTML
       const clickTd = (val, rows, label, cssClass, extraStyle='') => {
         if (!val) return `<td class="${cssClass} td-num td-zero" style="${extraStyle}">0</td>`;
-        const rowsJson = encodeURIComponent(JSON.stringify(
-          rows.map(r => ({ n: r['ชื่อลูกค้า']||'', m: r['รุ่นรถ']||'', d: r['วันที่จอง']||r['วันที่ปล่อย']||'' }))
-        ));
+        const dataKey = '_sr_' + (Math.random().toString(36).slice(2));
+        window[dataKey] = rows.map(r => ({ n: r['ชื่อลูกค้า']||'', m: r['รุ่นรถ']||'', d: r['วันที่จอง']||r['วันที่ยกเลิกจอง']||r['วันที่ปล่อย']||'' }));
         return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}"
-          onclick="showSumTip(event,'${encodeURIComponent(label)}',${JSON.stringify(rowsJson)})"
+          onclick="showSumTip(event,'${encodeURIComponent(label)}','${dataKey}')"
           title="คลิกดูรายละเอียด">${val}</td>`;
       };
 
