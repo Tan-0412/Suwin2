@@ -4870,6 +4870,10 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
     modelCols.forEach(m => { counts[m] = 0; });
     const norm = s => (s||'').trim().replace(/\s+/g,' ');
     modelCols.forEach(m => { counts[norm(m)] = 0; });
+    // DEBUG
+    console.log('modelCols (norm):', modelCols.map(norm));
+    const sample = rows.slice(0,3).map(r => ({ รุ่นรถ: r['รุ่นรถ'], รุ่นรถ1: r['รุ่นรถ1'] }));
+    console.log('sample rows รุ่นรถ/รุ่นรถ1:', sample);
     rows.forEach(r => {
       const m1Direct = norm(r['รุ่นรถ1']);
       if (m1Direct && counts[m1Direct] !== undefined) {
