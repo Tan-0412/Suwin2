@@ -1456,6 +1456,34 @@ function testUpdate() {
   </div>
 </div>
 
+<!-- ════ MODAL: วันที่ปล่อยรถ ════ -->
+<div class="modal-overlay" id="releaseDateModal">
+  <div class="modal-box" style="width:min(96vw,420px);">
+    <div class="modal-hdr" style="background:linear-gradient(135deg,var(--green),var(--green2));">
+      <h3>🚗 บันทึกวันที่ปล่อยรถ</h3>
+      <button class="modal-close" onclick="closeReleaseDateModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:24px 20px;">
+      <div style="background:#f0fff4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:20px;flex-shrink:0;">🚗</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#14532d;margin-bottom:3px;">ยืนยันการปล่อยรถ</div>
+          <div style="font-size:12px;color:#166534;line-height:1.6;">สถานะจะเปลี่ยนเป็น <strong>ปล่อย</strong> กรุณาระบุวันที่ปล่อยรถด้วย</div>
+        </div>
+      </div>
+      <div class="frow">
+        <label>วันที่ปล่อยรถ *</label>
+        <input type="date" id="releaseDateInput" style="font-size:15px;font-weight:600;border-color:#86efac;">
+      </div>
+      <div id="releaseDateError" style="display:none;margin-top:8px;font-size:12px;color:var(--red);font-weight:600;">⚠️ กรุณาระบุวันที่ปล่อยรถ</div>
+    </div>
+    <div class="modal-footer" style="border-top:1px solid #dcfce7;">
+      <button class="btn btn-outline" onclick="closeReleaseDateModal()">↩️ คืนสถานะจอง</button>
+      <button class="btn btn-green" onclick="confirmReleaseDate()">🚗 ยืนยันปล่อยรถ</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ MODAL: วันที่ยกเลิกจอง ════ -->
 <div class="modal-overlay" id="cancelDateModal">
   <div class="modal-box" style="width:min(96vw,420px);">
@@ -2501,7 +2529,46 @@ async function saveBooking() {
     return;
   }
 
-  await _doSaveBooking('');
+  // ── ดักกรณีเปลี่ยนสถานะเป็น ปล่อย (RS) โดยไม่ได้กรอกวันที่ปล่อย ──
+  const isReleaseStatus = (status === 'RS' || status === 'ปล่อย');
+  const wasRelease      = (_prevStatusBeforeEdit === 'RS' || _prevStatusBeforeEdit === 'ปล่อย');
+  const hasRelDate      = document.getElementById('mRelDate').value.trim() !== '';
+  if (isReleaseStatus && !wasRelease && !hasRelDate && editingRow) {
+    openReleaseDateModal();
+    return;
+  }
+
+  await _doSaveBooking('', '');
+}
+
+// ── modal วันที่ปล่อยรถ ──
+function openReleaseDateModal() {
+  document.getElementById('releaseDateInput').value = formatDateInput(new Date());
+  document.getElementById('releaseDateError').style.display = 'none';
+  document.getElementById('releaseDateModal').classList.add('open');
+}
+
+function closeReleaseDateModal() {
+  document.getElementById('releaseDateModal').classList.remove('open');
+  // คืนสถานะกลับเป็นค่าเดิมใน modal
+  const statusSel = document.getElementById('mStatus');
+  if (statusSel) {
+    const opt = [...statusSel.options].find(o => o.value === _prevStatusBeforeEdit);
+    statusSel.value = opt ? _prevStatusBeforeEdit : (statusSel.options[0]?.value || '');
+  }
+}
+
+async function confirmReleaseDate() {
+  const releaseDate = document.getElementById('releaseDateInput').value;
+  if (!releaseDate) {
+    document.getElementById('releaseDateError').style.display = 'block';
+    return;
+  }
+  document.getElementById('releaseDateError').style.display = 'none';
+  document.getElementById('releaseDateModal').classList.remove('open');
+  // เซ็ตวันที่ปล่อยใน modal ด้วย (เพื่อให้ _doSaveBooking ส่งค่าถูกต้อง)
+  document.getElementById('mRelDate').value = releaseDate;
+  await _doSaveBooking('', '');
 }
 
 // ── modal วันที่ยกเลิกจอง ──
@@ -2529,10 +2596,10 @@ async function confirmCancelDate() {
   }
   document.getElementById('cancelDateError').style.display = 'none';
   document.getElementById('cancelDateModal').classList.remove('open');
-  await _doSaveBooking(formatThDate(cancelDate));
+  await _doSaveBooking(formatThDate(cancelDate), '');
 }
 
-async function _doSaveBooking(cancelDateThai) {
+async function _doSaveBooking(cancelDateThai, relDateOverride) {
   const date      = document.getElementById('mDate').value;
   const name      = document.getElementById('mName').value.trim();
   const sc        = document.getElementById('mSC').value;
@@ -2546,6 +2613,10 @@ async function _doSaveBooking(cancelDateThai) {
   const statusFound = (meta.status || []).find(s => s['STATUS'] === status);
   const statusThai  = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
 
+  const relDateVal = relDateOverride !== ''
+    ? relDateOverride
+    : formatThDate(document.getElementById('mRelDate').value);
+
   const params = {
     'วันที่จอง':         formatThDate(date),
     'ชื่อลูกค้า':        name,
@@ -2555,7 +2626,7 @@ async function _doSaveBooking(cancelDateThai) {
     'รายละเอียดรถ':      document.getElementById('mDetail').value.trim(),
     'รุ่นรถ':            document.getElementById('mModel').value.trim(),
     'สถานะ':             statusThai,
-    'วันที่ปล่อย':       formatThDate(document.getElementById('mRelDate').value),
+    'วันที่ปล่อย':       relDateVal,
     'ที่ปรึกษาการขาย':   sc,
     'ที่มาลูกค้า':       document.getElementById('mSource').value,
     'ไฟแนนซ์':           document.getElementById('mFinance').value,
