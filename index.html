@@ -274,6 +274,18 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   body { background:#fff !important; }
 }
 
+/* ── SUMMARY TOOLTIP ── */
+.sum-clickable:hover { filter: brightness(0.88); transition: filter .15s; }
+#sumTip {
+  position: fixed; z-index: 9999;
+  background: var(--primary); color: #fff;
+  border-radius: 14px; padding: 14px 16px;
+  font-size: 12px; font-family: 'Sarabun', sans-serif;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  max-width: 300px; min-width: 200px; line-height: 1.65;
+  pointer-events: none;
+}
+
 /* ── SUMMARY REPORT TABLE ── */
 .sum-table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
 .sum-table th, .sum-table td {
@@ -1465,7 +1477,7 @@ function testUpdate() {
     </div>
     <div class="modal-footer" style="border-top:1px solid #fde8e8;">
       <button class="btn btn-outline" onclick="closeCancelDateModal()">↩️ คืนสถานะจอง</button>
-      <button class="btn btn-red" onclick="confirmCancelDate()" id="cancelDateConfirmBtn">❌ ยืนยันยกเลิกจอง</button>
+      <button class="btn btn-red" onclick="confirmCancelDate()">❌ ยืนยันยกเลิกจอง</button>
     </div>
   </div>
 </div>
@@ -2366,6 +2378,8 @@ function openAddModal() {
   document.getElementById('bookingModal').classList.add('open');
   _prevStatusBeforeEdit = '';
 }
+
+function openEditModal(i) {
   const r = filteredBookings[i];
   if (!r) { toast('ไม่พบข้อมูลแถวนี้', 'err'); return; }
   editingRow = r._row || null;
@@ -2408,10 +2422,11 @@ function openAddModal() {
   setSelectValue('mSource', r['ที่มาลูกค้า'] || '');
 
   document.getElementById('bookingModal').classList.add('open');
-
-  // จำสถานะเดิมไว้ เพื่อตรวจว่าเปลี่ยนเป็นยกเลิกจองหรือไม่
+  // จำสถานะเดิมก่อนแก้ไข เพื่อตรวจว่าเปลี่ยนเป็นยกเลิกจองหรือไม่
   _prevStatusBeforeEdit = statusVal;
 }
+
+// ตั้งค่า select — ถ้าไม่พบ option จะ fallback เป็นค่าว่าง
 function setSelectValue(id, val) {
   const sel = document.getElementById(id);
   if (!sel) return;
@@ -2447,7 +2462,7 @@ function onRelDateChange() {
   }
 }
 
-// สถานะเดิมก่อนเปิด modal (ใช้ตรวจว่าเปลี่ยนจาก จอง → ยกเลิกจองไหม)
+// ── สถานะเดิมก่อนเปิด modal ──
 let _prevStatusBeforeEdit = '';
 
 async function saveBooking() {
@@ -2463,10 +2478,9 @@ async function saveBooking() {
   }
 
   // ── ดักกรณีเปลี่ยนสถานะเป็น ยกเลิกจอง (CL) ──
-  const isCancelStatus = status === 'CL' || status === 'ยกเลิกจอง';
-  const wasCancel = _prevStatusBeforeEdit === 'CL' || _prevStatusBeforeEdit === 'ยกเลิกจอง';
+  const isCancelStatus = (status === 'CL' || status === 'ยกเลิกจอง');
+  const wasCancel      = (_prevStatusBeforeEdit === 'CL' || _prevStatusBeforeEdit === 'ยกเลิกจอง');
   if (isCancelStatus && !wasCancel && editingRow) {
-    // เปิด modal ถามวันที่ยกเลิกจองก่อน
     openCancelDateModal();
     return;
   }
@@ -2476,7 +2490,6 @@ async function saveBooking() {
 
 // ── modal วันที่ยกเลิกจอง ──
 function openCancelDateModal() {
-  // เซ็ตวันที่เริ่มต้นเป็นวันนี้
   document.getElementById('cancelDateInput').value = formatDateInput(new Date());
   document.getElementById('cancelDateError').style.display = 'none';
   document.getElementById('cancelDateModal').classList.add('open');
@@ -2484,10 +2497,9 @@ function openCancelDateModal() {
 
 function closeCancelDateModal() {
   document.getElementById('cancelDateModal').classList.remove('open');
-  // คืนสถานะกลับเป็น จอง (BK) ใน modal เดิม
+  // คืนสถานะกลับเป็นค่าเดิมใน modal
   const statusSel = document.getElementById('mStatus');
   if (statusSel) {
-    // หา option ที่ตรงกับ _prevStatusBeforeEdit
     const opt = [...statusSel.options].find(o => o.value === _prevStatusBeforeEdit);
     statusSel.value = opt ? _prevStatusBeforeEdit : (statusSel.options[0]?.value || '');
   }
@@ -2501,8 +2513,6 @@ async function confirmCancelDate() {
   }
   document.getElementById('cancelDateError').style.display = 'none';
   document.getElementById('cancelDateModal').classList.remove('open');
-
-  // บันทึกพร้อมวันที่ยกเลิกจอง
   await _doSaveBooking(formatThDate(cancelDate));
 }
 
@@ -2517,24 +2527,23 @@ async function _doSaveBooking(cancelDateThai) {
   const saveBtn = document.querySelector('#bookingModal .modal-footer .btn-primary');
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
 
-  // แปลง STATUS code → ภาษาไทย
   const statusFound = (meta.status || []).find(s => s['STATUS'] === status);
-  const statusThai = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
+  const statusThai  = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
 
   const params = {
-    'วันที่จอง':          formatThDate(date),
-    'ชื่อลูกค้า':         name,
-    'เบอร์':              document.getElementById('mPhone').value.trim(),
-    'รหัสรุ่นรถ':         modelCode,
-    'ชื่อรุ่นรถ':         document.getElementById('mModelName').value.trim(),
-    'รายละเอียดรถ':       document.getElementById('mDetail').value.trim(),
-    'รุ่นรถ':             document.getElementById('mModel').value.trim(),
-    'สถานะ':              statusThai,
-    'วันที่ปล่อย':        formatThDate(document.getElementById('mRelDate').value),
-    'ที่ปรึกษาการขาย':    sc,
-    'ที่มาลูกค้า':        document.getElementById('mSource').value,
-    'ไฟแนนซ์':            document.getElementById('mFinance').value,
-    'วันที่ยกเลิกจอง':    cancelDateThai,
+    'วันที่จอง':         formatThDate(date),
+    'ชื่อลูกค้า':        name,
+    'เบอร์':             document.getElementById('mPhone').value.trim(),
+    'รหัสรุ่นรถ':        modelCode,
+    'ชื่อรุ่นรถ':        document.getElementById('mModelName').value.trim(),
+    'รายละเอียดรถ':      document.getElementById('mDetail').value.trim(),
+    'รุ่นรถ':            document.getElementById('mModel').value.trim(),
+    'สถานะ':             statusThai,
+    'วันที่ปล่อย':       formatThDate(document.getElementById('mRelDate').value),
+    'ที่ปรึกษาการขาย':   sc,
+    'ที่มาลูกค้า':       document.getElementById('mSource').value,
+    'ไฟแนนซ์':           document.getElementById('mFinance').value,
+    'วันที่ยกเลิกจอง':   cancelDateThai,
   };
 
   try {
@@ -4248,6 +4257,82 @@ function getFinanceValue() {
   return sel.value;
 }
 
+// ════════════════════════════════════════
+//  SUMMARY TOOLTIP
+// ════════════════════════════════════════
+let _sumTipEl = null;
+
+function showSumTip(e, labelEnc, rowsEnc) {
+  hideSumTip();
+  const label = decodeURIComponent(labelEnc);
+  let rows = [];
+  try { rows = JSON.parse(decodeURIComponent(rowsEnc)); } catch(_) {}
+
+  const isCL    = label.startsWith('ถอนจอง');
+  const isRS    = label.startsWith('ยอดปล่อย') || label.startsWith('ปล่อยเดือนนี้');
+  const isCarry = label.startsWith('จองยกมา');
+  const isTotal = label.startsWith('รวมจองปัจจุบัน');
+  const color   = isCL ? '#e74c3c' : isRS ? '#27ae60' : isCarry ? '#7b5ea7' : isTotal ? '#2471a0' : '#e8a020';
+  const icon    = isCL ? '❌' : isRS ? '🚗' : isCarry ? '📋' : isTotal ? '📊' : '🧡';
+
+  const tip = document.createElement('div');
+  tip.id = 'sumTip';
+
+  const parts = label.split(' · ');
+  const labelMain = parts[0];
+  const subLabel  = parts.slice(1).join(' · ');
+
+  let html = `<div style="font-weight:700;font-size:13px;color:${color};margin-bottom:8px;
+    border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:7px;display:flex;align-items:center;gap:6px;">
+    <span>${icon}</span>
+    <div>
+      <div>${labelMain}</div>
+      ${subLabel ? `<div style="font-size:10px;color:rgba(255,255,255,0.6);font-weight:500;">${subLabel}</div>` : ''}
+    </div>
+  </div>`;
+
+  if (!rows.length) {
+    html += `<div style="color:rgba(255,255,255,0.45);font-size:12px;">ไม่มีรายการ</div>`;
+  } else {
+    rows.forEach(r => {
+      html += `<div style="display:flex;align-items:baseline;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <span style="font-size:10px;color:rgba(255,255,255,0.45);white-space:nowrap;flex-shrink:0;">${r.d||'—'}</span>
+        <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.n||'—'}</span>
+        <span style="font-size:11px;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:8px;flex-shrink:0;color:#f5c842;">${r.m||'—'}</span>
+      </div>`;
+    });
+    html += `<div style="margin-top:8px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.12);
+      font-size:10px;color:rgba(245,200,66,0.7);text-align:right;">${rows.length} รายการ</div>`;
+  }
+
+  tip.innerHTML = html;
+  document.body.appendChild(tip);
+  _sumTipEl = tip;
+  _posSumTip(e);
+}
+
+function _posSumTip(e) {
+  if (!_sumTipEl) return;
+  const margin = 14;
+  const tw = _sumTipEl.offsetWidth || 240;
+  const th = _sumTipEl.offsetHeight || 120;
+  let x = e.clientX + margin;
+  let y = e.clientY + margin;
+  if (x + tw > window.innerWidth  - margin) x = e.clientX - tw - margin;
+  if (y + th > window.innerHeight - margin) y = e.clientY - th - margin;
+  _sumTipEl.style.left = x + 'px';
+  _sumTipEl.style.top  = y + 'px';
+}
+
+function hideSumTip() {
+  if (_sumTipEl) { _sumTipEl.remove(); _sumTipEl = null; }
+}
+
+document.addEventListener('click', e => {
+  if (_sumTipEl && !e.target.classList.contains('sum-clickable')) hideSumTip();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideSumTip(); });
+
 init();
 
 // ── PWA Service Worker ──
@@ -4397,7 +4482,13 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     const cl = clRows.length;
 
     return { name, carry, bkByModel, bkTotal, srcCount, totalCurrent, rsByModel, rsTotal, cl,
-      ทีม: sc['ทีม']||'' };
+      ทีม: sc['ทีม']||'',
+      _carryRows: carryRows,
+      _bkThisRows: bkThisRows,
+      _rsThisRows: rsThisRows,
+      _clRows: clRows,
+      _totalRows: [...carryRows.filter(r=>!r['วันที่ปล่อย']), ...bkThisRows.filter(r=>!r['วันที่ปล่อย'])],
+    };
   };
 
   // จัดกลุ่มตามทีม
@@ -4459,6 +4550,8 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   modelCols.forEach(m => { gBkMdl[m]=0; gRsMdl[m]=0; });
   srcCols.forEach(s => gSrc[s]=0);
 
+  if (!window._sumData) window._sumData = {};
+
   let rowIdx = 0;
 
   Object.entries(teams).forEach(([team, members]) => {
@@ -4470,20 +4563,38 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
 
     members.forEach((d, idx) => {
       const rowCls = idx % 2 === 0 ? 'row-odd' : 'row-even';
+      const key = type + '_' + d.name;
+      window._sumData[key] = d;
+
+      // helper: สร้าง td คลิกได้ถ้ามีค่า > 0
+      const clickTd = (val, rows, label, cssClass, extraStyle='') => {
+        if (!val) return `<td class="${cssClass} td-num td-zero" style="${extraStyle}">0</td>`;
+        const rowsJson = encodeURIComponent(JSON.stringify(
+          rows.map(r => ({ n: r['ชื่อลูกค้า']||'', m: r['รุ่นรถ']||'', d: r['วันที่จอง']||r['วันที่ปล่อย']||'' }))
+        ));
+        return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}"
+          onclick="showSumTip(event,'${encodeURIComponent(label)}',${JSON.stringify(rowsJson)})"
+          title="คลิกดูรายละเอียด">${val}</td>`;
+      };
 
       const bkMdlCells = modelCols.map(m => {
-        const v = d.bkByModel[m]||0; tBkMdl[m]+=v; gBkMdl[m]+=v;
-        return `<td class="td-num ${v?'':'td-zero'}">${v||0}</td>`;
+        const rows = (d._bkThisRows||[]).filter(r => (r['รุ่นรถ']||'').trim() === m.trim());
+        const v = rows.length; tBkMdl[m]+=v; gBkMdl[m]+=v;
+        return clickTd(v, rows, `จองเดือนนี้ · ${m} · ${d.name}`, 'td-bk');
       }).join('');
 
       const srcCells = srcCols.map(s => {
-        const v = d.srcCount[s]||0; tSrc[s]+=v; gSrc[s]+=v;
-        return `<td class="td-num ${v?'':'td-zero'}">${v||0}</td>`;
+        const rows = s === 'อื่นๆ'
+          ? (d._bkThisRows||[]).filter(r => !fixedSrc.includes(r['ที่มาลูกค้า']) && r['ที่มาลูกค้า'])
+          : (d._bkThisRows||[]).filter(r => r['ที่มาลูกค้า'] === s);
+        const v = rows.length; tSrc[s]+=v; gSrc[s]+=v;
+        return clickTd(v, rows, `แหล่งที่มา · ${s} · ${d.name}`, 'td-src');
       }).join('');
 
       const rsMdlCells = modelCols.map(m => {
-        const v = d.rsByModel[m]||0; tRsMdl[m]+=v; gRsMdl[m]+=v;
-        return `<td class="td-num ${v?'':'td-zero'}">${v||0}</td>`;
+        const rows = (d._rsThisRows||[]).filter(r => (r['รุ่นรถ']||'').trim() === m.trim());
+        const v = rows.length; tRsMdl[m]+=v; gRsMdl[m]+=v;
+        return clickTd(v, rows, `ปล่อยเดือนนี้ · ${m} · ${d.name}`, 'td-rs');
       }).join('');
 
       tCarry+=d.carry; tBkT+=d.bkTotal; tTotal+=d.totalCurrent;
@@ -4491,14 +4602,14 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
 
       html += `<tr class="${rowCls}">
         <td class="name-cell">${d.name}</td>
-        <td class="td-carry td-num">${d.carry||0}</td>
+        ${clickTd(d.carry,        d._carryRows||[],   `จองยกมา · ${d.name}`,          'td-carry')}
         ${bkMdlCells}
-        <td class="bk-total-col td-num">${d.bkTotal||0}</td>
+        ${clickTd(d.bkTotal,      d._bkThisRows||[],  `รวมจองเดือนนี้ · ${d.name}`,   'bk-total-col')}
         ${srcCells}
-        <td class="td-total td-num">${d.totalCurrent||0}</td>
+        ${clickTd(d.totalCurrent, d._totalRows||[],   `รวมจองปัจจุบัน · ${d.name}`,   'td-total')}
         ${rsMdlCells}
-        <td class="rs-total-col td-num">${d.rsTotal||0}</td>
-        <td class="td-num">${d.cl||0}</td>
+        ${clickTd(d.rsTotal,      d._rsThisRows||[],  `ยอดปล่อย · ${d.name}`,         'rs-total-col')}
+        ${clickTd(d.cl,           d._clRows||[],      `ถอนจอง · ${d.name}`,            'td-cl')}
       </tr>`;
       rowIdx++;
     });
