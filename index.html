@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+.<!DOCTYPE html>
 <html lang="th">
 <head>
 <meta charset="UTF-8">
@@ -4864,14 +4864,20 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
 
   // helper: สร้าง chip row HTML
   const makeChipRow = (rows, isRS) => {
-    // นับตาม รุ่นรถ1
+    // นับตาม รุ่นรถ1 — ใช้ r['รุ่นรถ1'] โดยตรง (เหมือน Summary Report)
+    // fallback: ถ้าไม่มี รุ่นรถ1 ให้ lookup จาก meta.model
     const counts = {};
     modelCols.forEach(m => { counts[m] = 0; });
     rows.forEach(r => {
-      // หา รุ่นรถ1 จาก รุ่นรถ ของ record นี้
-      const found = (meta.model||[]).find(m => (m['รุ่นรถ']||'').trim() === (r['รุ่นรถ']||'').trim());
-      const m1 = found ? (found['รุ่นรถ1']||'').trim() : '';
-      if (m1 && counts[m1] !== undefined) counts[m1]++;
+      const m1Direct = (r['รุ่นรถ1']||'').trim();
+      if (m1Direct && counts[m1Direct] !== undefined) {
+        counts[m1Direct]++;
+      } else {
+        // fallback: หา รุ่นรถ1 จาก meta.model โดย match รุ่นรถ
+        const found = (meta.model||[]).find(m => (m['รุ่นรถ']||'').trim() === (r['รุ่นรถ']||'').trim());
+        const m1 = found ? (found['รุ่นรถ1']||'').trim() : '';
+        if (m1 && counts[m1] !== undefined) counts[m1]++;
+      }
     });
     const total = rows.length;
     if (!total) return `<div class="cl-chip-row"><span style="font-size:9px;color:${isRS?'#0a5c2a':'#7d4e00'};opacity:0.5;">ไม่มีรายการ</span></div>`;
