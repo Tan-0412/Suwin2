@@ -238,15 +238,17 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   font-size:11px; font-weight:700; text-align:center;
   line-height:1.4; white-space:normal; word-break:keep-all;
 }
-/* ความกว้างคอลัม — SC กว้างพอ, ชื่อลูกค้าเผื่อไว้มาก, วันที่/รุ่น/FN กะทัดรัด */
-.cl-col-sc    { width:115px; }   /* SC — กว้างพอไม่ตัด */
+/* ความกว้างคอลัม */
+.cl-col-sc    { width:95px;  }   /* SC — ลดลงเพื่อเพิ่มให้ชื่อลูกค้า */
 .cl-col-total { width:46px;  }   /* รวมยอดจอง */
 .cl-col-date  { width:68px;  }   /* วันที่ */
-.cl-col-name  { width:180px; }   /* ชื่อลูกค้า — กว้างขึ้นเป็น 2 เท่า */
-.cl-col-model { width:52px;  }   /* รุ่นรถ */
+.cl-col-name  { width:210px; }   /* ชื่อลูกค้า (รุ่นรถ) — กว้างขึ้น */
+.cl-col-model { width:52px;  }   /* กลุ่มรถ */
 .cl-table td.model-cell { font-size:9px; font-weight:600; color:var(--primary2); }
 .cl-col-fn    { width:44px;  }   /* F/N */
 .cl-col-rs    { width:40px;  }   /* ยอดปล่อย */
+/* ชื่อรุ่นรถในวงเล็บ */
+.cl-model-sub { font-size:9px; color:#5a7a9a; font-weight:400; margin-left:3px; }
 /* หัวคอลัม — โทนอ่อน ตัวอักษรเข้ม ชัดเจน */
 .cl-th-sc     { background:#aed6f1; color:#1a3a6b; }
 .cl-th-total  { background:#a9cce3; color:#1a3a6b; }
@@ -573,7 +575,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
           <th>วันที่จอง</th>
           <th>ชื่อลูกค้า</th>
           <th>เบอร์</th>
-          <th>รายละเอียดรถ</th>
+          <th>ชื่อรุ่นรถ</th>
           <th>รุ่น</th>
           <th>สถานะ</th>
           <th>วันที่ปล่อย</th>
@@ -1852,7 +1854,7 @@ function renderBookings() {
       <td class="mono" style="font-size:11px;">${fmtDate(r['วันที่จอง'])}</td>
       <td style="font-weight:600;">${r['ชื่อลูกค้า']||'—'}</td>
       <td class="mono" style="font-size:11px;">${r['เบอร์']||'—'}</td>
-      <td style="font-size:11px;max-width:160px;">${r['รายละเอียดรถ']||'—'}</td>
+      <td style="font-size:11px;max-width:160px;">${r['ชื่อรุ่นรถ']||r['รายละเอียดรถ']||'—'}</td>
       <td><span style="font-weight:700;color:var(--primary2);">${r['รุ่นรถ']||'—'}</span></td>
       <td>${statusBadge}</td>
       <td class="mono" style="font-size:11px;">${r['วันที่ปล่อย']||'—'}</td>
@@ -4311,9 +4313,9 @@ function showSumTip(e, labelEnc, dataKey) {
   } else {
     rows.forEach(r => {
       html += `<div style="display:flex;align-items:baseline;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
-        <span style="font-size:10px;color:rgba(255,255,255,0.45);white-space:nowrap;flex-shrink:0;">${r.d||'—'}</span>
-        <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.n||'—'}</span>
-        <span style="font-size:11px;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:8px;flex-shrink:0;color:#f5c842;">${r.m||'—'}</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.45);white-space:nowrap;flex-shrink:0;">${r.date||'—'}</span>
+        <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name||'—'}</span>
+        <span style="font-size:11px;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:8px;flex-shrink:0;color:#f5c842;">${r.model||'—'}</span>
       </div>`;
     });
     html += `<div style="margin-top:8px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.12);
@@ -4786,12 +4788,12 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
           </tr>
           <tr>
             <th class="cl-th-bk">วันที่จอง</th>
-            <th class="cl-th-bk">ชื่อลูกค้า</th>
-            <th class="cl-th-bk">รุ่นรถ</th>
+            <th class="cl-th-bk">ชื่อลูกค้า (รุ่นรถ)</th>
+            <th class="cl-th-bk">กลุ่มรถ</th>
             <th class="cl-th-bk">F/N</th>
             <th class="cl-th-rsdet">วันที่ปล่อย</th>
-            <th class="cl-th-rsdet">ชื่อลูกค้า</th>
-            <th class="cl-th-rsdet">รุ่นรถ</th>
+            <th class="cl-th-rsdet">ชื่อลูกค้า (รุ่นรถ)</th>
+            <th class="cl-th-rsdet">กลุ่มรถ</th>
             <th class="cl-th-rsdet">F/N</th>
           </tr>
         </thead>
@@ -4830,38 +4832,48 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
         const isEven = i % 2 === 1;
         const rowBg = isEven ? 'background:#eeeeee;' : 'background:#ffffff;';
 
-        const bkDate  = bk ? fmtThDate(bk['วันที่จอง']) : '';
-        const bkName  = bk ? (bk['ชื่อลูกค้า']||'') : '';
-        const bkModel = bk ? (bk['รุ่นรถ']||'') : '';
-        const bkFN    = bk ? (bk['ไฟแนนซ์']||'') : '';
+        const bkDate     = bk ? fmtThDate(bk['วันที่จอง']) : '';
+        const bkName     = bk ? (bk['ชื่อลูกค้า']||'') : '';
+        const bkModelSub = bk ? (bk['ชื่อรุ่นรถ']||bk['รายละเอียดรถ']||'') : '';
+        const bkModel    = bk ? (bk['รุ่นรถ']||'') : '';
+        const bkFN       = bk ? (bk['ไฟแนนซ์']||'') : '';
 
-        const rsDate  = rs ? fmtThDate(rs['วันที่ปล่อย']) : '';
-        const rsName  = rs ? (rs['ชื่อลูกค้า']||'') : '';
-        const rsModel = rs ? (rs['รุ่นรถ']||'') : '';
-        const rsFN    = rs ? (rs['ไฟแนนซ์']||'') : '';
+        const rsDate     = rs ? fmtThDate(rs['วันที่ปล่อย']) : '';
+        const rsName     = rs ? (rs['ชื่อลูกค้า']||'') : '';
+        const rsModelSub = rs ? (rs['ชื่อรุ่นรถ']||rs['รายละเอียดรถ']||'') : '';
+        const rsModel    = rs ? (rs['รุ่นรถ']||'') : '';
+        const rsFN       = rs ? (rs['ไฟแนนซ์']||'') : '';
+
+        // ชื่อลูกค้า + ชื่อรุ่นรถในวงเล็บ
+        const bkNameHtml = bkName
+          ? `${bkName}${bkModelSub ? `<span class="cl-model-sub">(${bkModelSub})</span>` : ''}`
+          : '';
+        const rsNameHtml = rsName
+          ? `${rsName}${rsModelSub ? `<span class="cl-model-sub">(${rsModelSub})</span>` : ''}`
+          : '';
 
         if (i === 0) {
           html += `<tr>
             <td class="cl-td-sc" rowspan="${maxRows}">${name}</td>
             <td class="cl-td-total" rowspan="${maxRows}">${bkCount||0}</td>
             <td style="${rowBg}">${bkDate}</td>
-            <td class="cl-td-name" style="${rowBg}">${bkName}</td>
+            <td class="cl-td-name" style="${rowBg}">${bkNameHtml}</td>
             <td class="model-cell" style="${rowBg}">${bkModel}</td>
             <td style="${rowBg}">${bkFN}</td>
             <td class="cl-td-rs" rowspan="${maxRows}">${rsCount||0}</td>
             <td style="${rowBg}">${rsDate}</td>
-            <td class="cl-td-name" style="${rowBg}">${rsName}</td>
+            <td class="cl-td-name" style="${rowBg}">${rsNameHtml}</td>
             <td class="model-cell" style="${rowBg}">${rsModel}</td>
             <td style="${rowBg}">${rsFN}</td>
           </tr>`;
         } else {
           html += `<tr>
             <td style="${rowBg}">${bkDate}</td>
-            <td class="cl-td-name" style="${rowBg}">${bkName}</td>
+            <td class="cl-td-name" style="${rowBg}">${bkNameHtml}</td>
             <td class="model-cell" style="${rowBg}">${bkModel}</td>
             <td style="${rowBg}">${bkFN}</td>
             <td style="${rowBg}">${rsDate}</td>
-            <td class="cl-td-name" style="${rowBg}">${rsName}</td>
+            <td class="cl-td-name" style="${rowBg}">${rsNameHtml}</td>
             <td class="model-cell" style="${rowBg}">${rsModel}</td>
             <td style="${rowBg}">${rsFN}</td>
           </tr>`;
