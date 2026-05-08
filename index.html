@@ -4480,7 +4480,7 @@ async function runSummaryReport() {
 
     // รุ่นรถ1 แยกตามฝ่าย — รถเล็ก vs รถใหญ่
     const smallModels = ['STD','SPC','CAB 4','CAB 4 HR','MU-X'];
-    const bigModels   = ['2T','3T','6W','10W, 12W','T/H'];
+    const bigModels   = ['2T','3T','6W','10W,12W','T/H'];
     // ถ้า Model sheet มีข้อมูล ใช้จาก sheet แยกตาม ฝ่าย; fallback ใช้ค่าข้างบน
     const allModel1 = (meta.model||[]).map(m => ({ m1: (m['รุ่นรถ1']||'').trim(), dept: (m['ฝ่าย']||m['dept']||'').toString() })).filter(x => x.m1);
     const smallModelCols = allModel1.length
@@ -4845,7 +4845,7 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
   // ดึง รุ่นรถ1 ตามฝ่าย จาก meta.model (เหมือน Summary Report)
   const isSmall = deptName.includes('เล็ก');
   const smallModels = ['STD','SPC','CAB 4','CAB 4 HR','MU-X'];
-  const bigModels   = ['2T','3T','6W','10W, 12W','T/H'];
+  const bigModels   = ['2T','3T','6W','10W,12W','T/H'];
   const allModel1 = (meta.model||[]).map(m => ({ m1:(m['รุ่นรถ1']||'').trim(), dept:(m['ฝ่าย']||'').toString() })).filter(x=>x.m1);
   let modelCols;
   if (allModel1.length) {
@@ -4869,20 +4869,17 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
     const counts = {};
     modelCols.forEach(m => { counts[m] = 0; });
     const norm = s => (s||'').trim().replace(/\s+/g,' ');
+
+    const getM1 = (r) => {
+      const rv = norm(r['รุ่นรถ']);
+      const found = (meta.model||[]).find(m => norm(m['รุ่นรถ']) === rv);
+      return found ? norm(found['รุ่นรถ1']) : '';
+    };
+
     modelCols.forEach(m => { counts[norm(m)] = 0; });
-    // DEBUG
-    console.log('modelCols (norm):', modelCols.map(norm));
-    const sample = rows.slice(0,3).map(r => ({ รุ่นรถ: r['รุ่นรถ'], รุ่นรถ1: r['รุ่นรถ1'] }));
-    console.log('sample rows รุ่นรถ/รุ่นรถ1:', sample);
     rows.forEach(r => {
-      const m1Direct = norm(r['รุ่นรถ1']);
-      if (m1Direct && counts[m1Direct] !== undefined) {
-        counts[m1Direct]++;
-      } else {
-        const found = (meta.model||[]).find(m => norm(m['รุ่นรถ']) === norm(r['รุ่นรถ']));
-        const m1 = found ? norm(found['รุ่นรถ1']) : '';
-        if (m1 && counts[m1] !== undefined) counts[m1]++;
-      }
+      const m1 = getM1(r);
+      if (m1 && counts[m1] !== undefined) counts[m1]++;
     });
     const total = rows.length;
     if (!total) return `<div class="cl-chip-row"><span style="font-size:9px;color:${isRS?'#0a5c2a':'#7d4e00'};opacity:0.5;">ไม่มีรายการ</span></div>`;
