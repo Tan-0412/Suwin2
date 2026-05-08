@@ -4868,20 +4868,14 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
   // คำนวณ chip สรุปรายกลุ่ม (ระดับ dept+team รวมกัน)
   const scNames = sorted.map(s => s['ที่ปรึกษาการขาย']);
 
-  // helper: สร้าง chip row HTML
   const makeChipRow = (rows, isRS) => {
-    // นับตาม รุ่นรถ1 — ใช้ r['รุ่นรถ1'] โดยตรง (เหมือน Summary Report)
-    // fallback: ถ้าไม่มี รุ่นรถ1 ให้ lookup จาก meta.model
-    const counts = {};
-    modelCols.forEach(m => { counts[m] = 0; });
-    const norm = s => (s||'').trim().replace(/\s+/g,' ');
-
-    const getM1 = (r) => {
-      const rv = norm(r['รุ่นรถ']);
+    const norm  = s => (s||'').trim().replace(/\s+/g,' ');
+    const getM1 = r => {
+      const rv    = norm(r['รุ่นรถ']);
       const found = (meta.model||[]).find(m => norm(m['รุ่นรถ']) === rv);
       return found ? norm(found['รุ่นรถ1']) : '';
     };
-
+    const counts = {};
     modelCols.forEach(m => { counts[norm(m)] = 0; });
     rows.forEach(r => {
       const m1 = getM1(r);
@@ -4889,16 +4883,15 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
     });
     const total = rows.length;
     if (!total) return `<div class="cl-chip-row"><span style="font-size:9px;color:${isRS?'#0a5c2a':'#7d4e00'};opacity:0.5;">ไม่มีรายการ</span></div>`;
-    const chipClass   = isRS ? 'cl-chip-rs'    : 'cl-chip-bk';
-    const dotClass    = isRS ? 'cl-chip-rs-dot' : 'cl-chip-bk-dot';
-    const badgeClass  = isRS ? 'cl-chip-rs-badge' : 'cl-chip-bk-badge';
-    const totalClass  = isRS ? 'cl-chip-total-rs' : 'cl-chip-total-bk';
+    const chipClass  = isRS ? 'cl-chip-rs'       : 'cl-chip-bk';
+    const dotClass   = isRS ? 'cl-chip-rs-dot'   : 'cl-chip-bk-dot';
+    const badgeClass = isRS ? 'cl-chip-rs-badge'  : 'cl-chip-bk-badge';
+    const totalClass = isRS ? 'cl-chip-total-rs'  : 'cl-chip-total-bk';
     let chips = '';
     modelCols.forEach((m, i) => {
       const key = norm(m);
       if (!counts[key]) return;
-      const color = modelColors[i % modelColors.length];
-      chips += `<div class="${chipClass}"><span class="${dotClass}" style="background:${color};"></span>${m}<span class="${badgeClass}">${counts[key]}</span></div>`;
+      chips += `<div class="${chipClass}"><span class="${dotClass}" style="background:${modelColors[i % modelColors.length]};"></span>${m}<span class="${badgeClass}">${counts[key]}</span></div>`;
     });
     return `<div class="cl-chip-row">${chips}<div class="${totalClass}">รวม ${total}</div></div>`;
   };
