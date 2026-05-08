@@ -4548,9 +4548,15 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     const bkThisRows = curRows.filter(r =>
       r['ที่ปรึกษาการขาย'] === name && isBK(r['สถานะ'])
     );
+    // helper lookup รุ่นรถ1 จาก meta.model
+    const normM = s => (s||'').trim().replace(/\s+/g,' ');
+    const getM1fromRow = r => {
+      const found = (meta.model||[]).find(m => normM(m['รุ่นรถ']) === normM(r['รุ่นรถ']));
+      return found ? normM(found['รุ่นรถ1']) : normM(r['รุ่นรถ']);
+    };
     const bkByModel = {};
     modelCols.forEach(m => {
-      bkByModel[m] = bkThisRows.filter(r => (r['รุ่นรถ']||'').trim() === m.trim()).length;
+      bkByModel[m] = bkThisRows.filter(r => getM1fromRow(r) === normM(m)).length;
     });
     const bkTotal = bkThisRows.length;
 
@@ -4579,7 +4585,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
     );
     const rsByModel = {};
     modelCols.forEach(m => {
-      rsByModel[m] = rsThisRows.filter(r => (r['รุ่นรถ']||'').trim() === m.trim()).length;
+      rsByModel[m] = rsThisRows.filter(r => getM1fromRow(r) === normM(m)).length;
     });
     const rsTotal = rsThisRows.length;
 
