@@ -2178,13 +2178,27 @@ function _showTipRows(e, label, color, rows) {
   const tip = document.createElement('div');
   tip.style.cssText = `position:fixed;z-index:9999;background:var(--primary);color:#fff;
     border-radius:12px;padding:12px 14px;font-size:12px;font-family:'Sarabun',sans-serif;
-    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:320px;min-width:200px;
-    max-height:300px;overflow-y:auto;`;
+    box-shadow:0 8px 32px rgba(0,0,0,0.25);pointer-events:none;max-width:340px;min-width:200px;
+    max-height:320px;overflow-y:auto;`;
   let html = `<div style="font-weight:700;color:${color};margin-bottom:8px;
     border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:6px;position:sticky;top:0;
     background:var(--primary);">${label} (${rows.length})</div>`;
-  if (!rows.length) html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
-  else rows.forEach(r => { html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08);line-height:1.5;">${r}</div>`; });
+  if (!rows.length) {
+    html += '<div style="color:rgba(255,255,255,0.5);">ไม่มีรายการ</div>';
+  } else {
+    rows.forEach(r => {
+      // รองรับทั้ง object {date,name,model} และ string เดิม
+      if (typeof r === 'object' && r !== null) {
+        html += `<div style="display:flex;align-items:baseline;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+          <span style="font-size:10px;color:rgba(255,255,255,0.45);white-space:nowrap;flex-shrink:0;">${r.date||'—'}</span>
+          <span style="flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.name||'—'}</span>
+          <span style="font-size:11px;background:rgba(255,255,255,0.12);padding:1px 7px;border-radius:8px;flex-shrink:0;color:#f5c842;">${r.model||'—'}</span>
+        </div>`;
+      } else {
+        html += `<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.08);line-height:1.5;">${r}</div>`;
+      }
+    });
+  }
   tip.innerHTML = html;
   document.body.appendChild(tip);
   _dscTip = tip;
@@ -2908,7 +2922,8 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
     const bookInCur = dateMatchMonth(bookDate, curYM);
     const relInCur  = relDate && dateMatchMonth(relDate, curYM);
 
-    const line = `${fmtDate(bookDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
+    const line   = { date: fmtDate(bookDate), name: r['ชื่อลูกค้า']||'', model: r['ชื่อรุ่นรถ']||r['รายละเอียดรถ']||model||'' };
+    const lineRs = { date: fmtDate(relDate),  name: r['ชื่อลูกค้า']||'', model: r['ชื่อรุ่นรถ']||r['รายละเอียดรถ']||model||'' };
 
     if (bookInCur && !relInCur) {
       pivot[sc][model].bk++; pivot[sc].bkTotal++;
@@ -2917,7 +2932,6 @@ function renderModelReport(type, scList, rows, monthLabel, today, curYM) {
     }
 
     if (relInCur) {
-      const lineRs = `${fmtDate(relDate)} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||model} · ${r['สถานะ']||''}`;
       pivot[sc][model].rs++; pivot[sc].rsTotal++;
       pivot[sc].rsRows[model].push(lineRs);
       pivot[sc].rsRows['_all'].push(lineRs);
@@ -3196,14 +3210,16 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
     const rsTotal = rsTotalRows.length;
 
-    // ── ถอนจอง (CL) ──
-    // สถานะ "ยกเลิกจอง" จากทุกเดือน (allRows)
-    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name && isCL(r['สถานะ']));
+    // ── ถอนจอง (CL) — เฉพาะวันที่ยกเลิกในเดือนนี้ ──
+    const clRows2 = allRows.filter(r => r['ที่ปรึกษาการขาย']===name &&
+      isCL(r['สถานะ']) && r['วันที่ยกเลิกจอง'] &&
+      dateMatchMonth(r['วันที่ยกเลิกจอง'], curYM));
     const cl = clRows2.length;
 
-    // เก็บ detail สำหรับ tooltip
-    const fmt = r => `${fmtDate(r['วันที่จอง'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
-    const fmtRel = r => `${fmtDate(r['วันที่ปล่อย'])} · ${r['ชื่อลูกค้า']||''} · ${r['รายละเอียดรถ']||r['รุ่นรถ']||''} · ${r['สถานะ']||''}`;
+    // เก็บ detail สำหรับ tooltip — เป็น object {date, name, model}
+    const fmt    = r => ({ date: fmtDate(r['วันที่จอง']),           name: r['ชื่อลูกค้า']||'', model: r['รายละเอียดรถ']||r['รุ่นรถ']||'' });
+    const fmtRel = r => ({ date: fmtDate(r['วันที่ปล่อย']),         name: r['ชื่อลูกค้า']||'', model: r['รายละเอียดรถ']||r['รุ่นรถ']||'' });
+    const fmtCL  = r => ({ date: fmtDate(r['วันที่ยกเลิกจอง']),     name: r['ชื่อลูกค้า']||'', model: r['รายละเอียดรถ']||r['รุ่นรถ']||'' });
 
     // แหล่งที่มาลูกค้า แยก source (tooltip detail) — นับเฉพาะจองเดือนนี้
     const srcRowsMap = {};
@@ -3223,7 +3239,7 @@ function renderDSC(type, scList, curRows, prevRows, allRows, sources, monthLabel
       total:   [...carryRows, ...bkThisRows].map(fmt),
       ers:     ersRows.map(fmt),
       rsTotal: rsTotalRows.map(fmtRel),
-      cl:      clRows2.map(fmt),
+      cl:      clRows2.map(fmtCL),
       ...Object.fromEntries(sources.map(s => [`src_${s}`, srcRowsMap[s].map(fmt)])),
     };
 
@@ -4568,11 +4584,15 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
       const key = type + '_' + d.name;
       window._sumData[key] = d;
 
-      // helper: สร้าง td คลิกได้ถ้ามีค่า > 0 — เก็บ data ไว้ใน _sumRows แทนการ encode ใน HTML
-      const clickTd = (val, rows, label, cssClass, extraStyle='') => {
+      // helper: สร้าง td คลิกได้ถ้ามีค่า > 0 — เก็บ data ไว้ใน window แทนการ encode ใน HTML
+      const clickTd = (val, rows, label, cssClass, dateField='วันที่จอง', extraStyle='') => {
         if (!val) return `<td class="${cssClass} td-num td-zero" style="${extraStyle}">0</td>`;
         const dataKey = '_sr_' + (Math.random().toString(36).slice(2));
-        window[dataKey] = rows.map(r => ({ n: r['ชื่อลูกค้า']||'', m: r['รุ่นรถ']||'', d: r['วันที่จอง']||r['วันที่ยกเลิกจอง']||r['วันที่ปล่อย']||'' }));
+        window[dataKey] = rows.map(r => ({
+          date:  fmtDate(r[dateField] || r['วันที่จอง'] || ''),
+          name:  r['ชื่อลูกค้า'] || '',
+          model: r['ชื่อรุ่นรถ'] || r['รายละเอียดรถ'] || r['รุ่นรถ'] || '',
+        }));
         return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}"
           onclick="showSumTip(event,'${encodeURIComponent(label)}','${dataKey}')"
           title="คลิกดูรายละเอียด">${val}</td>`;
@@ -4581,7 +4601,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
       const bkMdlCells = modelCols.map(m => {
         const rows = (d._bkThisRows||[]).filter(r => (r['รุ่นรถ']||'').trim() === m.trim());
         const v = rows.length; tBkMdl[m]+=v; gBkMdl[m]+=v;
-        return clickTd(v, rows, `จองเดือนนี้ · ${m} · ${d.name}`, 'td-bk');
+        return clickTd(v, rows, `จองเดือนนี้ · ${m} · ${d.name}`, 'td-bk', 'วันที่จอง');
       }).join('');
 
       const srcCells = srcCols.map(s => {
@@ -4589,13 +4609,13 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
           ? (d._bkThisRows||[]).filter(r => !fixedSrc.includes(r['ที่มาลูกค้า']) && r['ที่มาลูกค้า'])
           : (d._bkThisRows||[]).filter(r => r['ที่มาลูกค้า'] === s);
         const v = rows.length; tSrc[s]+=v; gSrc[s]+=v;
-        return clickTd(v, rows, `แหล่งที่มา · ${s} · ${d.name}`, 'td-src');
+        return clickTd(v, rows, `แหล่งที่มา · ${s} · ${d.name}`, 'td-src', 'วันที่จอง');
       }).join('');
 
       const rsMdlCells = modelCols.map(m => {
         const rows = (d._rsThisRows||[]).filter(r => (r['รุ่นรถ']||'').trim() === m.trim());
         const v = rows.length; tRsMdl[m]+=v; gRsMdl[m]+=v;
-        return clickTd(v, rows, `ปล่อยเดือนนี้ · ${m} · ${d.name}`, 'td-rs');
+        return clickTd(v, rows, `ปล่อยเดือนนี้ · ${m} · ${d.name}`, 'td-rs', 'วันที่ปล่อย');
       }).join('');
 
       tCarry+=d.carry; tBkT+=d.bkTotal; tTotal+=d.totalCurrent;
@@ -4603,14 +4623,14 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
 
       html += `<tr class="${rowCls}">
         <td class="name-cell">${d.name}</td>
-        ${clickTd(d.carry,        d._carryRows||[],   `จองยกมา · ${d.name}`,          'td-carry')}
+        ${clickTd(d.carry,        d._carryRows||[],   `จองยกมา · ${d.name}`,          'td-carry',    'วันที่จอง')}
         ${bkMdlCells}
-        ${clickTd(d.bkTotal,      d._bkThisRows||[],  `รวมจองเดือนนี้ · ${d.name}`,   'bk-total-col')}
+        ${clickTd(d.bkTotal,      d._bkThisRows||[],  `รวมจองเดือนนี้ · ${d.name}`,   'bk-total-col','วันที่จอง')}
         ${srcCells}
-        ${clickTd(d.totalCurrent, d._totalRows||[],   `รวมจองปัจจุบัน · ${d.name}`,   'td-total')}
+        ${clickTd(d.totalCurrent, d._totalRows||[],   `รวมจองปัจจุบัน · ${d.name}`,   'td-total',    'วันที่จอง')}
         ${rsMdlCells}
-        ${clickTd(d.rsTotal,      d._rsThisRows||[],  `ยอดปล่อย · ${d.name}`,         'rs-total-col')}
-        ${clickTd(d.cl,           d._clRows||[],      `ถอนจอง · ${d.name}`,            'td-cl')}
+        ${clickTd(d.rsTotal,      d._rsThisRows||[],  `ยอดปล่อย · ${d.name}`,         'rs-total-col','วันที่ปล่อย')}
+        ${clickTd(d.cl,           d._clRows||[],      `ถอนจอง · ${d.name}`,            'td-cl',       'วันที่ยกเลิกจอง')}
       </tr>`;
       rowIdx++;
     });
