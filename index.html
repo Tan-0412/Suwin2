@@ -283,6 +283,17 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;
   body { background:#fff !important; }
 }
 
+/* ── chip สรุปกลุ่มรถ custlist ── */
+.cl-chip-bk{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(125,78,0,0.3);border-radius:20px;padding:1px 3px 1px 6px;font-size:9.5px;font-weight:600;color:#7d4e00;white-space:nowrap;flex-shrink:0;}
+.cl-chip-bk-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cl-chip-bk-badge{background:#7d4e00;color:#fde8b8;border-radius:20px;padding:0 6px;font-size:10.5px;font-weight:700;min-width:18px;text-align:center;}
+.cl-chip-rs{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(10,92,42,0.3);border-radius:20px;padding:1px 3px 1px 6px;font-size:9.5px;font-weight:600;color:#0a5c2a;white-space:nowrap;flex-shrink:0;}
+.cl-chip-rs-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.cl-chip-rs-badge{background:#0a5c2a;color:#c8f0d8;border-radius:20px;padding:0 6px;font-size:10.5px;font-weight:700;min-width:18px;text-align:center;}
+.cl-chip-total-bk{display:inline-flex;align-items:center;background:#7d4e00;border-radius:20px;padding:1px 9px;font-size:9.5px;font-weight:700;color:#fde8b8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.cl-chip-total-rs{display:inline-flex;align-items:center;background:#0a5c2a;border-radius:20px;padding:1px 9px;font-size:9.5px;font-weight:700;color:#c8f0d8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.cl-chip-row{display:flex;align-items:center;gap:4px;padding:5px 8px;flex-wrap:nowrap;overflow:hidden;}
+
 /* ── SUMMARY TOOLTIP ── */
 .sum-clickable:hover { filter: brightness(0.88); transition: filter .15s; }
 #sumTip {
@@ -4831,12 +4842,62 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
     teams[t].push(sc);
   });
 
+  // ดึง รุ่นรถ1 ตามฝ่าย จาก meta.model (เหมือน Summary Report)
+  const isSmall = deptName.includes('เล็ก');
+  const smallModels = ['STD','SPC','CAB 4','CAB 4 HR','MU-X'];
+  const bigModels   = ['2T','3T','6W','10W, 12W','T/H'];
+  const allModel1 = (meta.model||[]).map(m => ({ m1:(m['รุ่นรถ1']||'').trim(), dept:(m['ฝ่าย']||'').toString() })).filter(x=>x.m1);
+  let modelCols;
+  if (allModel1.length) {
+    const key = isSmall ? 'เล็ก' : 'ใหญ่';
+    const cols = [...new Set(allModel1.filter(x=>x.dept.includes(key)).map(x=>x.m1))];
+    modelCols = cols.length ? cols : (isSmall ? smallModels : bigModels);
+  } else {
+    modelCols = isSmall ? smallModels : bigModels;
+  }
+
+  // สีแต่ละกลุ่มรถ
+  const modelColors = ['#3568c8','#2e9e6a','#e8a020','#9b59b6','#c0392b','#16a085','#d35400'];
+
+  // คำนวณ chip สรุปรายกลุ่ม (ระดับ dept+team รวมกัน)
+  const scNames = sorted.map(s => s['ที่ปรึกษาการขาย']);
+
+  // helper: สร้าง chip row HTML
+  const makeChipRow = (rows, isRS) => {
+    // นับตาม รุ่นรถ1
+    const counts = {};
+    modelCols.forEach(m => { counts[m] = 0; });
+    rows.forEach(r => {
+      // หา รุ่นรถ1 จาก รุ่นรถ ของ record นี้
+      const found = (meta.model||[]).find(m => (m['รุ่นรถ']||'').trim() === (r['รุ่นรถ']||'').trim());
+      const m1 = found ? (found['รุ่นรถ1']||'').trim() : '';
+      if (m1 && counts[m1] !== undefined) counts[m1]++;
+    });
+    const total = rows.length;
+    if (!total) return `<div class="cl-chip-row"><span style="font-size:9px;color:${isRS?'#0a5c2a':'#7d4e00'};opacity:0.5;">ไม่มีรายการ</span></div>`;
+    const chipClass   = isRS ? 'cl-chip-rs'    : 'cl-chip-bk';
+    const dotClass    = isRS ? 'cl-chip-rs-dot' : 'cl-chip-bk-dot';
+    const badgeClass  = isRS ? 'cl-chip-rs-badge' : 'cl-chip-bk-badge';
+    const totalClass  = isRS ? 'cl-chip-total-rs' : 'cl-chip-total-bk';
+    let chips = '';
+    modelCols.forEach((m, i) => {
+      if (!counts[m]) return;
+      const color = modelColors[i % modelColors.length];
+      chips += `<div class="${chipClass}"><span class="${dotClass}" style="background:${color};"></span>${m}<span class="${badgeClass}">${counts[m]}</span></div>`;
+    });
+    return `<div class="cl-chip-row">${chips}<div class="${totalClass}">รวม ${total}</div></div>`;
+  };
+
   let html = '';
 
-  const teamKeys = Object.keys(teams);
   Object.entries(teams).forEach(([team, members], tIdx) => {
-    const isFirstTeam = tIdx === 0;
-    // header รายงานของทีม
+    // คำนวณ rows ทั้งทีมสำหรับ chip
+    const teamScNames = members.map(s => s['ที่ปรึกษาการขาย']);
+    const teamBkRows  = allRows.filter(r => teamScNames.includes(r['ที่ปรึกษาการขาย']) && (isBK(r['สถานะ'])||isERS(r['สถานะ'])) && !isCL(r['สถานะ']));
+    const teamRsRows  = allRows.filter(r => teamScNames.includes(r['ที่ปรึกษาการขาย']) && r['วันที่ปล่อย'] && dateMatchMonth(r['วันที่ปล่อย'], curYM));
+    const bkChipHtml  = makeChipRow(teamBkRows, false);
+    const rsChipHtml  = makeChipRow(teamRsRows, true);
+
     html += `
     <div class="cl-report-block cl-team-block">
       <div class="cl-report-title">
@@ -4860,11 +4921,15 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
         </colgroup>
         <thead>
           <tr>
-            <th class="cl-th-sc" rowspan="2">ที่ปรึกษา<br>การขาย SC</th>
-            <th class="cl-th-total" rowspan="2">รวมยอดจอง<br>ปัจจุบัน</th>
+            <th class="cl-th-sc" rowspan="3">ที่ปรึกษา<br>การขาย SC</th>
+            <th class="cl-th-total" rowspan="3">รวมยอดจอง<br>ปัจจุบัน</th>
             <th class="cl-th-bk" colspan="4">ยอดจอง (ทั้งหมด)</th>
-            <th class="cl-th-rs" rowspan="2">ยอด<br>ปล่อย</th>
+            <th class="cl-th-rs" rowspan="3">ยอด<br>ปล่อย</th>
             <th class="cl-th-rsdet" colspan="4">รายละเอียดการปล่อย (เดือนนี้)</th>
+          </tr>
+          <tr>
+            <td class="cl-th-bk" colspan="4" style="padding:0;">${bkChipHtml}</td>
+            <td class="cl-th-rsdet" colspan="4" style="padding:0;">${rsChipHtml}</td>
           </tr>
           <tr>
             <th class="cl-th-bk">วันที่จอง</th>
