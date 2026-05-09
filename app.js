@@ -1738,7 +1738,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   const modelBkHdr=modelCols.length?modelCols.map(m=>`<th class="th-bk" style="font-weight:600;font-size:9px;">${m}</th>`).join(''):'<th class="th-bk">—</th>';
   const modelRsHdr=modelCols.length?modelCols.map(m=>`<th class="th-rs" style="font-weight:600;font-size:9px;">${m}</th>`).join(''):'<th class="th-rs">—</th>';
   const srcHdr=srcCols.map(s=>`<th class="th-src" style="font-weight:600;font-size:10px;">${s}</th>`).join('');
-      const colgroupCols=[`<col style="width:100px;">`,`<col style="width:52px;">`,...modelCols.map(()=>`<col style="width:58px;">`),...[`<col style="width:52px;">`],...srcCols.map(()=>`<col style="width:52px;">`),`<col style="width:64px;">`,...modelCols.map(()=>`<col style="width:58px;">`),...[`<col style="width:52px;">`],`<col style="width:58px;">`].join('');
+      const colgroupCols=[`<col style="width:100px;">`,`<col style="width:48px;">`,...modelCols.map(()=>`<col style="width:46px;">`),...[`<col style="width:48px;">`],...srcCols.map(()=>`<col style="width:50px;">`),`<col style="width:60px;">`,...modelCols.map(()=>`<col style="width:46px;">`),...[`<col style="width:48px;">`],`<col style="width:48px;">`].join('');
   let html=`<table class="sum-table" style="font-size:11px;"><colgroup>${colgroupCols}</colgroup><thead><tr>
     <th rowspan="2" class="th-carry" style="text-align:left;">SC</th>
     <th rowspan="2" class="th-carry">ยกมา</th>
@@ -1769,7 +1769,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
       const srcCells=srcCols.map(s=>{const rows=s==='อื่นๆ'?(d._bkThisRows||[]).filter(r=>!fixedSrc.includes(r['ที่มาลูกค้า'])&&r['ที่มาลูกค้า']):(d._bkThisRows||[]).filter(r=>r['ที่มาลูกค้า']===s);const v=rows.length;tSrc[s]+=v;gSrc[s]+=v;return clickTd(v,rows,`แหล่งที่มา · ${s} · ${d.name}`,'td-src','วันที่จอง');}).join('');
       const rsMdlCells=modelCols.map(m=>{const rows=(d._rsThisRows||[]).filter(r=>(r['รุ่นรถ']||'').trim()===m.trim());const v=rows.length;tRsMdl[m]+=v;gRsMdl[m]+=v;return clickTd(v,rows,`ปล่อยเดือนนี้ · ${m} · ${d.name}`,'td-rs','วันที่ปล่อย');}).join('');
       tCarry+=d.carry;tBkT+=d.bkTotal;tTotal+=d.totalCurrent;tRsT+=d.rsTotal;tCl+=d.cl;
-      html+=`<tr class="${rowCls}"><td class="name-cell">${d.name}</td>
+      html+=`<tr class="${rowCls}"><td class="name-cell" style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name}</td>
         ${clickTd(d.carry,d._carryRows||[],`จองยกมา · ${d.name}`,'td-carry','วันที่จอง')}
         ${bkMdlCells}
         ${clickTd(d.bkTotal,d._bkThisRows||[],`รวมจองเดือนนี้ · ${d.name}`,'bk-total-col','วันที่จอง')}
