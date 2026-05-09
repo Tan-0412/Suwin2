@@ -1735,11 +1735,11 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   const teams={};
   sorted.forEach(sc => { const t=sc['ทีม']||'(ไม่ระบุ)'; if(!teams[t]) teams[t]=[]; teams[t].push(calcSC(sc)); });
   const mLen=modelCols.length||1, sLen=srcCols.length;
-  const modelBkHdr=modelCols.length?modelCols.map(m=>`<th class="th-bk" style="font-weight:600;">${m}</th>`).join(''):'<th class="th-bk">—</th>';
-  const modelRsHdr=modelCols.length?modelCols.map(m=>`<th class="th-rs" style="font-weight:600;">${m}</th>`).join(''):'<th class="th-rs">—</th>';
+  const modelBkHdr=modelCols.length?modelCols.map(m=>`<th class="th-bk" style="font-weight:600;font-size:9px;">${m}</th>`).join(''):'<th class="th-bk">—</th>';
+  const modelRsHdr=modelCols.length?modelCols.map(m=>`<th class="th-rs" style="font-weight:600;font-size:9px;">${m}</th>`).join(''):'<th class="th-rs">—</th>';
   const srcHdr=srcCols.map(s=>`<th class="th-src" style="font-weight:600;font-size:10px;">${s}</th>`).join('');
-      const colgroupCols=[`<col style="width:110px;">`,`<col style="width:60px;">`,...modelCols.map(()=>`<col style="width:56px;">`),...[`<col style="width:54px;">`],...srcCols.map(()=>`<col style="width:56px;">`),`<col style="width:72px;">`,...modelCols.map(()=>`<col style="width:56px;">`),...[`<col style="width:54px;">`],`<col style="width:52px;">`].join('');
-  let html=`<table class="sum-table"><colgroup>${colgroupCols}</colgroup><thead><tr>
+      const colgroupCols=[`<col style="width:100px;">`,`<col style="width:52px;">`,...modelCols.map(()=>`<col style="width:58px;">`),...[`<col style="width:52px;">`],...srcCols.map(()=>`<col style="width:52px;">`),`<col style="width:64px;">`,...modelCols.map(()=>`<col style="width:58px;">`),...[`<col style="width:52px;">`],`<col style="width:58px;">`].join('');
+  let html=`<table class="sum-table" style="font-size:11px;"><colgroup>${colgroupCols}</colgroup><thead><tr>
     <th rowspan="2" class="th-carry" style="text-align:left;">SC</th>
     <th rowspan="2" class="th-carry">ยกมา</th>
     <th colspan="${mLen+1}" class="th-bk">จองเดือนนี้</th>
