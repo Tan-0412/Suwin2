@@ -1738,7 +1738,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   const modelBkHdr=modelCols.length?modelCols.map(m=>`<th class="th-bk" style="font-weight:600;">${m}</th>`).join(''):'<th class="th-bk">—</th>';
   const modelRsHdr=modelCols.length?modelCols.map(m=>`<th class="th-rs" style="font-weight:600;">${m}</th>`).join(''):'<th class="th-rs">—</th>';
   const srcHdr=srcCols.map(s=>`<th class="th-src" style="font-weight:600;font-size:10px;">${s}</th>`).join('');
-  const colgroupCols=[`<col style="width:140px;">`,`<col style="width:60px;">`,...modelCols.map(()=>`<col style="width:46px;">`),...[`<col style="width:54px;">`],...srcCols.map(()=>`<col style="width:56px;">`),`<col style="width:72px;">`,...modelCols.map(()=>`<col style="width:46px;">`),...[`<col style="width:54px;">`],`<col style="width:52px;">`].join('');
+      const colgroupCols=[`<col style="width:110px;">`,`<col style="width:60px;">`,...modelCols.map(()=>`<col style="width:56px;">`),...[`<col style="width:54px;">`],...srcCols.map(()=>`<col style="width:56px;">`),`<col style="width:72px;">`,...modelCols.map(()=>`<col style="width:56px;">`),...[`<col style="width:54px;">`],`<col style="width:52px;">`].join('');
   let html=`<table class="sum-table"><colgroup>${colgroupCols}</colgroup><thead><tr>
     <th rowspan="2" class="th-carry" style="text-align:left;">SC</th>
     <th rowspan="2" class="th-carry">ยกมา</th>
@@ -1844,7 +1844,7 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
 
   // ── แก้บัค: norm ไม่ตัด comma ──
   const makeChipRow = (rows, isRS) => {
-    const norm  = s => (s||'').trim();
+    const norm  = s => (s||'').trim().toLowerCase();
     const getM1 = r => {
       const rv    = norm(r['รุ่นรถ']);
       const found = (meta.model||[]).find(m => norm(m['รุ่นรถ']) === rv);
