@@ -21,6 +21,11 @@ function init() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('url')) scriptUrl = decodeURIComponent(params.get('url'));
   document.getElementById('gsUrl').value = scriptUrl;
+  // ซ่อนแท็บที่ไม่ใช้
+  ['tab-report2','tab-report3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
   saveSetting();
   setConn(true);
   loadAll();
@@ -1960,5 +1965,21 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW error:', e));
   });
 }
+
+// ════ inject chip CSS ════
+(function(){
+  const s = document.createElement('style');
+  s.textContent = `
+.cl-chip-bk{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(125,78,0,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#7d4e00;white-space:nowrap;flex-shrink:0;}
+.cl-chip-bk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cl-chip-bk-badge{background:#7d4e00;color:#fde8b8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
+.cl-chip-rs{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(10,92,42,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#0a5c2a;white-space:nowrap;flex-shrink:0;}
+.cl-chip-rs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cl-chip-rs-badge{background:#0a5c2a;color:#c8f0d8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
+.cl-chip-total-bk{display:inline-flex;align-items:center;background:#7d4e00;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#fde8b8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.cl-chip-total-rs{display:inline-flex;align-items:center;background:#0a5c2a;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#c8f0d8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+  `;
+  document.head.appendChild(s);
+})();
 
 init();
