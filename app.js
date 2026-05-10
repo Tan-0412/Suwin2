@@ -189,6 +189,14 @@ async function loadBookings() {
     '<tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr>';
   try {
     const d = await callGS({ action: 'getBookings' });
+    async function loadBookings() {
+  ...
+  try {
+    const d = await callGS({ action: 'getBookings' });
+    
+    console.log('DATE SAMPLE:', (d.data||[]).slice(0,3).map(r => r['วันที่จอง']));  // ← เพิ่มตรงนี้
+    
+    allBookings = (d.data || []).map(r => {
     allBookings = (d.data || []).map(r => {
       ['วันที่จอง','วันที่ปล่อย'].forEach(col => {
         if (r[col]) {
