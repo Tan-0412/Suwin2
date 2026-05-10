@@ -1705,7 +1705,6 @@ function showSumTip(e, labelEnc, dataKey) {
   tip.style.left=x+'px'; tip.style.top=y+'px';
 }
 function hideSumTip() { if (_sumTipEl) { _sumTipEl.remove(); _sumTipEl=null; } }
-document.addEventListener('click', e => { if (_sumTipEl && !e.target.classList.contains('sum-clickable')) hideSumTip(); });
 document.addEventListener('keydown', e => { if (e.key==='Escape') hideSumTip(); });
 
 // ════════════════════════════════════════
@@ -1803,7 +1802,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
         if (!val) return `<td class="${cssClass} td-num td-zero" style="${extraStyle}">0</td>`;
         const dataKey='_sr_'+(Math.random().toString(36).slice(2));
         window[dataKey]=rows.map(r=>({date:fmtDate(r[dateField]||r['วันที่จอง']||''),name:r['ชื่อลูกค้า']||'',model:r['ชื่อรุ่นรถ']||r['รายละเอียดรถ']||r['รุ่นรถ']||''}));
-        return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}" onclick="showSumTip(event,'${encodeURIComponent(label)}','${dataKey}')" title="คลิกดูรายละเอียด">${val}</td>`;
+        return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}" onmouseenter="showSumTip(event,'${encodeURIComponent(label)}','${dataKey}')" onmouseleave="hideSumTip()" title="hover ดูรายละเอียด">${val}</td>`;
       };
       const bkMdlCells=modelCols.map(m=>{const rows=(d._bkThisRows||[]).filter(r=>(r['รุ่นรถ']||'').trim()===m.trim());const v=rows.length;tBkMdl[m]+=v;gBkMdl[m]+=v;return clickTd(v,rows,`จองเดือนนี้ · ${m} · ${d.name}`,'td-bk','วันที่จอง');}).join('');
       const srcCells=srcCols.map(s=>{const rows=s==='อื่นๆ'?(d._bkThisRows||[]).filter(r=>!fixedSrc.includes(r['ที่มาลูกค้า'])&&r['ที่มาลูกค้า']):(d._bkThisRows||[]).filter(r=>r['ที่มาลูกค้า']===s);const v=rows.length;tSrc[s]+=v;gSrc[s]+=v;return clickTd(v,rows,`แหล่งที่มา · ${s} · ${d.name}`,'td-src','วันที่จอง');}).join('');
