@@ -21,11 +21,6 @@ function init() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('url')) scriptUrl = decodeURIComponent(params.get('url'));
   document.getElementById('gsUrl').value = scriptUrl;
-  // ซ่อนแท็บที่ไม่ใช้
-  ['tab-report2','tab-report3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
   saveSetting();
   setConn(true);
   loadAll();
@@ -1303,11 +1298,17 @@ async function callGS(params, url) {
 //  HELPERS
 // ════════════════════════════════════════
 function fmtDate(s) {
-  if (!s) return '—';
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
-  const d = new Date(s);
-  if (!isNaN(d.getTime())) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-  return s;
+  if (!s || s === '—') return '—';
+  const str = String(s).trim();
+  // ถ้าเป็น dd/mm/yyyy อยู่แล้ว คืนเลย
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) return str;
+  // ใช้ parseThDate ที่รองรับทุก format รวม Serial Number
+  const t = parseThDate(str);
+  if (t) {
+    const d = new Date(t);
+    return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+  }
+  return str || '—';
 }
 function statusCode(val) {
   if (!val) return '';
@@ -1355,13 +1356,37 @@ function dateMatchMonth(dateStr, ym) {
 function parseThDate(s) {
   if (!s) return 0;
   const str = String(s).trim();
+  if (!str || str === '—' || str === '-') return 0;
+  // รูปแบบ dd/mm/yyyy หรือ d/m/yyyy (รวม พ.ศ.)
   const slashParts = str.split('/');
   if (slashParts.length >= 3) {
     let y = parseInt(slashParts[2].substring(0,4));
-    if (y > 2400) y -= 543;
-    return new Date(`${y}-${slashParts[1].padStart(2,'0')}-${slashParts[0].padStart(2,'0')}T00:00:00`).getTime() || 0;
+    if (y > 2400) y -= 543; // แปลง พ.ศ. → ค.ศ.
+    const m = slashParts[1].padStart(2,'0');
+    const d = slashParts[0].padStart(2,'0');
+    const t = new Date(`${y}-${m}-${d}T00:00:00`).getTime();
+    return isNaN(t) ? 0 : t;
   }
-  if (str.includes('-') && str.length >= 8 && str.indexOf('-') === 4) return new Date(str).getTime() || 0;
+  // รูปแบบ yyyy-mm-dd (ISO)
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return new Date(str).getTime() || 0;
+  // รูปแบบ dd-mm-yyyy หรือ d-m-yyyy
+  const dashParts = str.split('-');
+  if (dashParts.length === 3 && dashParts[0].length <= 2) {
+    let y = parseInt(dashParts[2].substring(0,4));
+    if (y > 2400) y -= 543;
+    const t = new Date(`${y}-${dashParts[1].padStart(2,'0')}-${dashParts[0].padStart(2,'0')}T00:00:00`).getTime();
+    return isNaN(t) ? 0 : t;
+  }
+  // Google Sheets Date Serial Number (จำนวนวันนับจาก 30 Dec 1899)
+  if (/^\d+$/.test(str)) {
+    const serial = parseInt(str);
+    if (serial > 40000 && serial < 60000) { // ช่วงปี 2009-2064 ปลอดภัย
+      const ms = (serial - 25569) * 86400000; // 25569 = วันที่ 1 Jan 1970 ใน Sheets serial
+      const t = new Date(ms).getTime();
+      return isNaN(t) ? 0 : t;
+    }
+  }
+  // fallback: ลอง new Date()
   const t = new Date(str).getTime();
   return isNaN(t) ? 0 : t;
 }
@@ -1662,7 +1687,17 @@ function showSumTip(e, labelEnc, dataKey) {
     html += `<div style="margin-top:8px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.12);font-size:10px;color:rgba(245,200,66,0.7);text-align:right;">${rows.length} รายการ</div>`;
   }
   tip.innerHTML = html;
+  // สไตล์ floating tooltip
+  Object.assign(tip.style, {
+    position:'fixed', zIndex:'99999',
+    background:'#1a2740', color:'#fff',
+    borderRadius:'10px', boxShadow:'0 8px 32px rgba(0,0,0,0.45)',
+    padding:'12px 14px', minWidth:'220px', maxWidth:'320px',
+    fontSize:'12px', lineHeight:'1.5',
+    pointerEvents:'none', left:'-9999px', top:'-9999px'
+  });
   document.body.appendChild(tip); _sumTipEl = tip;
+  // คำนวณตำแหน่งหลัง append (ได้ขนาดจริง)
   const margin=14, tw=tip.offsetWidth||240, th2=tip.offsetHeight||120;
   let x=e.clientX+margin, y=e.clientY+margin;
   if (x+tw>window.innerWidth-margin) x=e.clientX-tw-margin;
@@ -1965,21 +2000,5 @@ if ('serviceWorker' in navigator) {
       .catch(e => console.warn('SW error:', e));
   });
 }
-
-// ════ inject chip CSS ════
-(function(){
-  const s = document.createElement('style');
-  s.textContent = `
-.cl-chip-bk{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(125,78,0,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#7d4e00;white-space:nowrap;flex-shrink:0;}
-.cl-chip-bk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.cl-chip-bk-badge{background:#7d4e00;color:#fde8b8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
-.cl-chip-rs{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(10,92,42,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#0a5c2a;white-space:nowrap;flex-shrink:0;}
-.cl-chip-rs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.cl-chip-rs-badge{background:#0a5c2a;color:#c8f0d8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
-.cl-chip-total-bk{display:inline-flex;align-items:center;background:#7d4e00;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#fde8b8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
-.cl-chip-total-rs{display:inline-flex;align-items:center;background:#0a5c2a;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#c8f0d8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
-  `;
-  document.head.appendChild(s);
-})();
 
 init();
