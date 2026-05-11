@@ -550,11 +550,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
         <div class="frow"><label>วันที่จอง *</label><input type="date" id="mDate"></div>
         <div class="frow"><label>สถานะ *</label><select id="mStatus"></select></div>
         <div class="frow"><label>ชื่อลูกค้า *</label><input type="text" id="mName" placeholder="ชื่อ-นามสกุล"></div>
-        <div class="frow"><label>ไฟแนนซ์ (F/N)</label><select id="mFinance"></select></div>
+        <div class="frow"><label>เลข PO</label><input type="text" id="mPO" placeholder="เลขที่ใบ PO..."></div>
         <div class="frow"><label>เบอร์โทร</label><input type="text" id="mPhone" placeholder="0xx-xxx-xxxx"></div>
         <div class="frow"><label>ที่มาลูกค้า</label><select id="mSource"></select></div>
         <div class="frow"><label>ที่ปรึกษาการขาย *</label><select id="mSC"></select></div>
-        <div class="frow"><label>วันที่ปล่อย</label><input type="date" id="mRelDate" onchange="onRelDateChange()"></div>
+        <div class="frow"><label>ไฟแนนซ์ (F/N)</label><select id="mFinance"></select></div>
+        <input type="hidden" id="mRelDate">
         <div class="frow span2" style="padding:0;margin-top:4px;">
           <div style="width:100%;background:linear-gradient(135deg,#f0faf0 0%,#e6f7e6 100%);border:1.5px solid #a8d8a8;border-radius:12px;padding:14px 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;">
             <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:2px;">
@@ -659,7 +660,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
             <div class="frow"><label>เลขที่ใบส่งมอบ</label><input type="text" id="rl-delivery"></div>
-            <div class="frow"><label>เลขที่ใบ PO</label><input type="text" id="rl-po"></div>
+            <div class="frow"><label>เลขที่ใบ PO</label><input type="text" id="rl-po" readonly class="input-readonly" style="background:#f0f0f0;color:#555;cursor:default;" title="ค่าอัตโนมัติจากรายการจอง"></div>
           </div>
         </div>
       </div>
