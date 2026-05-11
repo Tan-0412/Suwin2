@@ -620,6 +620,7 @@ function openAddModal() {
   document.getElementById('mModelCode').value = '';
   document.getElementById('mModelName').value = '';
   document.getElementById('mRelDate').value   = '';
+  document.getElementById('mPO').value        = '';
   document.getElementById('mModelCodeDropdown').style.display = 'none';
   if (meta.status.length) document.getElementById('mStatus').value = 'BK';
   document.getElementById('bookingModal').classList.add('open');
@@ -649,6 +650,7 @@ function openEditModal(i) {
   } else { document.getElementById('mModelName').value = ''; }
   document.getElementById('mModelCodeDropdown').style.display = 'none';
   setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
+  document.getElementById('mPO').value = r['เลข PO'] || '';
   const rawStatus = r['สถานะ'] || '';
   const statusMatch = meta.status.find(s => s['STATUS'] === rawStatus || s['สถานะ'] === rawStatus);
   const statusVal = statusMatch ? statusMatch['STATUS'] : rawStatus;
@@ -774,6 +776,7 @@ async function _doSaveBooking(cancelDateThai, relDateOverride) {
     'ที่ปรึกษาการขาย': sc,
     'ที่มาลูกค้า': document.getElementById('mSource').value,
     'ไฟแนนซ์': document.getElementById('mFinance').value,
+    'po': document.getElementById('mPO').value.trim(),
     'วันที่ยกเลิกจอง': cancelDateThai,
   };
   try {
