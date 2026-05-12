@@ -701,12 +701,15 @@ async function saveBooking() {
   const modelCode = document.getElementById('mModelCode').value.trim();
   const status = document.getElementById('mStatus').value;
   if (!date || !name || !sc || !modelCode || !status) { toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return; }
-  const isCancelStatus = (status === 'CL' || status === 'ยกเลิกจอง');
-  const wasCancel      = (_prevStatusBeforeEdit === 'CL' || _prevStatusBeforeEdit === 'ยกเลิกจอง');
-  if (isCancelStatus && !wasCancel && editingRow) { openCancelDateModal(); return; }
+  const isCancelStatus  = (status === 'CL' || status === 'ยกเลิกจอง');
+  const wasCancel       = (_prevStatusBeforeEdit === 'CL' || _prevStatusBeforeEdit === 'ยกเลิกจอง');
   const isReleaseStatus = (status === 'RS' || status === 'ปล่อย');
   const wasRelease      = (_prevStatusBeforeEdit === 'RS' || _prevStatusBeforeEdit === 'ปล่อย');
   const hasRelDate      = document.getElementById('mRelDate').value.trim() !== '';
+  const hasCancelDate   = !!(filteredBookings.find(r => r._row == editingRow) || {})['วันที่ยกเลิกจอง'];
+  // เปลี่ยนเป็นยกเลิกจอง → ขอวันที่ยกเลิก (ทั้ง add ใหม่และ edit ที่ยังไม่เคย CL)
+  if (isCancelStatus && !wasCancel) { openCancelDateModal(); return; }
+  // เปลี่ยนเป็นปล่อย → ขอวันที่ปล่อย
   if (isReleaseStatus && !wasRelease && !hasRelDate && editingRow) { openReleaseDateModal(); return; }
   await _doSaveBooking('', '');
 }
@@ -735,6 +738,21 @@ async function confirmReleaseDate() {
 function openCancelDateModal() {
   document.getElementById('cancelDateInput').value = formatDateInput(new Date());
   document.getElementById('cancelDateError').style.display = 'none';
+  // แสดงชื่อลูกค้า + รุ่นรถ ใน modal
+  const customerName = document.getElementById('mName')?.value.trim() || '';
+  const modelName    = document.getElementById('mModelName')?.value.trim()
+                    || document.getElementById('mDetail')?.value.trim()
+                    || document.getElementById('mModel')?.value.trim() || '';
+  const infoBox = document.getElementById('cancelDateInfo');
+  if (infoBox) {
+    if (customerName || modelName) {
+      document.getElementById('cancelDateCustomerName').textContent = customerName || '—';
+      document.getElementById('cancelDateModelName').textContent    = modelName    || '—';
+      infoBox.style.display = 'block';
+    } else {
+      infoBox.style.display = 'none';
+    }
+  }
   document.getElementById('cancelDateModal').classList.add('open');
 }
 function closeCancelDateModal() {
@@ -750,7 +768,9 @@ async function confirmCancelDate() {
   if (!cancelDate) { document.getElementById('cancelDateError').style.display = 'block'; return; }
   document.getElementById('cancelDateError').style.display = 'none';
   document.getElementById('cancelDateModal').classList.remove('open');
-  await _doSaveBooking(formatThDate(cancelDate), '');
+  // clear วันที่ปล่อยออกเมื่อยกเลิกจอง
+  document.getElementById('mRelDate').value = '';
+  await _doSaveBooking(formatThDate(cancelDate), null);
 }
 
 async function _doSaveBooking(cancelDateThai, relDateOverride) {
@@ -764,7 +784,8 @@ async function _doSaveBooking(cancelDateThai, relDateOverride) {
   if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '⏳ กำลังบันทึก...'; }
   const statusFound = (meta.status || []).find(s => s['STATUS'] === status);
   const statusThai  = (statusFound && statusFound['สถานะ']) ? statusFound['สถานะ'] : status;
-  const relDateVal  = relDateOverride !== '' ? relDateOverride : formatThDate(document.getElementById('mRelDate').value);
+  // null = force clear, '' = use field value, any string = override
+  const relDateVal  = relDateOverride === null ? '' : (relDateOverride !== '' ? relDateOverride : formatThDate(document.getElementById('mRelDate').value));
   const params = {
     'วันที่จอง': formatThDate(date), 'ชื่อลูกค้า': name,
     'เบอร์': document.getElementById('mPhone').value.trim(),
