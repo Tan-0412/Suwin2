@@ -1935,7 +1935,7 @@ function renderCustListDept(deptName, scList, allRows, curYM, monthLabel, today)
     const bkChipHtml=makeChipRow(teamBkRows,false);
     const rsChipHtml=makeChipRow(teamRsRows,true);
     html+=`<div class="cl-report-block cl-team-block">
-      <div class="cl-report-title">รายชื่อลูกค้าจองและปล่อย ประจำเดือน ${monthLabel}<span class="cl-report-date">ณ วันที่ ${today}</span></div>
+      <div class="cl-report-title">รายชื่อลูกค้าจองและปล่อย<span class="cl-report-date">ณ วันที่ ${today}</span></div>
       <div class="cl-dept-bar">สาขาสุวินทวงศ์ ${deptName} ( ทีม ${team} )</div>
       <table class="cl-table">
         <colgroup><col class="cl-col-sc"><col class="cl-col-total"><col class="cl-col-date"><col class="cl-col-name"><col class="cl-col-model"><col class="cl-col-fn"><col class="cl-col-rs"><col class="cl-col-date"><col class="cl-col-name"><col class="cl-col-model"><col class="cl-col-fn"></colgroup>
