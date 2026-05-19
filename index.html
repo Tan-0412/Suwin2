@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="จองรถ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ระบบบันทึกการจองและปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1a3a6b;--primary2:#2451a0;--primary3:#3568c8;
+  --accent:#e8a020;--accent2:#f5c842;
+  --green:#1a7a4a;--green2:#25a866;
+  --red:#c0392b;--red2:#e74c3c;
+  --orange:#e06010;
+  --purple:#6c3fc8;
+  --bg:#f0f4fa;--white:#fff;
+  --gray:#7a8ea8;--gray2:#dde5f0;--gray3:#f5f8fc;
+  --tx:#1a2d45;--tx2:#3d5470;
+  --shadow:0 4px 24px rgba(26,58,107,0.12);
+  --shadow2:0 2px 10px rgba(26,58,107,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px;}
+.topbar{background:linear-gradient(135deg,#0d2347 0%,#1a3a6b 40%,#2451a0 80%,#1a5276 100%);padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 24px rgba(0,0,0,0.35);position:sticky;top:0;z-index:300;border-bottom:2px solid rgba(245,200,66,0.4);}
+.tb-brand{display:flex;align-items:center;gap:12px;}
+.tb-logo{width:46px;height:46px;background:linear-gradient(135deg,#e8a020,#f5c842);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;box-shadow:0 2px 12px rgba(232,160,32,0.5);}
+.tb-title{color:#fff;font-size:15.5px;font-weight:800;line-height:1.25;letter-spacing:0.2px;}
+.tb-sub{color:rgba(245,200,66,0.95);font-size:10.5px;font-weight:500;letter-spacing:0.3px;margin-top:2px;}
+.conn-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,0.6);}
+.conn-dot{width:7px;height:7px;border-radius:50%;background:#666;flex-shrink:0;}
+.conn-dot.ok{background:#2ECC71;box-shadow:0 0 5px #2ECC71;}
+.conn-dot.err{background:#E74C3C;}
+.tabs{background:var(--primary);border-top:1px solid rgba(255,255,255,0.08);display:flex;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;font-family:'Sarabun',sans-serif;white-space:nowrap;}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tab:hover:not(.active){color:rgba(255,255,255,0.8);}
+.page{display:none;padding:16px;max-width:1200px;margin:0 auto;}
+.page.active{display:block;}
+.card{background:var(--white);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;}
+.card-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-hdr h2{color:#fff;font-size:15px;font-weight:700;}
+.card-hdr p{color:rgba(245,200,66,0.8);font-size:10px;margin-top:1px;}
+.card-body{padding:16px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.frow{display:flex;flex-direction:column;gap:4px;}
+.frow label{font-size:10px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;}
+.frow input,.frow select,.frow textarea{padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;font-size:13px;font-family:'Sarabun',sans-serif;color:var(--tx);background:#fafbfd;outline:none;transition:border-color .2s;width:100%;}
+.frow input:focus,.frow select:focus,.frow textarea:focus{border-color:var(--primary3);background:#fff;}
+.frow textarea{resize:vertical;min-height:60px;}
+.frow.span2{grid-column:span 2;}
+.frow.span3{grid-column:span 3;}
+.btn{padding:9px 18px;border:none;border-radius:9px;font-size:13px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary2);}
+.btn-accent{background:var(--accent);color:var(--primary);}
+.btn-accent:hover{background:var(--accent2);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:var(--green2);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:var(--red2);}
+.btn-outline{background:transparent;border:1.5px solid var(--gray2);color:var(--tx);}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary);}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:7px;}
+.btn-full{width:100%;justify-content:center;}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-PS{background:#DBEAFE;color:#1D4ED8;}
+.badge-EBK{background:#FCE7F3;color:#9D174D;}
+.badge-BK{background:#FED7AA;color:#9A3412;}
+.badge-ERS{background:#FEF9C3;color:#854D0E;}
+.badge-RS{background:#D1FAE5;color:#065F46;}
+.badge-CL{background:#FEE2E2;color:#991B1B;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:800px;}
+thead{background:var(--primary);}
+th{padding:10px 10px;text-align:left;color:rgba(255,255,255,0.7);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;}
+th.r{text-align:right;}th.c{text-align:center;}
+td{padding:9px 10px;border-bottom:1px solid var(--gray2);vertical-align:middle;font-size:13px;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f5f8ff;}
+tr.alt td{background:#fafcff;}
+td.mono{font-family:'IBM Plex Mono',monospace;font-size:12px;}
+td.r{text-align:right;}td.c{text-align:center;}
+.action-btns{display:flex;gap:4px;justify-content:center;}
+#releaseReportTable{table-layout:fixed;min-width:700px;}
+#releaseReportTable th,#releaseReportTable td{height:36px;padding:0 8px;box-sizing:border-box;vertical-align:middle;}
+.sum-grid{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sum-card{background:var(--white);border-radius:10px;padding:8px 14px;box-shadow:var(--shadow2);border-left:3px solid var(--primary3);display:flex;align-items:center;gap:10px;flex:1;min-width:100px;}
+.sum-val{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:var(--primary);line-height:1;}
+.sum-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;line-height:1.3;}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+.filter-row .frow{min-width:130px;flex:1;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:18px;overflow:hidden;width:min(96vw,620px);max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.modal-hdr h3{color:#fff;font-size:14px;font-weight:700;}
+.modal-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:0 6px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;align-items:center;justify-content:center;padding:16px;}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:#fff;border-radius:16px;padding:28px 24px;width:min(94vw,380px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.confirm-icon{font-size:40px;margin-bottom:12px;}
+.confirm-title{font-size:16px;font-weight:700;color:var(--tx);margin-bottom:8px;}
+.confirm-msg{font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:10px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;display:none;box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.warn{background:var(--orange);}
+.loader{text-align:center;padding:40px;color:var(--gray);}
+.loader-spin{display:inline-block;width:28px;height:28px;border:3px solid var(--gray2);border-top-color:var(--primary3);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes connPulse{from{opacity:.4;}to{opacity:1;}}
+.empty{text-align:center;padding:44px;color:var(--gray);font-size:13px;}
+pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-size:10px;line-height:1.75;overflow-x:auto;font-family:'Courier New',monospace;white-space:pre;max-height:280px;overflow-y:auto;}
+.dvd{border:none;border-top:1px solid var(--gray2);margin:14px 0;}
+.step{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;}
+.stepn{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--primary);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.stept{font-size:13px;line-height:1.6;}
+.rec-badge{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(245,200,66,0.9);background:rgba(232,160,32,0.15);padding:3px 10px;border-radius:12px;border:1px solid rgba(232,160,32,0.3);}
+.cl-report-block{background:#fff;margin-bottom:24px;border-radius:10px;box-shadow:0 2px 12px rgba(26,58,107,0.1);overflow:hidden;}
+.cl-report-title{padding:10px 18px 8px;font-size:16px;font-weight:700;color:#1a2d45;display:flex;justify-content:flex-start;align-items:center;gap:1cm;border-bottom:1px solid #e0e8f0;}
+.cl-report-date{font-size:12px;font-weight:600;color:#2451a0;background:#e8f0fe;padding:4px 12px;border-radius:20px;white-space:nowrap;}
+.cl-dept-bar{background:linear-gradient(90deg,#e8a020,#f5c842);color:#1a2d45;font-size:13px;font-weight:700;padding:9px 18px;}
+.cl-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.cl-table th,.cl-table td{border:1px solid #d0daea;padding:6px 6px;vertical-align:middle;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cl-table th{font-size:11px;font-weight:700;text-align:center;line-height:1.4;white-space:normal;word-break:keep-all;}
+.cl-col-sc{width:95px;}.cl-col-total{width:46px;}.cl-col-date{width:68px;}.cl-col-name{width:210px;}.cl-col-model{width:52px;}
+.cl-table td.model-cell{font-size:9px;font-weight:600;color:var(--primary2);}
+.cl-col-fn{width:44px;}.cl-col-rs{width:40px;}
+.cl-model-sub{display:inline-block;font-size:9px;font-weight:600;background:rgba(26,58,107,0.1);color:var(--primary2);padding:1px 6px;border-radius:8px;margin-left:5px;white-space:nowrap;vertical-align:middle;line-height:1.6;}
+.cl-th-sc{background:#aed6f1;color:#1a3a6b;}.cl-th-total{background:#a9cce3;color:#1a3a6b;}.cl-th-bk{background:#fad7a0;color:#7d4e00;}.cl-th-rs{background:#a9dfbf;color:#0a5c2a;}.cl-th-rsdet{background:#c8e6c9;color:#0a5c2a;}
+.cl-td-sc{background:#ebf5fb !important;color:#1a3a6b;font-weight:700;font-size:12px;text-align:center;vertical-align:middle;}
+.cl-td-name{text-align:left !important;padding-left:10px !important;}
+.cl-td-total{background:#d6eaf8 !important;color:#1a3a6b;font-weight:700;font-size:14px;text-align:center;vertical-align:middle;}
+.cl-td-rs{background:#d5f5e3 !important;color:#0a5c2a;font-weight:700;font-size:14px;text-align:center;vertical-align:middle;}
+@media print{
+  .tabs,.topbar,.card:first-child,#clBody>.card{display:none !important;}
+  .cl-report-block{page-break-inside:avoid;box-shadow:none;border:none;margin-bottom:0;}
+  .cl-team-block{page-break-before:always;}
+  .cl-team-block:first-child{page-break-before:avoid;}
+  .cl-table{font-size:9.5px;}
+  .cl-table th,.cl-table td{padding:3px 5px;}
+  .cl-col-name{width:130px;}
+  body{background:#fff !important;}
+}
+.cl-chip-bk{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(125,78,0,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#7d4e00;white-space:nowrap;flex-shrink:0;}
+.cl-chip-bk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cl-chip-bk-badge{background:#7d4e00;color:#fde8b8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
+.cl-chip-rs{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.45);border:0.5px solid rgba(10,92,42,0.3);border-radius:20px;padding:2px 4px 2px 8px;font-size:11px;font-weight:600;color:#0a5c2a;white-space:nowrap;flex-shrink:0;}
+.cl-chip-rs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.cl-chip-rs-badge{background:#0a5c2a;color:#c8f0d8;border-radius:20px;padding:0 7px;font-size:12px;font-weight:700;min-width:20px;text-align:center;}
+.cl-chip-total-bk{display:inline-flex;align-items:center;background:#7d4e00;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#fde8b8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.cl-chip-total-rs{display:inline-flex;align-items:center;background:#0a5c2a;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:#c8f0d8;white-space:nowrap;flex-shrink:0;margin-left:2px;}
+.cl-chip-row{display:flex;align-items:center;justify-content:center;gap:5px;padding:5px 8px;flex-wrap:nowrap;overflow:hidden;}
+.sum-clickable:hover{filter:brightness(0.88);transition:filter .15s;}
+#sumTip{position:fixed;z-index:9999;background:var(--primary);color:#fff;border-radius:14px;padding:14px 16px;font-size:12px;font-family:'Sarabun',sans-serif;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:300px;min-width:200px;line-height:1.65;pointer-events:none;}
+.sum-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed;}
+.sum-table th,.sum-table td{padding:6px 5px;text-align:center;border:1px solid #d0daea;overflow:hidden;text-overflow:ellipsis;}
+.sum-table th{font-weight:700;font-size:11px;line-height:1.4;white-space:normal;word-break:keep-all;vertical-align:middle;}
+.sum-table td{white-space:nowrap;vertical-align:middle;}
+.sum-table td.name-cell{text-align:left;font-weight:600;width:140px;font-size:12px;white-space:nowrap;}
+.sum-table .th-carry{background:#aed6f1;color:#000;width:60px;}
+.sum-table .th-bk{background:#fad7a0;color:#000;width:46px;}
+.sum-table .th-src{background:#f5b7d1;color:#000;width:56px;}
+.sum-table .th-total{background:#a9cce3;color:#000;width:72px;}
+.sum-table .th-rs{background:#a9dfbf;color:#000;width:46px;}
+.sum-table .th-cl{background:#f1948a;color:#000;width:52px;}
+.sum-table .td-carry{background:#ebf5fb !important;color:#1a5276;font-weight:700;font-size:14px;}
+.sum-table .td-total{background:#d6eaf8 !important;color:#1a3a8a;font-weight:700;font-size:14px;}
+.sum-table .bk-total-col{background:#f5cba7 !important;color:#6e2c00;font-weight:700;font-size:14px;}
+.sum-table .rs-total-col{background:#a9dfbf !important;color:#0a5c2a;font-weight:700;font-size:14px;}
+.sum-table .td-num{font-family:'IBM Plex Mono',monospace;font-size:13px;}
+.sum-table .td-zero{color:#bbb;}
+.sum-table tr.row-odd td:not(.td-carry):not(.bk-total-col):not(.td-total):not(.rs-total-col){background:#ffffff;}
+.sum-table tr.row-even td:not(.td-carry):not(.bk-total-col):not(.td-total):not(.rs-total-col){background:#eeeeee;}
+.sum-table .row-team td{background:#2471a3 !important;color:#fff;font-weight:700;font-size:11px;}
+.sum-table .row-team-total td{background:#d6eaf8 !important;font-weight:700;}
+.sum-table .row-grand td{background:#fef9e7 !important;font-weight:700;font-size:12px;border-top:3px solid #e8a020;}
+.report-filter{background:var(--white);border-radius:14px;padding:16px;box-shadow:var(--shadow2);margin-bottom:14px;}
+.pivot-wrap{overflow-x:auto;}
+.pivot-table{width:100%;border-collapse:collapse;font-size:12px;}
+.pivot-table th{background:var(--primary);color:#fff;padding:8px 10px;text-align:center;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,0.2);}
+.pivot-table th.left{text-align:left;}
+.pivot-table td{padding:7px 10px;border:1px solid var(--gray2);text-align:center;}
+.pivot-table td.name{text-align:left;font-weight:600;}
+.pivot-table tr:nth-child(even) td{background:#fafcff;}
+.pivot-table tr.total-row td{background:#f0e8d0;font-weight:700;font-size:13px;border-top:2px solid var(--accent);}
+.pivot-table td.zero{color:#ccc;}
+.card-hdr-light{background:linear-gradient(135deg,#e8f0ff,#f0f5ff);padding:14px 18px;border-bottom:2px solid #c0d0f0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.card-hdr-light h2{color:#1a3a6b;font-size:16px;font-weight:700;}
+.card-hdr-light p{color:#4a6090;font-size:11px;margin-top:2px;}
+.dsc-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:auto;}
+.dsc-table th{padding:7px 6px;text-align:center;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,0.25);white-space:nowrap;line-height:1.35;color:#fff;vertical-align:middle;overflow:hidden;}
+.dsc-table th.left{text-align:left;background:#5a7099;min-width:140px;}
+.dsc-table td{padding:6px 5px;border:1px solid #e0e8f0;text-align:center;vertical-align:middle;font-size:12px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.dsc-table td.name{text-align:left;font-weight:600;background:#f4f8ff;color:#1a2d45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:140px;}
+.dsc-table td.num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;}
+.dsc-table td.bk{color:#2451a0;}.dsc-table td.rs{color:#1a7a4a;}.dsc-table td.ebk{color:#c06010;}.dsc-table td.cl{color:#c0392b;}.dsc-table td.zero{color:#c0cbda;}
+.dsc-table tr.team-total td{background:#e8eeff;font-weight:700;font-size:13px;border-top:2px solid #a0b4e0;color:#1a3080;}
+.dsc-table tr.grand-total td{background:#fdf3e3;font-weight:700;font-size:13px;border-top:2px solid #e8a020;color:#5a3e00;}
+.dsc-table tr.team-sep td{background:linear-gradient(90deg,#2451a0,#3a6cc8);font-size:12px;font-weight:700;color:#fff;padding:6px 12px;border-top:2px solid #a0b4e0;letter-spacing:.3px;}
+.dsc-table th.online-hdr{background:#b03680;white-space:nowrap;line-height:1.3;padding:7px 6px;min-width:68px;}
+.dsc-table td.online-col{min-width:68px;}
+.dsc-table th.carry{background:#7b5ea7;}.dsc-table th.ebk-hdr{background:#d06818;}.dsc-table th.bk-hdr{background:#3a6cc8;}.dsc-table th.rs-hdr{background:#28906a;}.dsc-table th.cl-hdr{background:#c43838;}
+.pivot-table td.has-val{color:var(--primary);font-weight:700;}
+.date-badge-r2{display:inline-flex;align-items:center;gap:8px;background:#e6f5ee;border-radius:8px;padding:5px 14px;border:1px solid #a8dbc0;}
+.date-badge-r2 .lbl{font-size:11px;color:#1a7a4a;font-weight:600;}
+.date-badge-r2 .val{font-size:16px;font-weight:700;color:#0f5c36;}
+.date-badge-r3{display:inline-flex;align-items:center;gap:8px;background:#e6eeff;border-radius:8px;padding:5px 14px;border:1px solid #a0b8f0;}
+.date-badge-r3 .lbl{font-size:11px;color:#1a3a6b;font-weight:600;}
+.date-badge-r3 .val{font-size:16px;font-weight:700;color:#1a2d80;}
+.datepick-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:700;align-items:center;justify-content:center;}
+.datepick-overlay.open{display:flex;}
+.datepick-box{background:#fff;border-radius:16px;overflow:hidden;width:min(94vw,360px);box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.datepick-hdr{background:linear-gradient(135deg,var(--primary),var(--primary2));padding:14px 20px;display:flex;align-items:center;justify-content:space-between;}
+.datepick-hdr h3{color:#fff;font-size:14px;font-weight:700;}
+.datepick-hdr .dp-close{background:none;border:none;color:rgba(255,255,255,0.7);font-size:22px;cursor:pointer;padding:0 4px;}
+.datepick-body{padding:20px;}
+.datepick-body label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;}
+.datepick-body input[type=date]{width:100%;padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;font-size:14px;font-family:'Sarabun',sans-serif;color:var(--tx);outline:none;}
+.datepick-body input[type=date]:focus{border-color:var(--primary3);}
+.datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
+.input-readonly{background:#f0f3f7 !important;color:var(--tx2) !important;cursor:default !important;border-color:var(--gray2) !important;}
+.input-readonly:focus{border-color:var(--gray2) !important;background:#f0f3f7 !important;}
+.rl-release-box{border:1.5px solid #86c9a0;border-radius:12px;overflow:hidden;}
+.rl-release-box-hdr{background:linear-gradient(135deg,#d4edda,#c3e6cb);padding:9px 16px;font-size:12px;font-weight:700;color:#1a5c35;border-bottom:1px solid #86c9a0;display:flex;align-items:center;gap:6px;}
+.rl-release-box-body{background:#f0faf4;padding:14px 16px;}
+.rl-release-box-body .frow input,.rl-release-box-body .frow select{background:#fff;}
+.rl-release-box-body .input-readonly{background:#e8f2ec !important;}
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid-2{grid-template-columns:1fr;}
+  .frow.span2,.frow.span3{grid-column:span 1;}
+  .sum-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-brand">
+    <div class="tb-logo">🚗</div>
+    <div>
+      <div class="tb-title">ระบบบันทึกการจองและปล่อยรถ · บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div>
+      <div class="tb-sub">สาขาสุวินทวงศ์</div>
+    </div>
+  </div>
+  <div class="conn-badge">
+    <div class="conn-dot" id="connDot"></div>
+    <span id="connLbl">ยังไม่เชื่อมต่อ</span>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('booking')" id="tab-booking">📋 บันทึกการจองและปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('report1')" id="tab-report1">📊 รายงานจองและปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('report2')" id="tab-report2" style="display:none;">📊 จอง-ปล่อยรายเดือน</div>
+  <div class="tab" onclick="switchTab('report3')" id="tab-report3" style="display:none;">📊 รวมจอง-ปล่อยรายเดือน</div>
+  <div class="tab" onclick="switchTab('release')" id="tab-release">📋 รายงานปล่อยรถ</div>
+  <div class="tab" onclick="switchTab('custlist')" id="tab-custlist">📋 รายชื่อลูกค้าจอง-ปล่อย</div>
+  <div class="tab" onclick="switchTab('summary')" id="tab-summary">📋 รายงานสรุปรวมยอดจอง-ปล่อย</div>
+  <div class="tab" onclick="switchTab('target')" id="tab-target">🎯 เป้าจำหน่าย</div>
+  <div class="tab" onclick="switchTab('setup')" id="tab-setup">⚙️ ตั้งค่า</div>
+</div>
+
+<!-- PAGE: BOOKING -->
+<div class="page active" id="page-booking">
+  <div class="sum-grid" id="sumGrid">
+    <div class="sum-card" style="border-left-color:var(--primary3);"><div class="sum-val" id="sAll">—</div><div class="sum-lbl">🤍 ทั้งหมด</div></div>
+    <div class="sum-card" style="border-left-color:#d97706;"><div class="sum-val" id="sEBK" style="color:#d97706;">—</div><div class="sum-lbl">💛 คาดจอง</div></div>
+    <div class="sum-card" style="border-left-color:#ea6c0a;"><div class="sum-val" id="sBK" style="color:#ea6c0a;">—</div><div class="sum-lbl">🧡 จอง</div></div>
+    <div class="sum-card" style="border-left-color:#db2777;"><div class="sum-val" id="sERS" style="color:#db2777;">—</div><div class="sum-lbl">🩷 คาดปล่อย</div></div>
+    <div class="sum-card" style="border-left-color:#16a34a;"><div class="sum-val" id="sRS" style="color:#16a34a;">—</div><div class="sum-lbl">💚 ปล่อย</div></div>
+    <div class="sum-card" style="border-left-color:#dc2626;"><div class="sum-val" id="sCL" style="color:#dc2626;">—</div><div class="sum-lbl">💔 ยกเลิก</div></div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="padding:10px 16px;">
+      <h2>📊 ยอดจองแต่ละ SC</h2>
+      <div style="display:flex;gap:8px;align-items:center;font-size:10px;flex-wrap:wrap;">
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);"><span style="width:10px;height:10px;border-radius:2px;background:#d97706;display:inline-block;"></span>💛 คาดจอง</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);"><span style="width:10px;height:10px;border-radius:2px;background:#ea6c0a;display:inline-block;"></span>🧡 จอง</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);"><span style="width:10px;height:10px;border-radius:2px;background:#db2777;display:inline-block;"></span>🩷 คาดปล่อย</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);"><span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block;"></span>💚 ปล่อย</span>
+      </div>
+    </div>
+    <div style="padding:14px 16px;overflow-x:auto;"><div id="scChart" style="min-height:120px;"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <div><h2>📋 รายการจองทั้งหมด</h2></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="rec-badge" id="recCount">0 รายการ</span>
+        <button class="btn btn-accent btn-sm" onclick="openAddModal()">+ เพิ่มรายการจอง</button>
+      </div>
+    </div>
+    <div class="card-body" style="padding-bottom:8px;">
+      <div class="filter-row">
+        <div class="frow"><label>ค้นหา</label><input type="text" id="fSearch" placeholder="ชื่อ / เบอร์ / รายละเอียด..." oninput="filterBooking()"></div>
+        <div class="frow"><label>ฝ่าย</label><select id="fDept" onchange="onDeptChange('fDept','fSC');filterBooking()"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>ที่ปรึกษา</label><select id="fSC" onchange="filterBooking()"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>รุ่นรถ</label><select id="fModel" onchange="filterBooking()"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>สถานะ</label><select id="fStatus" onchange="filterBooking()"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>เดือนจอง</label><select id="fMonth" onchange="filterBooking()"><option value="">ทั้งหมด</option></select></div>
+        <button class="btn btn-outline btn-sm" onclick="resetFilter()" style="align-self:flex-end;">✕ ล้าง</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:32px;">#</th><th>วันที่จอง</th><th>ชื่อลูกค้า</th><th>เบอร์</th>
+          <th>ชื่อรุ่นรถ</th><th>รุ่น</th><th>สถานะ</th><th>วันที่ปล่อย</th><th>SC</th><th>ที่มา</th><th class="c">จัดการ</th>
+        </tr></thead>
+        <tbody id="bookingBody"><tr><td colspan="11"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: REPORT 1 -->
+<div class="page" id="page-report1">
+  <div class="report-filter card">
+    <div class="card-hdr"><h2>🔍 ตัวกรอง / ค้นหา รายงานรายละเอียดการจอง</h2></div>
+    <div class="card-body">
+      <div class="filter-row">
+        <div class="frow"><label>ฝ่าย</label><select id="r1Dept" onchange="onDeptChange('r1Dept','r1SC')"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>ที่ปรึกษาการขาย</label><select id="r1SC"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>เดือนที่จอง</label><select id="r1Month"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow"><label>วันจองที่เริ่มต้น</label><input type="date" id="r1DateFrom"></div>
+        <div class="frow"><label>วันจองที่สิ้นสุด</label><input type="date" id="r1DateTo"></div>
+        <div class="frow"><label>สถานะ</label><select id="r1Status"><option value="">ทั้งหมด</option></select></div>
+      </div>
+      <div class="filter-row" style="margin-top:8px;">
+        <div class="frow" style="flex:3;min-width:250px;"><label>🔎 ค้นหา</label><input type="text" id="r1Search" placeholder="พิมพ์คำค้นหา..."></div>
+        <div style="display:flex;gap:6px;align-self:flex-end;">
+          <button class="btn btn-primary btn-sm" onclick="runReport1()">🔍 ค้นหา</button>
+          <button class="btn btn-outline btn-sm" onclick="clearReport1()">✕ ล้างตัวกรอง</button>
+          <button class="btn btn-accent btn-sm" onclick="printReport1()">🖨️ พิมพ์</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="r1Card">
+    <div class="card-hdr"><h2 id="r1Title">รายงานรายละเอียดการจอง</h2><span class="rec-badge" id="r1Count">0 รายการ</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>วันที่จอง</th><th>ชื่อลูกค้า</th><th>เบอร์</th><th>รายละเอียดรถ</th><th>รุ่น</th><th>สถานะ</th><th>วันที่ปล่อย</th><th>SC</th><th>ที่มา</th></tr></thead>
+        <tbody id="r1Body"><tr><td colspan="10"><div class="empty">เลือกเงื่อนไขแล้วกด ค้นหา</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: REPORT 2 -->
+<div class="page" id="page-report2">
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2>📊 รายงานยอดจองและปล่อยรถ</h2>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report2')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport2()">🖨️ พิมพ์</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="r2TitleSmall">รายงานยอดจองและปล่อยรถ</h2><p id="r2SubSmall">—</p></div>
+      <div id="r2DateBadgeSmall" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r2BodySmall"><div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="r2TitleBig">รายงานยอดจองและปล่อยรถ</h2><p id="r2SubBig">—</p></div>
+      <div id="r2DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r2BodyBig"><div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div></div>
+  </div>
+</div>
+
+<!-- PAGE: REPORT 3 -->
+<div class="page" id="page-report3">
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <h2 id="r3MainTitle">👤 Daily SC Performance</h2>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('report3')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="doPrintReport3()">🖨️ พิมพ์</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="r3TitleSmall">📊 ฝ่ายขายรถเล็ก</h2><p id="r3SubSmall" style="display:none;"></p></div>
+      <div id="r3DateBadgeSmall" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r3BodySmall"><div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr-light" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="r3TitleBig">📊 ฝ่ายขายรถใหญ่</h2><p id="r3SubBig" style="display:none;"></p></div>
+      <div id="r3DateBadgeBig" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" id="r3BodyBig"><div class="empty">เลือกเดือนแล้วกด ดูรายงาน</div></div>
+  </div>
+</div>
+
+<!-- PAGE: RELEASE -->
+<div class="page" id="page-release">
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-hdr"><div><h2>📋 รายงานการปล่อยรถ</h2><p>เลือกวันที่ปล่อยรถแล้วกดแสดงรายงาน</p></div></div>
+    <div class="card-body">
+      <div class="filter-row" style="align-items:flex-end;gap:12px;">
+        <div class="frow" style="min-width:200px;"><label>วันที่ปล่อยรถ</label><input type="date" id="releaseReportDate"></div>
+        <button class="btn btn-primary" onclick="runReleaseReportPage()">🔍 แสดงรายงาน</button>
+        <button class="btn btn-accent" id="releaseReportPrintBtn" onclick="doReleaseReportPage()" style="display:none;">🖨️ พิมพ์รายงาน</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="releaseReportPreviewCard" style="display:none;">
+    <div class="card-hdr">
+      <div><h2 id="releaseReportPreviewTitle">รายงานการปล่อยรถ</h2><p id="releaseReportPreviewSub">—</p></div>
+      <span class="rec-badge" id="releaseReportCount">0 คัน</span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="releaseReportTable" style="table-layout:fixed;">
+        <thead><tr style="height:36px;">
+          <th style="width:72px;">F/N</th><th>รุ่นรถ</th><th>เลขเครื่อง</th><th>เลขแชสซีส์</th><th>ชื่อลูกค้า</th>
+          <th style="width:90px;">ทะเบียนป้ายแดง</th><th style="width:80px;">ใบส่งมอบ</th><th style="width:80px;">ใบ PO</th><th style="width:110px;">SC ที่ปรึกษาการขาย</th>
+        </tr></thead>
+        <tbody id="releaseReportBody"><tr><td colspan="9"><div class="empty">ยังไม่มีข้อมูล</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: CUSTLIST -->
+<div class="page" id="page-custlist">
+  <div class="card">
+    <div class="card-hdr">
+      <div><h2>📋 รายชื่อลูกค้าจอง-ปล่อย</h2><p id="clSubLabel">กำลังโหลด...</p></div>
+      <div style="display:flex;gap:8px;align-items:center;"><button class="btn btn-accent btn-sm" onclick="printCustList()">🖨️ พิมพ์รายงาน</button></div>
+    </div>
+  </div>
+  <div id="clBody"><div class="loader"><div class="loader-spin"></div><br>กดแท็บเพื่อโหลด</div></div>
+</div>
+
+<!-- PAGE: SUMMARY -->
+<div class="page" id="page-summary">
+  <div class="card">
+    <div class="card-hdr" style="flex-wrap:wrap;gap:8px;">
+      <div><h2>📋 รายงานสรุปรวมยอดจอง-ปล่อย</h2><p id="sumSubLabel">กำลังโหลด...</p></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="changeReportDate('summary')">📅 เปลี่ยนวันที่</button>
+        <button class="btn btn-accent btn-sm" onclick="printSummaryReport()">🖨️ พิมพ์รายงาน</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="sumCardSmall">
+    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="sumTitleSmall">รายงานสรุปยอดจองและยอดปล่อยรถ — ฝ่ายขายรถเล็ก</h2></div>
+      <div id="sumDateSmall" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" style="overflow-x:hidden;"><div id="sumBodySmall"><div class="loader"><div class="loader-spin"></div><br>กดแท็บเพื่อโหลด</div></div></div>
+  </div>
+  <div class="card" id="sumCardBig">
+    <div class="card-hdr" style="background:linear-gradient(135deg,#1a5276,#2471a3);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+      <div><h2 id="sumTitleBig">รายงานสรุปยอดจองและยอดปล่อยรถ — ฝ่ายขายรถใหญ่</h2></div>
+      <div id="sumDateBig" style="flex-shrink:0;margin-top:2px;"></div>
+    </div>
+    <div class="tbl-wrap" style="overflow-x:hidden;"><div id="sumBodyBig"><div class="loader"><div class="loader-spin"></div><br>กดแท็บเพื่อโหลด</div></div></div>
+  </div>
+</div>
+
+<!-- PAGE: TARGET -->
+<div class="page" id="page-target">
+  <div class="card">
+    <div class="card-hdr"><h2>🎯 เป้าการจำหน่ายต่อเดือน</h2><button class="btn btn-accent btn-sm" onclick="openTargetModal()">+ เพิ่ม/แก้ไขเป้า</button></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>เดือน</th><th class="r">เป้าการจำหน่าย</th><th class="c">จัดการ</th></tr></thead>
+        <tbody id="targetBody"><tr><td colspan="4"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: SETUP -->
+<div class="page" id="page-setup">
+  <div style="max-width:600px;margin:0 auto;">
+    <div class="card">
+      <div class="card-hdr"><h2>🔗 เชื่อมต่อ Google Sheets</h2><p>ตั้งค่าครั้งเดียว ใช้ได้ทุกเครื่อง</p></div>
+      <div class="card-body">
+        <div class="step"><div class="stepn">1</div><div class="stept">เปิด Google Sheets "Booking" → <strong>Extensions → Apps Script</strong> → ลบโค้ดเดิมออก</div></div>
+        <div class="step"><div class="stepn">2</div><div class="stept">คัดลอก Script ด้านล่างวางแทน → <strong>Ctrl+S</strong></div></div>
+        <div class="step"><div class="stepn">3</div><div class="stept"><strong>Deploy → New Deployment</strong> · Type: Web app · Execute as: Me · Access: Anyone → Deploy → Authorize</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stept">คัดลอก URL → วางด้านล่าง → กด <strong>เชื่อมต่อ</strong></div></div>
+        <div class="dvd"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <strong style="font-size:12px;">📄 Apps Script</strong>
+          <button class="btn btn-outline btn-sm" onclick="copyScript()">📋 คัดลอก</button>
+        </div>
+        <pre class="code" id="scriptCode">// วาง Apps Script ของคุณที่นี่</pre>
+        <div id="copyOk" style="font-size:11px;color:var(--green);margin-top:4px;display:none;">✅ คัดลอกแล้ว!</div>
+        <div class="dvd"></div>
+        <div class="frow"><label>Apps Script URL</label><input type="url" id="gsUrl" placeholder="https://script.google.com/macros/s/xxxx/exec"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn btn-primary" style="flex:1;" onclick="connectSheet()">🔌 เชื่อมต่อ</button>
+          <button class="btn btn-outline btn-sm" onclick="testConn()">🧪 ทดสอบ</button>
+        </div>
+        <div id="setupStatus" style="font-size:12px;margin-top:8px;min-height:18px;color:var(--green);"></div>
+        <div class="dvd"></div>
+        <button class="btn btn-outline btn-sm" onclick="resetCache()" style="color:var(--red);border-color:#f5c6c6;">🔄 ล้างค่าเก่า / รีเซ็ต</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>🔗 แชร์ให้ทีม</h2></div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--gray);margin-bottom:10px;">คัดลอกลิงค์ให้ทีม เปิดแล้วเชื่อมต่ออัตโนมัติ</p>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="shareUrl" readonly style="flex:1;font-size:11px;font-family:monospace;background:#f5f7fa;">
+          <button class="btn btn-outline btn-sm" onclick="copyShareUrl()">📋</button>
+        </div>
+        <div id="shareOk" style="font-size:11px;color:var(--green);margin-top:4px;display:none;">✅ คัดลอกแล้ว!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal-box">
+    <div class="modal-hdr"><h3 id="modalTitle">➕ เพิ่มรายการจอง</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="frow"><label>วันที่จอง *</label><input type="date" id="mDate"></div>
+        <div class="frow"><label>สถานะ *</label><select id="mStatus"></select></div>
+        <div class="frow"><label>ชื่อลูกค้า *</label><input type="text" id="mName" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="frow"><label>เลข PO</label><input type="text" id="mPO" placeholder="เลขที่ใบ PO..."></div>
+        <div class="frow"><label>เบอร์โทร</label><input type="text" id="mPhone" placeholder="0xx-xxx-xxxx"></div>
+        <div class="frow"><label>ที่มาลูกค้า</label><select id="mSource"></select></div>
+        <div class="frow"><label>ที่ปรึกษาการขาย *</label><select id="mSC"></select></div>
+        <div class="frow"><label>ไฟแนนซ์ (F/N)</label><select id="mFinance"></select></div>
+        <input type="hidden" id="mRelDate">
+        <div class="frow span2" style="padding:0;margin-top:4px;">
+          <div style="width:100%;background:linear-gradient(135deg,#f0faf0 0%,#e6f7e6 100%);border:1.5px solid #a8d8a8;border-radius:12px;padding:14px 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;">
+            <div style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+              <span style="font-size:14px;">🚛</span>
+              <span style="font-size:12px;font-weight:700;color:#2d6a2d;">ข้อมูลรถ</span>
+              <span style="font-size:10px;color:#5a9a5a;margin-left:2px;">เลือกรหัสรุ่นรถเพื่อเติมข้อมูลอัตโนมัติ</span>
+            </div>
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รหัสรุ่นรถ * <span style="font-size:9px;color:#5a9a5a;font-weight:500;margin-left:4px;">พิมพ์เพื่อค้นหา</span></label>
+              <input type="text" id="mModelCode" placeholder="เช่น UNA10, TFR41..." autocomplete="off" oninput="onModelCodeInput()" onfocus="onModelCodeFocus()" onblur="onModelCodeBlur()" style="background:#fff;border-color:#a8d8a8;">
+            </div>
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รุ่นรถ <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span></label>
+              <input type="text" id="mModel" placeholder="—" readonly style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">ชื่อรุ่นรถ <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span></label>
+              <input type="text" id="mModelName" placeholder="—" readonly style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+            <div class="frow" style="background:transparent;padding:0;margin:0;">
+              <label style="color:#2d6a2d;">รายละเอียดรถ <span style="font-size:9px;color:#5a9a5a;font-weight:400;margin-left:4px;">เติมอัตโนมัติ</span></label>
+              <input type="text" id="mDetail" placeholder="—" readonly style="background:#d4edda;color:#2d6a2d;cursor:default;border-color:#a8d8a8;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveBooking()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TARGET -->
+<div class="modal-overlay" id="targetModal">
+  <div class="modal-box" style="max-width:360px;">
+    <div class="modal-hdr"><h3>🎯 บันทึกเป้าการจำหน่าย</h3><button class="modal-close" onclick="closeTargetModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="frow" style="margin-bottom:12px;"><label>เดือน</label><input type="month" id="tMonth"></div>
+      <div class="frow"><label>เป้าการจำหน่าย (คัน)</label><input type="number" id="tTarget" placeholder="30" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeTargetModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveTarget()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">⚠️</div>
+    <div class="confirm-title" id="confirmTitle">ยืนยันการลบ</div>
+    <div class="confirm-msg" id="confirmMsg">คุณแน่ใจหรือไม่?</div>
+    <div class="confirm-btns">
+      <button class="btn btn-outline" onclick="closeConfirm()">ยกเลิก</button>
+      <button class="btn btn-red" id="confirmOkBtn" onclick="confirmOk()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATE PICKER -->
+<div class="datepick-overlay" id="datepickOverlay">
+  <div class="datepick-box">
+    <div class="datepick-hdr"><h3 id="datepickTitle">เลือกวันที่สำหรับรายงาน</h3><button class="dp-close" onclick="closeDatePick()">✕</button></div>
+    <div class="datepick-body"><label>ณ วันที่</label><input type="date" id="datepickInput"></div>
+    <div class="datepick-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeDatePick()">ยกเลิก</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmDatePick()">✅ ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RELEASE -->
+<div class="modal-overlay" id="releaseModal">
+  <div class="modal-box" style="width:min(96vw,680px);">
+    <div class="modal-hdr"><h3>🚗 บันทึกรายละเอียดการปล่อยรถ</h3><button class="modal-close" onclick="closeReleaseModal()">✕</button></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="frow"><label>ชื่อลูกค้า</label><input type="text" id="rl-customer" readonly class="input-readonly"></div>
+        <div class="frow"><label>ลูกค้ารับรถ</label><input type="text" id="rl-rcv-customer"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="frow"><label>วันที่ปล่อยรถ</label><input type="text" id="rl-release-date" readonly class="input-readonly"></div>
+        <div class="frow"><label>ที่ปรึกษาการขาย SC</label><input type="text" id="rl-sc" readonly class="input-readonly"></div>
+      </div>
+      <div class="rl-release-box">
+        <div class="rl-release-box-hdr"><span>📋 กรอกข้อมูลการปล่อยรถ</span></div>
+        <div class="rl-release-box-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="frow"><label>เลขทะเบียนป้ายแดง</label><input type="text" id="rl-plate"></div>
+            <div class="frow">
+              <label>ไฟแนนซ์</label>
+              <select id="rl-finance" onchange="onFinanceSelectChange()" disabled style="background:#f5f5f5;color:#555;cursor:not-allowed;"><option value="">-- เลือก --</option></select>
+              <div id="rl-finance-custom-wrap" style="display:none;margin-top:6px;"><input type="text" id="rl-finance-custom" placeholder="พิมพ์ชื่อไฟแนนซ์เอง..." style="font-size:12px;" readonly></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+            <div class="frow"><label>เลขเครื่อง</label><input type="text" id="rl-engine"></div>
+            <div class="frow"><label>เลขแชสซีส์</label><input type="text" id="rl-chassis"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
+            <div class="frow"><label>เลขที่ใบส่งมอบ</label><input type="text" id="rl-delivery"></div>
+            <div class="frow"><label>เลขที่ใบ PO</label><input type="text" id="rl-po" readonly class="input-readonly" style="background:#f0f0f0;color:#555;cursor:default;" title="ค่าอัตโนมัติจากรายการจอง"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:none;">
+        <input type="text" id="rl-model">
+        <select id="rl-model-full" onchange="onRlModelFullChange()"><option value="">-- เลือกรุ่น --</option></select>
+        <input type="text" id="rl-model-full-custom">
+        <div id="rl-model-full-custom-wrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeReleaseModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveAndPrintRelease()">💾 บันทึก & พิมพ์รายงาน</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: วันที่ปล่อยรถ -->
+<div class="modal-overlay" id="releaseDateModal">
+  <div class="modal-box" style="width:min(96vw,420px);">
+    <div class="modal-hdr" style="background:linear-gradient(135deg,var(--green),var(--green2));"><h3>🚗 บันทึกวันที่ปล่อยรถ</h3><button class="modal-close" onclick="closeReleaseDateModal()">✕</button></div>
+    <div class="modal-body" style="padding:24px 20px;">
+      <div style="background:#f0fff4;border:1.5px solid #86efac;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:20px;flex-shrink:0;">🚗</span>
+        <div><div style="font-size:13px;font-weight:700;color:#14532d;margin-bottom:3px;">ยืนยันการปล่อยรถ</div><div style="font-size:12px;color:#166534;line-height:1.6;">สถานะจะเปลี่ยนเป็น <strong>ปล่อย</strong> กรุณาระบุวันที่ปล่อยรถด้วย</div></div>
+      </div>
+      <div class="frow"><label>วันที่ปล่อยรถ *</label><input type="date" id="releaseDateInput" style="font-size:15px;font-weight:600;border-color:#86efac;"></div>
+      <div id="releaseDateError" style="display:none;margin-top:8px;font-size:12px;color:var(--red);font-weight:600;">⚠️ กรุณาระบุวันที่ปล่อยรถ</div>
+    </div>
+    <div class="modal-footer" style="border-top:1px solid #dcfce7;">
+      <button class="btn btn-outline" onclick="closeReleaseDateModal()">↩️ คืนสถานะจอง</button>
+      <button class="btn btn-green" onclick="confirmReleaseDate()">🚗 ยืนยันปล่อยรถ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: วันที่ยกเลิกจอง -->
+<div class="modal-overlay" id="cancelDateModal">
+  <div class="modal-box" style="width:min(96vw,420px);">
+    <div class="modal-hdr" style="background:linear-gradient(135deg,var(--red),var(--red2));"><h3>❌ บันทึกวันที่ยกเลิกจอง</h3><button class="modal-close" onclick="closeCancelDateModal()">✕</button></div>
+    <div class="modal-body" style="padding:24px 20px;">
+      <div style="background:#fff5f5;border:1.5px solid #fca5a5;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:20px;flex-shrink:0;">⚠️</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:3px;">ยืนยันการยกเลิกจอง</div>
+          <div style="font-size:12px;color:#7f1d1d;line-height:1.6;">สถานะจะเปลี่ยนเป็น <strong>ยกเลิกจอง</strong> กรุณาระบุวันที่ยกเลิกด้วย</div>
+        </div>
+      </div>
+      <!-- แสดงชื่อลูกค้า + รุ่นรถ -->
+      <div id="cancelDateInfo" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:14px;">
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#991b1b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">ลูกค้า</div>
+            <div id="cancelDateCustomerName" style="font-size:13px;font-weight:700;color:#7f1d1d;"></div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:10px;color:#991b1b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">รุ่นรถ</div>
+            <div id="cancelDateModelName" style="font-size:13px;font-weight:700;color:#7f1d1d;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="frow"><label>วันที่ยกเลิกจอง *</label><input type="date" id="cancelDateInput" style="font-size:15px;font-weight:600;border-color:#fca5a5;"></div>
+      <div id="cancelDateError" style="display:none;margin-top:8px;font-size:12px;color:var(--red);font-weight:600;">⚠️ กรุณาระบุวันที่ยกเลิกจอง</div>
+    </div>
+    <div class="modal-footer" style="border-top:1px solid #fde8e8;">
+      <button class="btn btn-outline" onclick="closeCancelDateModal()">↩️ ยกเลิก</button>
+      <button class="btn btn-red" onclick="confirmCancelDate()">❌ ยืนยันยกเลิกจอง</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="mModelCodeDropdown" style="display:none;position:fixed;background:#fff;border:1.5px solid var(--primary3);border-radius:9px;max-height:260px;overflow-y:auto;z-index:9000;box-shadow:0 8px 32px rgba(26,58,107,0.18);font-family:'Sarabun',sans-serif;"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
