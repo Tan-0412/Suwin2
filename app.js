@@ -1620,36 +1620,81 @@ function printReleaseReportFromList(releaseList, rDate) {
 function initReleaseReportPage() {
   const inp = document.getElementById('releaseReportDate');
   if (inp && !inp.value) inp.value = formatDateInput(new Date());
+  // Populate month dropdown from allBookings release dates
+  const sel = document.getElementById('releaseReportMonth');
+  if (sel) {
+    const months = new Set();
+    (allBookings||[]).forEach(b => {
+      if (b['วันที่ปล่อย']) {
+        const d = String(b['วันที่ปล่อย']).trim();
+        // support yyyy-mm-dd or dd/mm/yyyy
+        let ym = '';
+        if (/^\d{4}-\d{2}-\d{2}/.test(d)) { ym = d.slice(0,7); }
+        else if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) { const p=d.split('/'); ym=p[2]+'-'+p[1]; }
+        if (ym) months.add(ym);
+      }
+    });
+    const sorted = Array.from(months).sort().reverse();
+    sel.innerHTML = '<option value="">— เลือกเดือน —</option>';
+    sorted.forEach(ym => {
+      const o = document.createElement('option');
+      o.value = ym;
+      o.textContent = thMonthYear(ym);
+      sel.appendChild(o);
+    });
+  }
 }
 function runReleaseReportPage() {
-  const dateVal = document.getElementById('releaseReportDate').value;
-  if (!dateVal) { toast('กรุณาเลือกวันที่ปล่อยรถ', 'err'); return; }
-  const [y, m, d] = dateVal.split('-');
-  const list = (allBookings||[]).filter(b => b['วันที่ปล่อย'] && fmtDate(String(b['วันที่ปล่อย']).trim())===fmtDate(dateVal));
-  const rDate = new Date(`${y}-${m}-${d}T00:00:00`);
-  const dateStr = thDateFull(rDate);
-  const curYM = rDate.getFullYear()+'-'+String(rDate.getMonth()+1).padStart(2,'0');
-  const monthLabel = thMonthYear(curYM);
+  const dateVal  = document.getElementById('releaseReportDate').value;
+  const monthVal = document.getElementById('releaseReportMonth').value;
+  if (!dateVal && !monthVal) { toast('กรุณาเลือกวันที่ หรือ เดือนปล่อยรถ', 'err'); return; }
+
+  let list, subLabel, rDate;
+
+  if (monthVal) {
+    // Filter by month (yyyy-mm)
+    list = (allBookings||[]).filter(b => {
+      if (!b['วันที่ปล่อย']) return false;
+      const d = String(b['วันที่ปล่อย']).trim();
+      let ym = '';
+      if (/^\d{4}-\d{2}-\d{2}/.test(d)) { ym = d.slice(0,7); }
+      else if (/^\d{2}\/\d{2}\/\d{4}/.test(d)) { const p=d.split('/'); ym=p[2]+'-'+p[1]; }
+      return ym === monthVal;
+    });
+    subLabel = `ประจำเดือน ${thMonthYear(monthVal)}`;
+    rDate = null;
+  } else {
+    // Filter by exact date
+    const [y, m, d] = dateVal.split('-');
+    list = (allBookings||[]).filter(b => b['วันที่ปล่อย'] && fmtDate(String(b['วันที่ปล่อย']).trim())===fmtDate(dateVal));
+    rDate = new Date(`${y}-${m}-${d}T00:00:00`);
+    subLabel = `ประจำวันที่ ${thDateFull(rDate)}`;
+  }
+
   document.getElementById('releaseReportPreviewTitle').textContent = `รายงานการปล่อยรถ`;
-  document.getElementById('releaseReportPreviewSub').textContent   = `ประจำวันที่ ${dateStr}`;
+  document.getElementById('releaseReportPreviewSub').textContent   = subLabel;
   document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
   const tbody = document.getElementById('releaseReportBody');
-  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่พบรถที่ปล่อยในวันที่เลือก</div></td></tr>'; }
-  else { tbody.innerHTML = list.map(b => `<tr>
-    <td class="c" style="font-weight:800;font-size:13px;color:#c0392b;">${b['ไฟแนนซ์']||'—'}</td>
-    <td style="font-weight:600;">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||'—'}</td>
-    <td class="mono" style="font-size:11px;">${b['เลขเครื่อง']||'—'}</td>
-    <td class="mono" style="font-size:11px;">${b['เลขแชสซีส์']||'—'}</td>
-    <td style="font-weight:600;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||'—'}</td>
-    <td class="c" style="font-weight:800;color:#c0392b;">${b['เลขทะเบียน']||'—'}</td>
-    <td class="c">${b['เลขส่งมอบ']||'—'}</td>
-    <td class="c">${b['เลข PO']||'—'}</td>
-    <td>${b['ที่ปรึกษาการขาย']||'—'}</td>
-  </tr>`).join(''); }
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่พบรถที่ปล่อยในช่วงที่เลือก</div></td></tr>';
+  } else {
+    tbody.innerHTML = list.map(b => `<tr>
+      <td class="c" style="font-weight:800;font-size:13px;color:#c0392b;">${b['ไฟแนนซ์']||'—'}</td>
+      <td style="font-weight:600;">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${b['เลขเครื่อง']||'—'}</td>
+      <td class="mono" style="font-size:11px;">${b['เลขแชสซีส์']||'—'}</td>
+      <td style="font-weight:600;">${b['ลูกค้ารับรถ']||b['ชื่อลูกค้า']||'—'}</td>
+      <td class="c" style="font-weight:800;color:#c0392b;">${b['เลขทะเบียน']||'—'}</td>
+      <td class="c">${b['เลขส่งมอบ']||'—'}</td>
+      <td class="c">${b['เลข PO']||'—'}</td>
+      <td>${b['ที่ปรึกษาการขาย']||'—'}</td>
+    </tr>`).join('');
+  }
   document.getElementById('releaseReportPreviewCard').style.display = '';
   document.getElementById('releaseReportPrintBtn').style.display    = '';
   window._releaseReportList = list;
-  window._releaseReportDate = rDate;
+  window._releaseReportDate = rDate || (dateVal ? new Date(dateVal+'T00:00:00') : new Date());
+  window._releaseReportLabel = subLabel;
 }
 function doReleaseReportPage() {
   const list = window._releaseReportList, rDate = window._releaseReportDate;
