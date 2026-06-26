@@ -424,10 +424,13 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
   <div class="card" style="margin-bottom:14px;">
     <div class="card-hdr"><div><h2>📋 รายงานการปล่อยรถ</h2><p>เลือกวันที่ปล่อยรถแล้วกดแสดงรายงาน</p></div></div>
     <div class="card-body">
-      <div class="filter-row" style="align-items:flex-end;gap:12px;">
+      <div class="filter-row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;">
         <div class="frow" style="min-width:200px;"><label>วันที่ปล่อยรถ</label><input type="date" id="releaseReportDate"></div>
         <div class="frow" style="min-width:160px;"><label>เดือนปล่อยรถ</label><select id="releaseReportMonth"><option value="">— เลือกเดือน —</option></select></div>
+        <div class="frow" style="min-width:140px;"><label>ฝ่าย</label><select id="releaseReportDept" onchange="onDeptChange('releaseReportDept','releaseReportSC')"><option value="">ทั้งหมด</option></select></div>
+        <div class="frow" style="min-width:160px;"><label>SC ที่ปรึกษาการขาย</label><select id="releaseReportSC"><option value="">ทั้งหมด</option></select></div>
         <button class="btn btn-primary" onclick="runReleaseReportPage()">🔍 แสดงรายงาน</button>
+        <button class="btn btn-secondary" onclick="clearReleaseReportFilter()" style="background:#6b7280;color:#fff;">🗑️ ล้างตัวกรอง</button>
         <button class="btn btn-accent" id="releaseReportPrintBtn" onclick="doReleaseReportPage()" style="display:none;">🖨️ พิมพ์รายงาน</button>
       </div>
     </div>
