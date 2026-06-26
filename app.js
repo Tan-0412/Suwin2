@@ -151,7 +151,7 @@ function populateSel(id, data, valField, labelField, allLabel) {
 
 function populateDeptFilter() {
   const depts = [...new Set(meta.sc.map(s => s['ฝ่าย']).filter(Boolean))].sort();
-  ['fDept','r1Dept'].forEach(id => {
+  ['fDept','r1Dept','releaseReportDept'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const prev = sel.value;
@@ -1706,6 +1706,19 @@ function runReleaseReportPage() {
     return toTs(a['วันที่ปล่อย']) - toTs(b['วันที่ปล่อย']);
   });
 
+  // กรองตามฝ่าย / SC
+  const deptVal = document.getElementById('releaseReportDept')?.value || '';
+  const scVal   = document.getElementById('releaseReportSC')?.value   || '';
+  if (deptVal) {
+    list = list.filter(b => {
+      const sc = meta.sc.find(s => s['ที่ปรึกษาการขาย'] === (b['ที่ปรึกษาการขาย']||''));
+      return sc && sc['ฝ่าย'] === deptVal;
+    });
+  }
+  if (scVal) {
+    list = list.filter(b => (b['ที่ปรึกษาการขาย']||'') === scVal);
+  }
+
   document.getElementById('releaseReportPreviewTitle').textContent = `รายงานการปล่อยรถ`;
   document.getElementById('releaseReportPreviewSub').textContent   = subLabel;
   document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
@@ -1731,6 +1744,18 @@ function runReleaseReportPage() {
   window._releaseReportList = list;
   window._releaseReportDate = rDate || (dateVal ? new Date(dateVal+'T00:00:00') : new Date());
   window._releaseReportLabel = subLabel;
+}
+function clearReleaseReportFilter() {
+  const d = document.getElementById('releaseReportDate');
+  if (d) d.value = formatDateInput(new Date());
+  const m = document.getElementById('releaseReportMonth');
+  if (m) m.value = '';
+  const dept = document.getElementById('releaseReportDept');
+  if (dept) { dept.value = ''; onDeptChange('releaseReportDept','releaseReportSC'); }
+  const sc = document.getElementById('releaseReportSC');
+  if (sc) sc.value = '';
+  document.getElementById('releaseReportPreviewCard').style.display = 'none';
+  document.getElementById('releaseReportPrintBtn').style.display    = 'none';
 }
 function doReleaseReportPage() {
   const list = window._releaseReportList, rDate = window._releaseReportDate;
