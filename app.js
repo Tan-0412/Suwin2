@@ -1694,14 +1694,27 @@ function runReleaseReportPage() {
     subLabel = `ประจำวันที่ ${thDateFull(rDate)}`;
   }
 
+  // เรียงตามวันที่ปล่อย จากน้อยไปมาก
+  list.sort((a, b) => {
+    const toTs = v => {
+      if (!v) return 0;
+      const s = String(v).trim();
+      const p = s.split('/');
+      if (p.length === 3) return new Date(`${p[2].length===4?p[2]:'20'+p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}T00:00:00`).getTime();
+      return new Date(s).getTime() || 0;
+    };
+    return toTs(a['วันที่ปล่อย']) - toTs(b['วันที่ปล่อย']);
+  });
+
   document.getElementById('releaseReportPreviewTitle').textContent = `รายงานการปล่อยรถ`;
   document.getElementById('releaseReportPreviewSub').textContent   = subLabel;
   document.getElementById('releaseReportCount').textContent = list.length + ' คัน';
   const tbody = document.getElementById('releaseReportBody');
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9"><div class="empty">ไม่พบรถที่ปล่อยในช่วงที่เลือก</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10"><div class="empty">ไม่พบรถที่ปล่อยในช่วงที่เลือก</div></td></tr>';
   } else {
     tbody.innerHTML = list.map(b => `<tr>
+      <td class="c" style="font-size:11px;">${fmtDate(b['วันที่ปล่อย']||'')||'—'}</td>
       <td class="c" style="font-weight:800;font-size:13px;color:#c0392b;">${b['ไฟแนนซ์']||'—'}</td>
       <td style="font-weight:600;">${b['ชื่อรุ่นรถ']||b['รายละเอียดรถ']||'—'}</td>
       <td class="mono" style="font-size:11px;">${b['เลขเครื่อง']||'—'}</td>
