@@ -233,6 +233,29 @@ function populateMonthFilter() {
     });
     if (prev) sel.value = prev;
   });
+
+  // populate releaseReportMonth จาก วันที่ปล่อย (เรียกตรงนี้เพราะ allBookings โหลดเสร็จแล้ว)
+  const relSel = document.getElementById('releaseReportMonth');
+  if (relSel) {
+    const relMonths = new Set();
+    allBookings.forEach(r => {
+      const d = r['วันที่ปล่อย'];
+      if (!d) return;
+      const p = String(d).trim().split('/');
+      if (p.length >= 3) {
+        const y = p[2].length === 4 ? p[2] : '20'+p[2];
+        relMonths.add(y + '-' + p[1].padStart(2,'0'));
+      }
+    });
+    const prevVal = relSel.value;
+    relSel.innerHTML = '<option value="">— เลือกเดือน —</option>';
+    [...relMonths].sort().reverse().forEach(ym => {
+      const [y, m] = ym.split('-');
+      const o = document.createElement('option');
+      o.value = ym; o.textContent = TH[parseInt(m)] + ' ' + y; relSel.appendChild(o);
+    });
+    if (prevVal) relSel.value = prevVal;
+  }
 }
 
 function filterBooking() {
