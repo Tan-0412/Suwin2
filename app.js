@@ -1884,7 +1884,7 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
   const calcSC = (sc) => {
     const name = sc['ที่ปรึกษาการขาย'];
     const carryRows = prevRows.filter(r => r['ที่ปรึกษาการขาย']===name && (isBK(r['สถานะ'])||isERS(r['สถานะ'])) && !isCL(r['สถานะ']));
-    const bkThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && isBK(r['สถานะ']));
+    const bkThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
     const normM = s=>(s||'').trim();
     const getM1fromRow = r => { const found=(meta.model||[]).find(m=>normM(m['รุ่นรถ'])===normM(r['รุ่นรถ'])); return found?normM(found['รุ่นรถ1']):normM(r['รุ่นรถ']); };
     const srcThisRows = curRows.filter(r => r['ที่ปรึกษาการขาย']===name && !isCL(r['สถานะ']));
