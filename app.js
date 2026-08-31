@@ -1934,9 +1934,9 @@ function renderSummary(type, scList, curRows, prevRows, allRows, srcCols, fixedS
         window[dataKey]=rows.map(r=>({date:fmtDate(r[dateField]||r['วันที่จอง']||''),name:r['ชื่อลูกค้า']||'',model:r['ชื่อรุ่นรถ']||r['รายละเอียดรถ']||r['รุ่นรถ']||''}));
         return `<td class="${cssClass} td-num sum-clickable" style="cursor:pointer;${extraStyle}" onmouseenter="showSumTip(event,'${encodeURIComponent(label)}','${dataKey}')" onmouseleave="hideSumTip()" title="hover ดูรายละเอียด">${val}</td>`;
       };
-      const bkMdlCells=modelCols.map(m=>{const rows=(d._bkThisRows||[]).filter(r=>(r['รุ่นรถ']||'').trim()===m.trim());const v=rows.length;tBkMdl[m]+=v;gBkMdl[m]+=v;return clickTd(v,rows,`จองเดือนนี้ · ${m} · ${d.name}`,'td-bk','วันที่จอง');}).join('');
+      const bkMdlCells=modelCols.map(m=>{const rows=(d._bkThisRows||[]).filter(r=>d._getM1(r)===d._normM(m));const v=rows.length;tBkMdl[m]+=v;gBkMdl[m]+=v;return clickTd(v,rows,`จองเดือนนี้ · ${m} · ${d.name}`,'td-bk','วันที่จอง');}).join('');
       const srcCells=srcCols.map(s=>{const rows=s==='อื่นๆ'?(d._bkThisRows||[]).filter(r=>!fixedSrc.includes(r['ที่มาลูกค้า'])&&r['ที่มาลูกค้า']):(d._bkThisRows||[]).filter(r=>r['ที่มาลูกค้า']===s);const v=rows.length;tSrc[s]+=v;gSrc[s]+=v;return clickTd(v,rows,`แหล่งที่มา · ${s} · ${d.name}`,'td-src','วันที่จอง');}).join('');
-      const rsMdlCells=modelCols.map(m=>{const rows=(d._rsThisRows||[]).filter(r=>(r['รุ่นรถ']||'').trim()===m.trim());const v=rows.length;tRsMdl[m]+=v;gRsMdl[m]+=v;return clickTd(v,rows,`ปล่อยเดือนนี้ · ${m} · ${d.name}`,'td-rs','วันที่ปล่อย');}).join('');
+      const rsMdlCells=modelCols.map(m=>{const rows=(d._rsThisRows||[]).filter(r=>d._getM1(r)===d._normM(m));const v=rows.length;tRsMdl[m]+=v;gRsMdl[m]+=v;return clickTd(v,rows,`ปล่อยเดือนนี้ · ${m} · ${d.name}`,'td-rs','วันที่ปล่อย');}).join('');
       tCarry+=d.carry;tBkT+=d.bkTotal;tTotal+=d.totalCurrent;tRsT+=d.rsTotal;tCl+=d.cl;
       html+=`<tr class="${rowCls}"><td class="name-cell" style="font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.name}</td>
         ${clickTd(d.carry,d._carryRows||[],`จองยกมา · ${d.name}`,'td-carry','วันที่จอง')}
