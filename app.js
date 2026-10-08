@@ -14,15 +14,19 @@ let confirmCallback = null;
 // ════════════════════════════════════════
 function init() {
   const FIXED_URL = 'https://script.google.com/macros/s/AKfycbxr3b1bYEMUlruD3UQNOXXNUtE89iHkwzmJ3V9EFRVDziQq29sOsMSAi3JCpEcXz_tt/exec';
-  const saved = localStorage.getItem('booking_app');
-  if (saved) {
-    try { const s = JSON.parse(saved); scriptUrl = s.url || FIXED_URL; } catch(e) { scriptUrl = FIXED_URL; }
-  } else { scriptUrl = FIXED_URL; }
+  // ใช้ FIXED_URL เป็นหลัก — URL ที่เก็บไว้ในเครื่องจะถูกใช้ก็ต่อเมื่อผู้ใช้ตั้งเองในหน้า "ตั้งค่า" (custom=true)
+  // กันปัญหา URL เก่าที่ค้างในเครื่องจากเวอร์ชันก่อนหน้า ทำให้โหลดไม่ขึ้น
+  scriptUrl = FIXED_URL;
+  try {
+    const saved = localStorage.getItem('booking_app');
+    if (saved) { const s = JSON.parse(saved); if (s && s.custom && s.url) scriptUrl = s.url; }
+  } catch(e) {}
   const params = new URLSearchParams(window.location.search);
-  if (params.get('url')) scriptUrl = decodeURIComponent(params.get('url'));
+  if (params.get('url')) {
+    scriptUrl = decodeURIComponent(params.get('url'));
+    saveSetting(true);
+  }
   document.getElementById('gsUrl').value = scriptUrl;
-  saveSetting();
-  setConn(true);
   loadAll();
   updateShareUrl();
   const modalBox = document.querySelector('#bookingModal .modal-box');
@@ -40,18 +44,32 @@ function init() {
 
 async function loadAll() {
   setConn(null);
-  try { await callGS({ action: 'ping' }); setConn(true); } catch(e) { setConn(false); }
-  try { await loadMeta(); } catch(e) { console.error('loadMeta:', e); }
-  try { await loadBookings(); } catch(e) {
-    console.error('loadBookings:', e);
-    document.getElementById('bookingBody').innerHTML =
-      '<tr><td colspan="11"><div class="empty">❌ โหลดไม่สำเร็จ: ' + e.message + '</div></td></tr>';
+  if (!scriptUrl) { setConn(false); showLoadError('ยังไม่ได้ตั้งค่า URL ของ Apps Script'); return; }
+  // เรียก meta / bookings / targets พร้อมกัน (เดิมเรียกทีละตัว ทำให้รอนานมาก)
+  const [metaR, bkR, tgR] = await Promise.allSettled([loadMeta(), loadBookings(), loadTargets()]);
+  if (metaR.status === 'rejected') console.error('loadMeta:', metaR.reason);
+  if (tgR.status === 'rejected')   console.error('loadTargets:', tgR.reason);
+  if (bkR.status === 'rejected') {
+    console.error('loadBookings:', bkR.reason);
+    showLoadError(bkR.reason && bkR.reason.message || 'ไม่ทราบสาเหตุ');
   }
-  try { await loadTargets(); } catch(e) { console.error('loadTargets:', e); }
+  const anyOk = metaR.status === 'fulfilled' || bkR.status === 'fulfilled';
+  setConn(anyOk);
+  if (metaR.status === 'rejected') toast('⚠️ โหลดข้อมูลตั้งค่า (meta) ไม่สำเร็จ: ' + (metaR.reason && metaR.reason.message || ''), 'warn');
+  // meta อาจมาถึงหลัง bookings → วาดตาราง/กราฟใหม่อีกครั้งให้ครบ
+  if (metaR.status === 'fulfilled' && bkR.status === 'fulfilled') filterBooking();
   ['r2BodySmall','r2BodyBig','r3BodySmall','r3BodyBig'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<div class="empty">กดแท็บนี้เพื่อโหลดรายงาน</div>';
   });
+}
+
+function showLoadError(msg) {
+  const el = document.getElementById('bookingBody');
+  if (!el) return;
+  el.innerHTML = '<tr><td colspan="11"><div class="empty">❌ โหลดไม่สำเร็จ: ' + escHtml(msg) +
+    '<br><br><button class="btn btn-primary btn-sm" onclick="loadAll()">🔄 ลองใหม่</button> ' +
+    '<button class="btn btn-outline btn-sm" onclick="switchTab(\'setup\')">⚙️ ตรวจสอบ URL</button></div></td></tr>';
 }
 
 // ════════════════════════════════════════
@@ -75,9 +93,9 @@ function switchTab(tab) {
 function connectSheet() {
   const url = document.getElementById('gsUrl').value.trim();
   if (!url) { toast('กรุณาใส่ URL', 'err'); return; }
-  scriptUrl = url; saveSetting(); setConn(true); loadAll(); updateShareUrl();
-  document.getElementById('setupStatus').textContent = '✅ บันทึกแล้ว';
-  toast('✅ เชื่อมต่อแล้ว!', 'ok');
+  scriptUrl = url; saveSetting(true); loadAll(); updateShareUrl();
+  document.getElementById('setupStatus').textContent = '✅ บันทึกแล้ว กำลังเชื่อมต่อ...';
+  toast('✅ บันทึก URL แล้ว กำลังโหลดข้อมูล', 'ok');
 }
 async function testConn() {
   const url = document.getElementById('gsUrl').value.trim();
@@ -89,7 +107,7 @@ async function testConn() {
     else throw new Error('ไม่ตอบสนอง');
   } catch(e) { document.getElementById('setupStatus').textContent = '❌ ' + e.message; toast('❌ ไม่ได้', 'err'); }
 }
-function saveSetting() { localStorage.setItem('booking_app', JSON.stringify({ url: scriptUrl })); }
+function saveSetting(custom) { try { localStorage.setItem('booking_app', JSON.stringify({ url: scriptUrl, custom: !!custom })); } catch(e) {} }
 function setConn(ok) {
   const dot = document.getElementById('connDot');
   const lbl = document.getElementById('connLbl');
@@ -112,9 +130,9 @@ function resetCache() {
 // ════════════════════════════════════════
 async function loadMeta() {
   if (!scriptUrl) return;
-  try {
+  {
     const d = await callGS({ action: 'getMeta' });
-    meta = d;
+    meta = Object.assign({ sc:[], isuzu:[], model:[], status:[], source:[] }, d);
     populateDeptFilter();
     populateSel('fSC', meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด');
     populateSel('fStatus', meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
@@ -125,7 +143,7 @@ async function loadMeta() {
     populateBookingFinance();
     ['r1SC','r2SC'].forEach(id => populateSel(id, meta.sc, 'ที่ปรึกษาการขาย', '', 'ทั้งหมด'));
     populateSel('r1Status', meta.status, 'STATUS', 'สถานะ', 'ทั้งหมด');
-  } catch(e) { console.error('loadMeta:', e); }
+  }
 }
 
 function populateSel(id, data, valField, labelField, allLabel) {
@@ -204,8 +222,7 @@ async function loadBookings() {
     populateMonthFilter();
     filterBooking();
   } catch(e) {
-    document.getElementById('bookingBody').innerHTML =
-      `<tr><td colspan="11"><div class="empty">❌ ${e.message}</div></td></tr>`;
+    throw e; // ให้ loadAll() แสดงข้อความ error + ปุ่มลองใหม่
   }
 }
 
@@ -1328,17 +1345,33 @@ async function callGS(params, url) {
   const base = url || scriptUrl;
   if (!base) throw new Error('ไม่มี URL');
   const qs = new URLSearchParams(params).toString();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 30000);
-  try {
-    const res = await fetch(base + '?' + qs, { signal: controller.signal });
-    clearTimeout(timer);
-    return await res.json();
-  } catch(e) {
-    clearTimeout(timer);
-    if (e.name === 'AbortError') throw new Error('หมดเวลาเชื่อมต่อ (timeout)');
-    throw e;
+  // อ่านข้อมูล (ping/get*) ลองใหม่ได้ 1 ครั้ง (Apps Script ครั้งแรกมัก cold start ช้า)
+  // คำสั่งเขียน (add/update/delete/save) ห้ามลองซ้ำ เพราะอาจบันทึกซ้ำสองรอบ
+  const isRead = /^(ping|get)/i.test(String(params && params.action || ''));
+  const attempts = isRead ? 2 : 1;
+  let lastErr;
+  for (let n = 1; n <= attempts; n++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000);
+    try {
+      const res = await fetch(base + '?' + qs, { signal: controller.signal });
+      if (!res.ok) throw new Error('เซิร์ฟเวอร์ตอบ HTTP ' + res.status + ' — ตรวจสอบ URL / การ Deploy ของ Apps Script');
+      const text = await res.text(); // timer ยังทำงานอยู่ระหว่างอ่าน body ด้วย
+      clearTimeout(timer);
+      let d;
+      try { d = JSON.parse(text); }
+      catch(pe) { throw new Error('Apps Script ไม่ได้ตอบเป็น JSON (อาจเป็นหน้า login/error) — ตรวจสอบว่า Deploy เป็น Web app และ Access: Anyone'); }
+      if (d && d.error && !d.ok && !d.data) throw new Error(String(d.error));
+      return d;
+    } catch(e) {
+      clearTimeout(timer);
+      lastErr = e.name === 'AbortError' ? new Error('หมดเวลาเชื่อมต่อ (timeout 25 วินาที)')
+              : (e instanceof TypeError ? new Error('เชื่อมต่อ Apps Script ไม่ได้ (เครือข่าย / URL ผิด / ไม่ได้ตั้ง Access: Anyone)') : e);
+      const retryable = e.name === 'AbortError' || e instanceof TypeError;
+      if (!retryable || n === attempts) break;
+    }
   }
+  throw lastErr;
 }
 
 // ════════════════════════════════════════
