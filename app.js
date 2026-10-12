@@ -85,6 +85,72 @@ function switchTab(tab) {
   if (tab === 'custlist' && scriptUrl) runCustListReport();
   if (tab === 'summary' && scriptUrl) runSummaryReport();
   if (tab === 'release') initReleaseReportPage();
+  if (tab === 'addmodel') initModelForm();
+}
+
+// ════════════════════════════════════════
+//  ADD MODEL (ชีต Model)
+// ════════════════════════════════════════
+function initModelForm() {
+  const fill = (id, key) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = sel.value;
+    const vals = [...new Set((meta.model||[]).map(m => String(m[key]||'').trim()).filter(Boolean))];
+    sel.innerHTML = '<option value="">-- เลือก --</option>';
+    vals.forEach(v => { const o=document.createElement('option'); o.value=o.textContent=v; sel.appendChild(o); });
+    const oc=document.createElement('option'); oc.value='__custom__'; oc.textContent='✏️ พิมพ์เอง'; sel.appendChild(oc);
+    if (prev) sel.value = prev;
+  };
+  fill('nmGroup','รุ่นรถ'); fill('nmGroup1','รุ่นรถ1');
+}
+function onNmSelChange(selId, inpId) {
+  const show = document.getElementById(selId).value === '__custom__';
+  const inp = document.getElementById(inpId);
+  inp.style.display = show ? '' : 'none';
+  if (!show) inp.value = '';
+}
+function _nmVal(selId, inpId) {
+  const v = document.getElementById(selId).value;
+  return v === '__custom__' ? document.getElementById(inpId).value.trim() : v.trim();
+}
+function checkModelDup() {
+  const code = document.getElementById('nmCode').value.trim().toUpperCase();
+  const warn = document.getElementById('nmDupWarn');
+  const dup = code && (meta.model||[]).some(m => String(m['รหัสรุ่นรถ']||'').trim().toUpperCase() === code);
+  warn.style.display = dup ? 'block' : 'none';
+  warn.textContent = dup ? '⚠️ รหัสรุ่นรถนี้มีอยู่ในชีต Model แล้ว' : '';
+  return !!dup;
+}
+function clearModelForm() {
+  ['nmCode','nmName','nmDetail','nmPrice','nmGroupCustom','nmGroup1Custom'].forEach(id => { document.getElementById(id).value=''; });
+  ['nmGroup','nmGroup1'].forEach(id => { document.getElementById(id).value=''; });
+  ['nmGroupCustom','nmGroup1Custom'].forEach(id => { document.getElementById(id).style.display='none'; });
+  document.getElementById('nmDupWarn').style.display = 'none';
+}
+async function saveNewModel() {
+  const code   = document.getElementById('nmCode').value.trim().toUpperCase();
+  const name   = document.getElementById('nmName').value.trim();
+  const detail = document.getElementById('nmDetail').value.trim();
+  const price  = document.getElementById('nmPrice').value.trim();
+  const group  = _nmVal('nmGroup','nmGroupCustom');
+  const group1 = _nmVal('nmGroup1','nmGroup1Custom');
+  if (!code || !name || !detail || !group || !group1) { toast('กรุณากรอกข้อมูลที่จำเป็น (*)', 'err'); return; }
+  if (checkModelDup()) { toast('❌ รหัสรุ่นรถนี้มีอยู่แล้ว', 'err'); return; }
+  const btn = document.getElementById('nmSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳ กำลังบันทึก...';
+  try {
+    const r = await callGS({ action:'addModel', 'รหัสรุ่นรถ':code, 'ชื่อรุ่นรถ':name, 'รายละเอียดรถ':detail, 'ราคา':price, 'รุ่นรถ':group, 'รุ่นรถ1':group1 });
+    if (!(r && r.ok)) throw new Error((r && r.error) || 'ไม่สำเร็จ');
+    toast('✅ เพิ่มรุ่นรถสำเร็จ!', 'ok');
+    const row = { 'รหัสรุ่นรถ':code, 'ชื่อรุ่นรถ':name, 'รายละเอียดรถ':detail, 'ราคา':price, 'รุ่นรถ':group, 'รุ่นรถ1':group1 };
+    meta.model = meta.model || []; meta.model.push(row);
+    const tb = document.getElementById('nmRecent');
+    if (tb.querySelector('.empty')) tb.innerHTML = '';
+    tb.insertAdjacentHTML('afterbegin', `<tr><td class="mono">${escHtml(code)}</td><td>${escHtml(name)}</td><td>${escHtml(detail)}</td><td class="r">${price?parseInt(price).toLocaleString():'—'}</td><td>${escHtml(group)}</td><td>${escHtml(group1)}</td></tr>`);
+    clearModelForm(); initModelForm();
+  } catch(e) { toast('❌ ' + e.message, 'err'); }
+  finally { btn.disabled = false; btn.textContent = '💾 บันทึกรุ่นรถ'; }
 }
 
 // ════════════════════════════════════════
