@@ -275,6 +275,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
   <div class="tab" onclick="switchTab('custlist')" id="tab-custlist">📋 รายชื่อลูกค้าจอง-ปล่อย</div>
   <div class="tab" onclick="switchTab('summary')" id="tab-summary">📋 รายงานสรุปรวมยอดจอง-ปล่อย</div>
   <div class="tab" onclick="switchTab('target')" id="tab-target">🎯 เป้าจำหน่าย</div>
+  <div class="tab" onclick="switchTab('addmodel')" id="tab-addmodel">🚛 เพิ่มรุ่นรถ</div>
   <div class="tab" onclick="switchTab('setup')" id="tab-setup">⚙️ ตั้งค่า</div>
 </div>
 
@@ -499,6 +500,45 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
         <thead><tr><th>#</th><th>เดือน</th><th class="r">เป้าการจำหน่าย</th><th class="c">จัดการ</th></tr></thead>
         <tbody id="targetBody"><tr><td colspan="4"><div class="loader"><div class="loader-spin"></div><br>กำลังโหลด...</div></td></tr></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: ADD MODEL -->
+<div class="page" id="page-addmodel">
+  <div style="max-width:640px;margin:0 auto;">
+    <div class="card">
+      <div class="card-hdr"><div><h2>🚛 เพิ่มรุ่นรถใหม่ (ชีต Model)</h2><p>กรอกข้อมูลแล้วกดบันทึก ระบบจะเพิ่มแถวใหม่ในชีต Model</p></div></div>
+      <div class="card-body">
+        <div class="form-grid-2">
+          <div class="frow"><label>รหัสรุ่นรถ *</label><input type="text" id="nmCode" placeholder="เช่น UNA10" autocomplete="off" oninput="this.value=this.value.toUpperCase();checkModelDup()"></div>
+          <div class="frow"><label>ชื่อรุ่นรถ *</label><input type="text" id="nmName" placeholder="เช่น TFR41GFMNATS" autocomplete="off"></div>
+          <div class="frow span2"><label>รายละเอียดรถ *</label><input type="text" id="nmDetail" placeholder="เช่น Spark 2.2 Flat Deck(SWB)" autocomplete="off"></div>
+          <div class="frow"><label>ราคา (บาท)</label><input type="number" id="nmPrice" placeholder="692000" min="0"></div>
+          <div class="frow"><label>รุ่นรถ *</label>
+            <select id="nmGroup" onchange="onNmSelChange('nmGroup','nmGroupCustom')"></select>
+            <input type="text" id="nmGroupCustom" placeholder="พิมพ์รุ่นรถใหม่..." style="display:none;margin-top:6px;">
+          </div>
+          <div class="frow"><label>รุ่นรถ1 *</label>
+            <select id="nmGroup1" onchange="onNmSelChange('nmGroup1','nmGroup1Custom')"></select>
+            <input type="text" id="nmGroup1Custom" placeholder="พิมพ์รุ่นรถ1 ใหม่..." style="display:none;margin-top:6px;">
+          </div>
+        </div>
+        <div id="nmDupWarn" style="display:none;margin-top:10px;font-size:12px;color:var(--red);font-weight:600;"></div>
+        <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+          <button class="btn btn-outline" onclick="clearModelForm()">✕ ล้างฟอร์ม</button>
+          <button class="btn btn-primary" id="nmSaveBtn" onclick="saveNewModel()">💾 บันทึกรุ่นรถ</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>🕘 เพิ่มล่าสุด (ในเซสชันนี้)</h2></div>
+      <div class="tbl-wrap">
+        <table style="min-width:500px;">
+          <thead><tr><th>รหัสรุ่นรถ</th><th>ชื่อรุ่นรถ</th><th>รายละเอียดรถ</th><th class="r">ราคา</th><th>รุ่นรถ</th><th>รุ่นรถ1</th></tr></thead>
+          <tbody id="nmRecent"><tr><td colspan="6"><div class="empty">ยังไม่มีรายการ</div></td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
