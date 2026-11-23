@@ -105,6 +105,40 @@
   };
   const dShow = v => v ? fmtDate(String(v).trim()) : '';
 
+  // ── กราฟแท่งเปรียบเทียบรายเดือน (ปีของวันที่รายงาน) — ใช้ div ล้วนเพื่อให้ html2canvas แคปได้ชัวร์ ──
+  const TH_MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  // สถานะในระบบเป็นรหัส BK/EBK/RS/ERS/CL/PS (isCL, isPS มาจาก app.js)
+  const isCancelSt = r => isCL(r['สถานะ']);      // ยกเลิกจอง
+  const isProspectSt = r => isPS(r['สถานะ']);    // มุ่งหวัง
+
+  // series = [{name, color, vals:[12 ค่า]}]
+  function buildChart(width, title, series) {
+    const H = 190;                                   // ความสูงพื้นที่แท่งสูงสุด (px)
+    const max = Math.max(1, ...series.flatMap(s => s.vals));
+    const colW = width / 12;
+    const barW = Math.max(14, Math.min(34, Math.floor((colW - 14) / series.length)));
+    const legend = series.map(s => `<span style="display:inline-block;margin:0 12px;font-size:15px;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;background:${s.color};border:1px solid #000;vertical-align:middle;margin-right:6px;"></span>${s.name}</span>`).join('');
+    const cols = TH_MON.map((m, i) => {
+      const bars = series.map(s => {
+        const v = s.vals[i];
+        const h = v > 0 ? Math.max(3, Math.round(v / max * H)) : 0;
+        return `<div style="width:${barW}px;margin:0 2px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:${H + 22}px;">
+          <div style="font-size:14px;font-weight:700;line-height:20px;height:20px;color:${v ? '#000' : '#aaa'};">${v}</div>
+          <div style="width:${barW}px;height:${h}px;background:${s.color};${h ? 'border:1px solid #000;border-bottom:0;box-sizing:border-box;' : ''}"></div>
+        </div>`;
+      }).join('');
+      return `<div style="width:${colW}px;text-align:center;">
+        <div style="display:flex;justify-content:center;align-items:flex-end;border-bottom:1.5px solid #000;">${bars}</div>
+        <div style="font-size:15px;font-weight:700;line-height:26px;height:26px;color:#000;">${m}</div>
+      </div>`;
+    }).join('');
+    return `<div style="width:${width}px;border:1.5px solid #000;box-sizing:border-box;padding:10px 0 6px;margin-bottom:16px;background:#fff;">
+      <div style="text-align:center;font-size:18px;font-weight:800;line-height:1.5;">${title}</div>
+      <div style="text-align:center;margin:4px 0 8px;">${legend}</div>
+      <div style="display:flex;">${cols}</div>
+    </div>`;
+  }
+
   function buildMonthly(u, allRows, rDate) {
     const ym = rDate.getFullYear() + '-' + String(rDate.getMonth() + 1).padStart(2, '0');
     const isBook = u.kind === 'booking';
@@ -139,15 +173,38 @@
       ? rows.map((r, i) => '<tr>' + cells(r, i).map(v => `<td style="${tdS}">${esc(v)}</td>`).join('') + '</tr>').join('')
       : Array.from({ length: 3 }, () => '<tr>' + cols.map(() => `<td style="${tdS}"></td>`).join('') + '</tr>').join('');
 
+    // ── ข้อมูลกราฟรายเดือนของปีปัจจุบัน (นับทั้งปี ไม่ผูกกับเดือนที่เลือก) ──
+    const yr = rDate.getFullYear();
+    const deptRows = allRows.filter(r => deptOf(r).includes(u.dept));
+    const perMonth = fn => Array.from({ length: 12 }, (_, i) => {
+      const ymi = yr + '-' + String(i + 1).padStart(2, '0');
+      return fn(deptRows.filter(r => r[dateKey] && dateMatchMonth(r[dateKey], ymi)));
+    });
+    let series;
+    if (isBook) {
+      const booked = perMonth(ms => ms.filter(r => !isProspectSt(r)).length);   // ทุกสถานะ ยกเว้นมุ่งหวัง
+      const cancel = perMonth(ms => ms.filter(r => !isProspectSt(r) && isCancelSt(r)).length);
+      const remain = perMonth(ms => ms.filter(r => !isCancelSt(r)).length);      // คงเหลือ = นับแบบเดียวกับหน้าสรุปเดิม (ตัด CL ออก)
+      series = [
+        { name: 'ยอดจอง (คัน)',       color: '#6fa8dc', vals: booked },
+        { name: 'ยอดยกเลิกจอง (คัน)', color: '#e06666', vals: cancel },
+        { name: 'ยอดจองคงเหลือ (ไม่รวมยกเลิก)', color: '#f6b26b', vals: remain }
+      ];
+    } else {
+      series = [{ name: 'ยอดปล่อยรถ (คัน)', color: '#93c47e', vals: perMonth(ms => ms.length) }];
+    }
+    const chartHtml = buildChart(width, 'กราฟเปรียบเทียบรายเดือน ปี ' + (yr + 543) + ' · ' + title, series);
+
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
     holder.innerHTML = `<div style="width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
       <div style="text-align:center;font-size:17px;line-height:1.5;">${COMPANY[u.dept]}</div>
       <div style="text-align:center;font-size:26px;font-weight:800;line-height:1.5;">${title}</div>
       <div style="text-align:center;font-size:21px;font-weight:800;line-height:1.5;margin-bottom:14px;">ประจำเดือน ${thMonthYear(ym)}</div>
+      ${chartHtml}
       <table style="width:${width}px;border-collapse:collapse;table-layout:fixed;">
         <colgroup>${cols.map(c => `<col style="width:${c[1]}px">`).join('')}</colgroup>
-        <thead><tr>${cols.map(c => `<th style="${B}background:${hdrBg};padding:6px 4px;font-size:17px;font-weight:700;height:40px;color:#000;">${c[0]}</th>`).join('')}</tr></thead>
+        <thead><tr>${cols.map(c => `<th style="${B}background:${hdrBg};padding:0;font-size:17px;font-weight:700;height:40px;color:#000;text-align:center;vertical-align:middle;"><div style="display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:4px;line-height:1.3;">${c[0]}</div></th>`).join('')}</tr></thead>
         <tbody>${body}</tbody>
       </table></div>`;
     document.body.appendChild(holder);
