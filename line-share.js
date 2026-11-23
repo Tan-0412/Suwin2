@@ -11,14 +11,11 @@
   // ── รายการรายงานที่เลือกส่งได้ (แก้/เพิ่มได้ที่นี่) ──
   // els() คืน [{el, label}] = ส่วนของหน้าที่จะแคปเป็นรูป 1 รูปต่อ 1 รายการ
   const UNITS = [
-    { id:'r2s', grp:'📊 จอง-ปล่อยรายเดือน', label:'ฝ่ายขายรถเล็ก', tab:'report2', body:'r2BodySmall',
-      els:() => [{ el: byId('r2BodySmall').closest('.card'), label:'จอง-ปล่อยรายเดือน · ฝ่ายขายรถเล็ก' }] },
-    { id:'r2b', grp:'📊 จอง-ปล่อยรายเดือน', label:'ฝ่ายขายรถใหญ่', tab:'report2', body:'r2BodyBig',
-      els:() => [{ el: byId('r2BodyBig').closest('.card'), label:'จอง-ปล่อยรายเดือน · ฝ่ายขายรถใหญ่' }] },
-    { id:'r3s', grp:'📊 รวมจอง-ปล่อยรายเดือน (Daily SC)', label:'ฝ่ายขายรถเล็ก', tab:'report3', body:'r3BodySmall',
-      els:() => [{ el: byId('r3BodySmall').closest('.card'), label:'รวมจอง-ปล่อยรายเดือน · ฝ่ายขายรถเล็ก' }] },
-    { id:'r3b', grp:'📊 รวมจอง-ปล่อยรายเดือน (Daily SC)', label:'ฝ่ายขายรถใหญ่', tab:'report3', body:'r3BodyBig',
-      els:() => [{ el: byId('r3BodyBig').closest('.card'), label:'รวมจอง-ปล่อยรายเดือน · ฝ่ายขายรถใหญ่' }] },
+    // ── กลุ่มใหม่: สรุปรายงานประจำเดือน (สร้างตารางตามแบบฟอร์ม ไม่ต้องเปิดแท็บ) ──
+    { id:'m_bk_s',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถเล็ก)',  special:'monthly', kind:'booking', dept:'เล็ก' },
+    { id:'m_bk_b',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถใหญ่)',  special:'monthly', kind:'booking', dept:'ใหญ่' },
+    { id:'m_rel_s', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถเล็ก)',   special:'monthly', kind:'release', dept:'เล็ก' },
+    { id:'m_rel_b', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถใหญ่)',   special:'monthly', kind:'release', dept:'ใหญ่' },
     { id:'sums', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็ก', tab:'summary', body:'sumBodySmall',
       els:() => [{ el: byId('sumCardSmall'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถเล็ก' }] },
     { id:'sumb', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถใหญ่', tab:'summary', body:'sumBodyBig',
@@ -99,6 +96,64 @@
     box.appendChild(d); box.scrollTop = box.scrollHeight;
   }
 
+  // ── สร้างตารางรายงานประจำเดือน (ตามแบบฟอร์ม) แล้วคืน element ที่ซ่อนไว้นอกจอ ──
+  const COMPANY = { 'เล็ก': 'บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด สาขาสุวินทวงศ์', 'ใหญ่': 'บริษัท อีซูซุคิงส์ยนต์ จำกัด สาขาสุวินทวงศ์' };
+  const esc = v => String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const deptOf = r => {
+    const sc = ((window.meta || meta || {}).sc || []).find(x => x['ที่ปรึกษาการขาย'] === (r['ที่ปรึกษาการขาย'] || ''));
+    return sc ? String(sc['ฝ่าย'] || '') : '';
+  };
+  const dShow = v => v ? fmtDate(String(v).trim()) : '';
+
+  function buildMonthly(u, allRows, rDate) {
+    const ym = rDate.getFullYear() + '-' + String(rDate.getMonth() + 1).padStart(2, '0');
+    const isBook = u.kind === 'booking';
+    const sizeTxt = u.dept === 'เล็ก' ? 'รถเล็ก' : 'รถใหญ่';
+    const title = (isBook ? 'สรุปรายงานลูกค้าจอง' : 'สรุปรายงานปล่อยรถ') + ' (' + sizeTxt + ')';
+    const dateKey = isBook ? 'วันที่จอง' : 'วันที่ปล่อย';
+
+    let rows = allRows.filter(r => r[dateKey] && dateMatchMonth(r[dateKey], ym) && deptOf(r).includes(u.dept));
+    if (isBook) rows = rows.filter(r => { const st = r['สถานะ']; return isBK(st) || isEBK(st) || isRS(st) || isERS(st); }); // ไม่รวมยกเลิก/มุ่งหวัง
+    rows.sort((a, b) => parseThDate(a[dateKey]) - parseThDate(b[dateKey]));
+
+    const cols = isBook
+      ? [['#',44],['วันที่จอง',100],['ชื่อลูกค้า',185],['เบอร์โทร',115],['รุ่นรถ',230],['ประเภทรถ',95],['สถานะ',90],['วันที่ปล่อย',100],['ที่ปรึกษาการขาย',165],['ที่มา',110]]
+      : [['#',44],['วันที่ปล่อย',100],['ชื่อลูกค้า',175],['รุ่นรถ',225],['เลขเครื่อง',110],['เลขแชสซีส์',180],['ไฟแนนซ์',85],['ป้ายแดง',105],['ที่ปรึกษาการขาย',160],['ที่มา',110]];
+    const hdrBg = isBook ? '#6fa8dc' : '#93c47e';
+    const width = cols.reduce((a, c) => a + c[1], 0);
+    const B = 'border:1.5px solid #000;';
+    const tdS = B + 'padding:6px 6px;text-align:center;font-size:15px;height:38px;color:#000;word-break:break-word;';
+
+    const cells = (r, i) => (isBook ? [
+      i + 1, dShow(r['วันที่จอง']), r['ชื่อลูกค้า'], r['เบอร์'],
+      r['ชื่อรุ่นรถ'] || r['รายละเอียดรถ'], r['รุ่นรถ'],      // ประเภทรถ = ค่า "รุ่น" ในระบบ
+      statusLabel(r['สถานะ']), dShow(r['วันที่ปล่อย']), r['ที่ปรึกษาการขาย'], r['ที่มาลูกค้า']
+    ] : [
+      i + 1, dShow(r['วันที่ปล่อย']), r['ลูกค้ารับรถ'] || r['ชื่อลูกค้า'],
+      r['ชื่อรุ่นรถ'] || r['รายละเอียดรถ'], r['เลขเครื่อง'], r['เลขแชสซีส์'],
+      r['ไฟแนนซ์'], r['เลขทะเบียน'], r['ที่ปรึกษาการขาย'], r['ที่มาลูกค้า']
+    ]);
+
+    // ไม่มีข้อมูล → ตารางว่าง 3 แถว (เหมือนแบบฟอร์ม)
+    const body = rows.length
+      ? rows.map((r, i) => '<tr>' + cells(r, i).map(v => `<td style="${tdS}">${esc(v)}</td>`).join('') + '</tr>').join('')
+      : Array.from({ length: 3 }, () => '<tr>' + cols.map(() => `<td style="${tdS}"></td>`).join('') + '</tr>').join('');
+
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
+    holder.innerHTML = `<div style="width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
+      <div style="text-align:center;font-size:17px;line-height:1.5;">${COMPANY[u.dept]}</div>
+      <div style="text-align:center;font-size:26px;font-weight:800;line-height:1.5;">${title}</div>
+      <div style="text-align:center;font-size:21px;font-weight:800;line-height:1.5;margin-bottom:14px;">ประจำเดือน ${thMonthYear(ym)}</div>
+      <table style="width:${width}px;border-collapse:collapse;table-layout:fixed;">
+        <colgroup>${cols.map(c => `<col style="width:${c[1]}px">`).join('')}</colgroup>
+        <thead><tr>${cols.map(c => `<th style="${B}background:${hdrBg};padding:6px 4px;font-size:17px;font-weight:700;height:40px;color:#000;">${c[0]}</th>`).join('')}</tr></thead>
+        <tbody>${body}</tbody>
+      </table></div>`;
+    document.body.appendChild(holder);
+    return { holder, el: holder.firstElementChild, label: title + ' · ประจำเดือน ' + thMonthYear(ym) };
+  }
+
   // ── รอจนรายงานโหลดเสร็จ ──
   async function waitReady(u) {
     const t0 = Date.now();
@@ -169,7 +224,8 @@
     byId('lineProgress').innerHTML = '';
     const startTab = (document.querySelector('.tab.active') || {}).id?.replace('tab-', '') || 'booking';
     const dateStr = thDateFull(window._reportDate || new Date());
-    let curTab = null, sent = 0, fail = 0;
+    let curTab = null, sent = 0, fail = 0, rowsCache = null;
+    const rDateM = window._reportDate || new Date();
 
     // เรียงตามแท็บเพื่อไม่ต้องโหลดซ้ำ
     const units = UNITS.filter(u => sel.includes(u.id));
@@ -177,7 +233,11 @@
       try {
         log('⏳ ' + u.grp + ' · ' + u.label);
         let targets;
-        if (u.special === 'release') {
+        if (u.special === 'monthly') {
+          if (!rowsCache) { const d = await callGS({ action: 'getBookings' }); rowsCache = d.data || []; }
+          const m = buildMonthly(u, rowsCache, rDateM);
+          targets = [{ el: m.el, label: m.label, tmp: m.holder }];
+        } else if (u.special === 'release') {
           switchTab('release'); curTab = 'release';
           byId('releaseReportDate').value = formatDateInput(new Date());
           byId('releaseReportMonth').value = '';
@@ -192,9 +252,11 @@
         }
         for (const t of targets) {
           if (!t.el) continue;
-          const img = await capture(t.el);
-          await postGS({ action: 'lineSendImage', secret, caption: '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
-          sent++; log('✅ ส่งแล้ว: ' + t.label, '#1a7a4a');
+          try {
+            const img = await capture(t.el);
+            await postGS({ action: 'lineSendImage', secret, caption: '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
+            sent++; log('✅ ส่งแล้ว: ' + t.label, '#1a7a4a');
+          } finally { if (t.tmp) t.tmp.remove(); }
           await sleep(700);
         }
       } catch (e) {
