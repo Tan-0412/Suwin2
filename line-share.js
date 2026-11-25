@@ -14,16 +14,19 @@
     // ── กลุ่มใหม่: สรุปรายงานประจำเดือน (สร้างตารางตามแบบฟอร์ม ไม่ต้องเปิดแท็บ) ──
     { id:'m_bk',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถเล็ก + รถใหญ่ ส่งทั้งชุด)', special:'monthly', kind:'booking', depts:['เล็ก','ใหญ่'] },
     { id:'m_rel', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถเล็ก + รถใหญ่ ส่งทั้งชุด)',   special:'monthly', kind:'release', depts:['เล็ก','ใหญ่'] },
-    { id:'sums', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็ก', tab:'summary', body:'sumBodySmall',
-      els:() => [{ el: byId('sumCardSmall'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถเล็ก' }] },
-    { id:'sumb', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถใหญ่', tab:'summary', body:'sumBodyBig',
-      els:() => [{ el: byId('sumCardBig'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถใหญ่' }] },
+    { id:'sum', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็กและรถใหญ่ (ส่งทั้งชุด)', tab:'summary', body:['sumBodySmall','sumBodyBig'],
+      els:() => [
+        { el: byId('sumCardSmall'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถเล็ก' },
+        { el: byId('sumCardBig'),   label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถใหญ่' }
+      ],
+      intro: d => '📊 สรุปรวมยอดจอง-ปล่อย ฝ่ายขายรถเล็กและรถใหญ่ ณ วันที่ ' + d },
     { id:'cust', grp:'📋 รายชื่อลูกค้าจอง-ปล่อย', label:'ทุกทีม (แยกรูปตามทีม)', tab:'custlist', body:'clBody',
-      readySel:'#clBody .cl-team-block',
+      readySel:'#clBody .cl-team-block', stamp:true,
       els:() => [...document.querySelectorAll('#clBody .cl-team-block')].map(b => ({
         el: b,
         label: 'รายชื่อลูกค้าจอง-ปล่อย · ' + ((b.querySelector('.cl-dept-bar') || {}).textContent || '').trim()
-      })) },
+      })),
+      intro: d => '📊 รายชื่อลูกค้าจอง-ปล่อย สาขาสุวินทวงศ์ ฝ่ายขายรถเล็กและรถใหญ่ ณ วันที่ ' + d },
     { id:'rel', grp:'🚗 รายงานปล่อยรถ', label:'ปล่อยรถประจำวันนี้', tab:'release', special:'release' },
   ];
 
@@ -73,6 +76,61 @@
         <button class="btn btn-green" id="lineSendBtn" onclick="runLineShare()">📤 ส่ง</button>
       </div></div>`;
     document.body.appendChild(m);
+  }
+
+  const TH_MONTH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  function buildMonthModal() {
+    if (byId('lineMonthModal')) return;
+    const m = document.createElement('div');
+    m.className = 'modal-overlay';
+    m.id = 'lineMonthModal';
+    m.innerHTML = `<div class="modal-box" style="width:min(96vw,980px);">
+      <div class="modal-hdr" style="background:linear-gradient(135deg,var(--green),var(--green2));">
+        <h3>🗓️ เลือกเดือนของสรุปรายงานประจำเดือน</h3></div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+          <b style="font-size:13px;">เดือน</b><select id="lineMonthSel" style="padding:6px 10px;font-size:14px;"></select>
+          <b style="font-size:13px;">ปี</b><select id="lineYearSel" style="padding:6px 10px;font-size:14px;"></select>
+          <span style="font-size:12px;color:var(--gray);">ตรวจตัวอย่างด้านล่างให้ถูกต้อง แล้วกด “ยืนยันส่ง”</span>
+        </div>
+        <div id="lineMonthPrev" style="max-height:60vh;overflow:auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="lineMonthCancel">ยกเลิก</button>
+        <button class="btn btn-green" id="lineMonthOk">✅ ยืนยันส่ง</button>
+      </div></div>`;
+    document.body.appendChild(m);
+  }
+
+  // แสดงตัวอย่างรายงานตามเดือนที่เลือก → resolve {y, m} เมื่อกดยืนยัน หรือ null เมื่อยกเลิก
+  function chooseMonth(monthlyUnits, rows) {
+    buildMonthModal();
+    return new Promise(resolve => {
+      const mm = byId('lineMonthModal'), ms = byId('lineMonthSel'), ys = byId('lineYearSel'), box = byId('lineMonthPrev');
+      const base = window._reportDate || new Date();
+      ms.innerHTML = TH_MONTH_FULL.map((n, i) => `<option value="${i + 1}">${n}</option>`).join('');
+      ys.innerHTML = [base.getFullYear(), base.getFullYear() - 1, base.getFullYear() - 2].map(y => `<option value="${y}">${y + 543}</option>`).join('');
+      ms.value = base.getMonth() + 1; ys.value = base.getFullYear();
+      const render = () => {
+        box.innerHTML = '';
+        const d = new Date(+ys.value, +ms.value - 1, 1);
+        monthlyUnits.forEach(u => u.depts.forEach(dp => {
+          const r = buildMonthly({ ...u, dept: dp }, rows, d, base);
+          const wrap = document.createElement('div');
+          wrap.style.cssText = 'overflow:hidden;border:1px solid #bbb;margin-bottom:10px;background:#fff;';
+          box.appendChild(wrap); wrap.appendChild(r.el); r.holder.remove();
+          const w = r.el.offsetWidth, h = r.el.offsetHeight, sc = Math.min(1, (box.clientWidth - 4) / w);
+          r.el.style.transformOrigin = '0 0'; r.el.style.transform = 'scale(' + sc + ')';
+          wrap.style.width = Math.round(w * sc) + 'px'; wrap.style.height = Math.round(h * sc) + 'px';
+        }));
+      };
+      const done = v => { mm.classList.remove('open'); box.innerHTML = ''; resolve(v); };
+      ms.onchange = ys.onchange = render;
+      byId('lineMonthOk').onclick = () => done({ y: +ys.value, m: +ms.value });
+      byId('lineMonthCancel').onclick = () => done(null);
+      mm.classList.add('open'); render();
+    });
   }
 
   window.openLineModal = function () {
@@ -213,7 +271,8 @@
     </div>`;
   }
 
-  function buildMonthly(u, allRows, rDate) {
+  function buildMonthly(u, allRows, rDate, asOf) {
+    asOf = asOf || rDate;
     const ym = rDate.getFullYear() + '-' + String(rDate.getMonth() + 1).padStart(2, '0');
     const isBook = u.kind === 'booking';
     const sizeTxt = u.dept === 'เล็ก' ? 'รถเล็ก' : 'รถใหญ่';
@@ -277,9 +336,7 @@
 
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
-    const asOfBox = isBook
-      ? `<div style="position:absolute;top:14px;right:12px;border:1.5px solid #000;padding:6px 16px;font-size:17px;font-weight:700;line-height:1.4;background:#fff;white-space:nowrap;">ณ วันที่ ${esc(thDateFull(rDate))}</div>`
-      : '';
+    const asOfBox = `<div style="position:absolute;top:14px;right:12px;border:1.5px solid #000;padding:6px 16px;font-size:17px;font-weight:700;line-height:1.4;background:#fff;white-space:nowrap;">${esc(thDateFull(asOf))}</div>`;
     holder.innerHTML = `<div style="position:relative;width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
       ${asOfBox}
       <div style="text-align:center;font-size:17px;line-height:1.5;">${COMPANY[u.dept]}</div>
@@ -298,10 +355,10 @@
   // ── รอจนรายงานโหลดเสร็จ ──
   async function waitReady(u) {
     const t0 = Date.now();
+    const bodies = [].concat(u.body || []).map(byId);
     while (Date.now() - t0 < 40000) {
-      const body = byId(u.body);
-      if (body && body.textContent.includes('❌')) throw new Error('โหลดรายงานไม่สำเร็จ');
-      const ok = u.readySel ? document.querySelector(u.readySel) : (body && body.querySelector('table'));
+      if (bodies.some(b => b && b.textContent.includes('❌'))) throw new Error('โหลดรายงานไม่สำเร็จ');
+      const ok = u.readySel ? document.querySelector(u.readySel) : (bodies.length && bodies.every(b => b && b.querySelector('table')));
       if (ok) { await sleep(300); return; }
       await sleep(250);
     }
@@ -309,7 +366,14 @@
   }
 
   // ── แคป element เป็นรูป ──
-  async function capture(el) {
+  async function capture(el, stamp) {
+    let bar = null;
+    if (stamp) {   // แถบกรอบวันที่มุมขวาบน (ใส่ชั่วคราวระหว่างแคป)
+      bar = document.createElement('div');
+      bar.style.cssText = 'text-align:right;padding:6px 10px 8px;background:#fff;';
+      bar.innerHTML = '<span style="display:inline-block;border:1.5px solid #000;padding:4px 16px;font-size:16px;font-weight:700;color:#000;background:#fff;">' + esc(stamp) + '</span>';
+      el.insertBefore(bar, el.firstChild);
+    }
     const nodes = [el, ...el.querySelectorAll('.tbl-wrap,.card')];
     const saved = nodes.map(n => [n, n.style.cssText]);
     nodes.forEach(n => { n.style.overflow = 'visible'; });
@@ -327,6 +391,7 @@
       return { full, prev };
     } finally {
       saved.forEach(([n, css]) => { n.style.cssText = css; });
+      if (bar) bar.remove();
     }
   }
 
@@ -360,31 +425,39 @@
     const secret = byId('lineSecret').value.trim();
     savePref({ sel, secret });
 
+    const units = UNITS.filter(u => sel.includes(u.id));
+    const monthlyUnits = units.filter(u => u.special === 'monthly');
+    let rowsCache = null, monthPick = null;
+    if (monthlyUnits.length) {   // รายงานประจำเดือน: เลือกเดือน → ดูตัวอย่าง → ยืนยันส่ง
+      try { const d = await callGS({ action: 'getBookings' }); rowsCache = d.data || []; }
+      catch (e) { toast('❌ โหลดข้อมูลไม่สำเร็จ: ' + e.message, 'err'); return; }
+      monthPick = await chooseMonth(monthlyUnits, rowsCache);
+      if (!monthPick) return;
+    }
+
     window._lineBusy = true;
     const btn = byId('lineSendBtn'); btn.disabled = true; btn.textContent = '⏳ กำลังส่ง...';
     byId('lineProgress').innerHTML = '';
     const startTab = (document.querySelector('.tab.active') || {}).id?.replace('tab-', '') || 'booking';
     const dateStr = thDateFull(window._reportDate || new Date());
-    let curTab = null, sent = 0, fail = 0, rowsCache = null;
-    const rDateM = window._reportDate || new Date();
+    let curTab = null, sent = 0, fail = 0;
+    const asOfDate = window._reportDate || new Date();
+    const rDateM = monthPick ? new Date(monthPick.y, monthPick.m - 1, 1) : asOfDate;
 
-    // เรียงตามแท็บเพื่อไม่ต้องโหลดซ้ำ
-    const units = UNITS.filter(u => sel.includes(u.id));
     for (const u of units) {
       try {
         log('⏳ ' + u.grp + ' · ' + u.label);
         let targets;
         if (u.special === 'monthly') {
-          if (!rowsCache) { const d = await callGS({ action: 'getBookings' }); rowsCache = d.data || []; }
           const isBk = u.kind === 'booking';
           const ymM = rDateM.getFullYear() + '-' + String(rDateM.getMonth() + 1).padStart(2, '0');
           targets = u.depts.map(d => {
-            const m = buildMonthly({ ...u, dept: d }, rowsCache, rDateM);
+            const m = buildMonthly({ ...u, dept: d }, rowsCache, rDateM, asOfDate);
             return { el: m.el, label: m.label, tmp: m.holder };
           });
           // กล่องข้อความนำ: ส่งไปพร้อมภาพแรกของชุด ภาพถัดไปไม่มีข้อความซ้ำ
           targets.forEach((t, k) => { t.caption = k === 0
-            ? '📊 ' + (isBk ? 'สรุปรายงานลูกค้าจอง' : 'สรุปรายงานปล่อยรถ') + ' ประจำเดือน ' + thMonthYear(ymM) + '\nฝ่ายขายรถเล็ก + รถใหญ่ (' + targets.length + ' ภาพ)\nณ วันที่ ' + dateStr
+            ? '📊 ' + (isBk ? 'สรุปรายงานลูกค้าจอง' : 'สรุปรายงานปล่อยรถ') + ' ประจำเดือน ' + thMonthYear(ymM) + '\nฝ่ายขายรถเล็ก + รถใหญ่ (' + targets.length + ' ภาพ)'
             : ''; });
         } else if (u.special === 'release') {
           switchTab('release'); curTab = 'release';
@@ -398,11 +471,13 @@
           if (curTab !== u.tab) { switchTab(u.tab); curTab = u.tab; }
           await waitReady(u);
           targets = u.els();
+          if (u.intro) targets.forEach((t, k) => { t.caption = k === 0 ? u.intro(dateStr) : ''; });   // ข้อความนำ ส่งพร้อมภาพแรก
+          if (u.stamp) targets.forEach(t => { t.stamp = 'ณ วันที่ ' + dateStr; });
         }
         for (const t of targets) {
           if (!t.el) continue;
           try {
-            const img = await capture(t.el);
+            const img = await capture(t.el, t.stamp);
             await postGS({ action: 'lineSendImage', secret, caption: t.caption !== undefined ? t.caption : '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
             sent++; log('✅ ส่งแล้ว: ' + t.label, '#1a7a4a');
           } finally { if (t.tmp) t.tmp.remove(); }
