@@ -148,7 +148,8 @@
   const modelKey = s => String(s == null ? '' : s).replace(/\s+/g, '').toUpperCase();
 
   // กราฟแท่งซ้อน: แต่ละเดือน 1 แท่ง แบ่งสีตามรุ่น (สัดส่วนรุ่น) · series = [{name,color,vals:[12]}]
-  function buildStackedChart(width, title, series) {
+  function buildStackedChart(width, title, series, opts) {
+    opts = opts || {};
     const H = 190;
     const totals = TH_MON.map((_, i) => series.reduce((a, s) => a + s.vals[i], 0));
     const max = Math.max(1, ...totals);
@@ -176,10 +177,41 @@
         <div style="font-size:15px;font-weight:700;line-height:26px;height:26px;color:#000;">${m}</div>
       </div>`;
     }).join('');
+    // ── กล่องสรุปยอดรวมทั้งปี วางในพื้นที่ว่างของกราฟ (หาช่วง 3 เดือนที่แท่งเตี้ยที่สุด เน้นด้านซ้ายก่อน) ──
+    const BOX_H = 112, PLOT_H = H + 24, SPAN = 3;
+    const free = i => PLOT_H - (Math.round(Math.max(...totals.slice(i, i + SPAN)) / max * H) + 20);
+    const starts = [0, 9, 1, 2, 3, 4, 5, 6, 7, 8];
+    const pos = starts.find(i => free(i) >= BOX_H + 10);
+    const peakI = totals.indexOf(Math.max(...totals));
+    const monthsElapsed = Math.max(1, opts.curMonth || 12);
+    const topS = series.slice().sort((a, b) => b.vals.reduce((x, y) => x + y, 0) - a.vals.reduce((x, y) => x + y, 0))[0];
+    const topSum = topS ? topS.vals.reduce((x, y) => x + y, 0) : 0;
+    const stat = (k, v) => `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:14px;line-height:22px;"><span style="color:#444;">${k}</span><span style="font-weight:700;">${v}</span></div>`;
+    const boxInner = `<div style="background:#93c47e;border-bottom:1.5px solid #000;text-align:center;font-size:15px;font-weight:800;line-height:26px;height:26px;">สรุปยอดปล่อยรถ ปี ${opts.yearTh || ''}</div>
+      <div style="display:flex;align-items:center;padding:6px 12px 6px;gap:12px;">
+        <div style="text-align:center;min-width:84px;border-right:1px solid #999;padding-right:12px;">
+          <div style="font-size:40px;font-weight:800;line-height:1.05;">${grand}</div>
+          <div style="font-size:14px;font-weight:700;">คัน (รวมทั้งปี)</div>
+        </div>
+        <div style="flex:1;">
+          ${stat('เฉลี่ย/เดือน', (grand / monthsElapsed).toFixed(1) + ' คัน')}
+          ${stat('เดือนสูงสุด', grand ? TH_MON[peakI] + ' · ' + totals[peakI] + ' คัน' : '-')}
+          ${stat('รุ่นหลัก', topSum ? topS.name + ' · ' + Math.round(topSum / grand * 100) + '%' : '-')}
+        </div>
+      </div>`;
+    const boxW = Math.round(colW * SPAN - 20);
+    const box = pos !== undefined
+      ? `<div style="position:absolute;left:${Math.round(pos * colW + 10)}px;top:4px;width:${boxW}px;height:${BOX_H}px;background:#fff;border:1.5px solid #000;box-sizing:border-box;overflow:hidden;">${boxInner}</div>`
+      : '';
+    // ไม่มีพื้นที่ว่างพอ → วางเป็นแถบเต็มความกว้างเหนือกราฟแทน (ไม่บังแท่ง)
+    const stripBox = pos === undefined
+      ? `<div style="width:${Math.min(420, width - 40)}px;height:${BOX_H}px;margin:0 auto 8px;background:#fff;border:1.5px solid #000;box-sizing:border-box;overflow:hidden;">${boxInner}</div>`
+      : '';
     return `<div style="width:${width}px;border:1.5px solid #000;box-sizing:border-box;padding:10px 0 6px;margin-bottom:16px;background:#fff;">
       <div style="text-align:center;font-size:18px;font-weight:800;line-height:1.5;">${title}</div>
       <div style="text-align:center;margin:4px 8px 8px;line-height:1.7;">${legend}</div>
-      <div style="display:flex;">${cols}</div>
+      ${stripBox}
+      <div style="display:flex;position:relative;">${cols}${box}</div>
     </div>`;
   }
 
@@ -243,7 +275,7 @@
       const other = perMonth(ms => ms.filter(r => !known.has(modelKey(r['รุ่นรถ']))).length);
       if (other.some(v => v > 0)) series.push({ name: MODEL_OTHER[0], color: MODEL_OTHER[1], vals: other });
     }
-    const chartHtml = (isBook ? buildChart : buildStackedChart)(width, 'กราฟเปรียบเทียบรายเดือน ปี ' + (yr + 543) + ' · ' + title + (isBook ? '' : ' (แยกตามรุ่น)'), series);
+    const chartHtml = (isBook ? buildChart : buildStackedChart)(width, 'กราฟเปรียบเทียบรายเดือน ปี ' + (yr + 543) + ' · ' + title + (isBook ? '' : ' (แยกตามรุ่น)'), series, { yearTh: yr + 543, curMonth: rDate.getMonth() + 1 });
 
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
