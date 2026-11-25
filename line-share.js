@@ -12,10 +12,8 @@
   // els() คืน [{el, label}] = ส่วนของหน้าที่จะแคปเป็นรูป 1 รูปต่อ 1 รายการ
   const UNITS = [
     // ── กลุ่มใหม่: สรุปรายงานประจำเดือน (สร้างตารางตามแบบฟอร์ม ไม่ต้องเปิดแท็บ) ──
-    { id:'m_bk_s',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถเล็ก)',  special:'monthly', kind:'booking', dept:'เล็ก' },
-    { id:'m_bk_b',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถใหญ่)',  special:'monthly', kind:'booking', dept:'ใหญ่' },
-    { id:'m_rel_s', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถเล็ก)',   special:'monthly', kind:'release', dept:'เล็ก' },
-    { id:'m_rel_b', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถใหญ่)',   special:'monthly', kind:'release', dept:'ใหญ่' },
+    { id:'m_bk',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถเล็ก + รถใหญ่ ส่งทั้งชุด)', special:'monthly', kind:'booking', depts:['เล็ก','ใหญ่'] },
+    { id:'m_rel', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถเล็ก + รถใหญ่ ส่งทั้งชุด)',   special:'monthly', kind:'release', depts:['เล็ก','ใหญ่'] },
     { id:'sums', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็ก', tab:'summary', body:'sumBodySmall',
       els:() => [{ el: byId('sumCardSmall'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถเล็ก' }] },
     { id:'sumb', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถใหญ่', tab:'summary', body:'sumBodyBig',
@@ -279,7 +277,11 @@
 
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
-    holder.innerHTML = `<div style="width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
+    const asOfBox = isBook
+      ? `<div style="position:absolute;top:14px;right:12px;border:1.5px solid #000;padding:6px 16px;font-size:17px;font-weight:700;line-height:1.4;background:#fff;white-space:nowrap;">ณ วันที่ ${esc(thDateFull(rDate))}</div>`
+      : '';
+    holder.innerHTML = `<div style="position:relative;width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
+      ${asOfBox}
       <div style="text-align:center;font-size:17px;line-height:1.5;">${COMPANY[u.dept]}</div>
       <div style="text-align:center;font-size:26px;font-weight:800;line-height:1.5;">${title}</div>
       <div style="text-align:center;font-size:21px;font-weight:800;line-height:1.5;margin-bottom:14px;">ประจำเดือน ${thMonthYear(ym)}</div>
@@ -374,8 +376,16 @@
         let targets;
         if (u.special === 'monthly') {
           if (!rowsCache) { const d = await callGS({ action: 'getBookings' }); rowsCache = d.data || []; }
-          const m = buildMonthly(u, rowsCache, rDateM);
-          targets = [{ el: m.el, label: m.label, tmp: m.holder }];
+          const isBk = u.kind === 'booking';
+          const ymM = rDateM.getFullYear() + '-' + String(rDateM.getMonth() + 1).padStart(2, '0');
+          targets = u.depts.map(d => {
+            const m = buildMonthly({ ...u, dept: d }, rowsCache, rDateM);
+            return { el: m.el, label: m.label, tmp: m.holder };
+          });
+          // กล่องข้อความนำ: ส่งไปพร้อมภาพแรกของชุด ภาพถัดไปไม่มีข้อความซ้ำ
+          targets.forEach((t, k) => { t.caption = k === 0
+            ? '📊 ' + (isBk ? 'สรุปรายงานลูกค้าจอง' : 'สรุปรายงานปล่อยรถ') + ' ประจำเดือน ' + thMonthYear(ymM) + '\nฝ่ายขายรถเล็ก + รถใหญ่ (' + targets.length + ' ภาพ)\nณ วันที่ ' + dateStr
+            : ''; });
         } else if (u.special === 'release') {
           switchTab('release'); curTab = 'release';
           byId('releaseReportDate').value = formatDateInput(new Date());
@@ -393,12 +403,13 @@
           if (!t.el) continue;
           try {
             const img = await capture(t.el);
-            await postGS({ action: 'lineSendImage', secret, caption: '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
+            await postGS({ action: 'lineSendImage', secret, caption: t.caption !== undefined ? t.caption : '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
             sent++; log('✅ ส่งแล้ว: ' + t.label, '#1a7a4a');
           } finally { if (t.tmp) t.tmp.remove(); }
           await sleep(700);
         }
       } catch (e) {
+        document.querySelectorAll('body > div[style*="-99999px"]').forEach(n => n.remove());
         fail++; log('❌ ' + u.label + ': ' + e.message, '#c0392b');
       }
     }
