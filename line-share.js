@@ -139,6 +139,50 @@
     </div>`;
   }
 
+  // ── รุ่นรถ (ค่า "รุ่น" ในระบบ) แยกตามฝ่าย — แก้/เพิ่มรุ่นได้ที่นี่ ──
+  const MODEL_CATS = {
+    'เล็ก': [['STD','#6fa8dc'],['SPC','#ffd966'],['CAB 4','#93c47e'],['CAB 4 HR','#e06666'],['MU-X','#b4a7d6']],
+    'ใหญ่': [['2T','#6fa8dc'],['3T','#ffd966'],['6W','#93c47e'],['10W (6X2)','#f6b26b'],['10W (6X4)','#e06666'],['12W','#b4a7d6'],['T/H','#76a5af']]
+  };
+  const MODEL_OTHER = ['อื่นๆ/ไม่ระบุ', '#cccccc'];
+  const modelKey = s => String(s == null ? '' : s).replace(/\s+/g, '').toUpperCase();
+
+  // กราฟแท่งซ้อน: แต่ละเดือน 1 แท่ง แบ่งสีตามรุ่น (สัดส่วนรุ่น) · series = [{name,color,vals:[12]}]
+  function buildStackedChart(width, title, series) {
+    const H = 190;
+    const totals = TH_MON.map((_, i) => series.reduce((a, s) => a + s.vals[i], 0));
+    const max = Math.max(1, ...totals);
+    const grand = totals.reduce((a, b) => a + b, 0);
+    const colW = width / 12;
+    const barW = Math.max(30, Math.min(64, Math.floor(colW - 24)));
+    const legend = series.map(s => {
+      const sum = s.vals.reduce((a, b) => a + b, 0);
+      const pct = grand ? Math.round(sum / grand * 100) : 0;
+      return `<span style="display:inline-block;margin:0 10px;font-size:15px;white-space:nowrap;"><span style="display:inline-block;width:14px;height:14px;background:${s.color};border:1px solid #000;vertical-align:middle;margin-right:6px;"></span>${s.name} ${sum} คัน (${pct}%)</span>`;
+    }).join('');
+    const cols = TH_MON.map((m, i) => {
+      const t = totals[i];
+      const segs = series.slice().reverse().map(s => {      // reverse → รุ่นแรกอยู่ล่างสุด
+        const v = s.vals[i];
+        if (!v) return '';
+        const h = Math.max(3, Math.round(v / max * H));
+        return `<div style="width:${barW}px;height:${h}px;background:${s.color};border:1px solid #000;border-bottom:0;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;line-height:1;color:#000;">${h >= 16 ? v : ''}</div>`;
+      }).join('');
+      return `<div style="width:${colW}px;text-align:center;">
+        <div style="display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:${H + 24}px;border-bottom:1.5px solid #000;">
+          <div style="font-size:14px;font-weight:700;line-height:20px;height:20px;color:${t ? '#000' : '#aaa'};">${t}</div>
+          ${segs}
+        </div>
+        <div style="font-size:15px;font-weight:700;line-height:26px;height:26px;color:#000;">${m}</div>
+      </div>`;
+    }).join('');
+    return `<div style="width:${width}px;border:1.5px solid #000;box-sizing:border-box;padding:10px 0 6px;margin-bottom:16px;background:#fff;">
+      <div style="text-align:center;font-size:18px;font-weight:800;line-height:1.5;">${title}</div>
+      <div style="text-align:center;margin:4px 8px 8px;line-height:1.7;">${legend}</div>
+      <div style="display:flex;">${cols}</div>
+    </div>`;
+  }
+
   function buildMonthly(u, allRows, rDate) {
     const ym = rDate.getFullYear() + '-' + String(rDate.getMonth() + 1).padStart(2, '0');
     const isBook = u.kind === 'booking';
@@ -191,9 +235,15 @@
         { name: 'ยอดจองคงเหลือ (ไม่รวมยกเลิก)', color: '#f6b26b', vals: remain }
       ];
     } else {
-      series = [{ name: 'ยอดปล่อยรถ (คัน)', color: '#93c47e', vals: perMonth(ms => ms.length) }];
+      // ปล่อยรถ: แท่งซ้อนแยกตามรุ่น (รุ่นที่ไม่อยู่ในรายการ → "อื่นๆ/ไม่ระบุ")
+      const cats = MODEL_CATS[u.dept] || [];
+      const known = new Set(cats.map(c => modelKey(c[0])));
+      const countModel = (ms, c) => ms.filter(r => modelKey(r['รุ่นรถ']) === modelKey(c)).length;
+      series = cats.map(c => ({ name: c[0], color: c[1], vals: perMonth(ms => countModel(ms, c[0])) }));
+      const other = perMonth(ms => ms.filter(r => !known.has(modelKey(r['รุ่นรถ']))).length);
+      if (other.some(v => v > 0)) series.push({ name: MODEL_OTHER[0], color: MODEL_OTHER[1], vals: other });
     }
-    const chartHtml = buildChart(width, 'กราฟเปรียบเทียบรายเดือน ปี ' + (yr + 543) + ' · ' + title, series);
+    const chartHtml = (isBook ? buildChart : buildStackedChart)(width, 'กราฟเปรียบเทียบรายเดือน ปี ' + (yr + 543) + ' · ' + title + (isBook ? '' : ' (แยกตามรุ่น)'), series);
 
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
