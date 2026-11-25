@@ -14,14 +14,14 @@
     // ── กลุ่มใหม่: สรุปรายงานประจำเดือน (สร้างตารางตามแบบฟอร์ม ไม่ต้องเปิดแท็บ) ──
     { id:'m_bk',  grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานลูกค้าจอง (รถเล็ก + รถใหญ่ ส่งทั้งชุด)', special:'monthly', kind:'booking', depts:['เล็ก','ใหญ่'] },
     { id:'m_rel', grp:'🗓️ สรุปรายงานประจำเดือน', label:'สรุปรายงานปล่อยรถ (รถเล็ก + รถใหญ่ ส่งทั้งชุด)',   special:'monthly', kind:'release', depts:['เล็ก','ใหญ่'] },
-    { id:'sum', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็กและรถใหญ่ (ส่งทั้งชุด)', tab:'summary', body:['sumBodySmall','sumBodyBig'],
+    { id:'sum', grp:'📋 สรุปรวมยอดจอง-ปล่อย', label:'ฝ่ายขายรถเล็กและรถใหญ่ (ส่งทั้งชุด)', tab:'summary', body:['sumBodySmall','sumBodyBig'], fillDate:true,
       els:() => [
         { el: byId('sumCardSmall'), label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถเล็ก' },
         { el: byId('sumCardBig'),   label:'สรุปรวมยอดจอง-ปล่อย · ฝ่ายขายรถใหญ่' }
       ],
       intro: d => '📊 สรุปรวมยอดจอง-ปล่อย ฝ่ายขายรถเล็กและรถใหญ่ ณ วันที่ ' + d },
     { id:'cust', grp:'📋 รายชื่อลูกค้าจอง-ปล่อย', label:'ทุกทีม (แยกรูปตามทีม)', tab:'custlist', body:'clBody',
-      readySel:'#clBody .cl-team-block', stamp:true,
+      readySel:'#clBody .cl-team-block',
       els:() => [...document.querySelectorAll('#clBody .cl-team-block')].map(b => ({
         el: b,
         label: 'รายชื่อลูกค้าจอง-ปล่อย · ' + ((b.querySelector('.cl-dept-bar') || {}).textContent || '').trim()
@@ -336,7 +336,7 @@
 
     const holder = document.createElement('div');
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
-    const asOfBox = `<div style="position:absolute;top:14px;right:12px;border:1.5px solid #000;padding:6px 16px;font-size:17px;font-weight:700;line-height:1.4;background:#fff;white-space:nowrap;">${esc(thDateFull(asOf))}</div>`;
+    const asOfBox = `<div style="position:absolute;top:14px;right:12px;border:1.5px solid #6fa8dc;border-radius:12px;padding:6px 18px;font-size:17px;font-weight:700;line-height:1.4;background:#dcecfa;color:#000;white-space:nowrap;">${esc(thDateFull(asOf))}</div>`;
     holder.innerHTML = `<div style="position:relative;width:${width + 24}px;background:#fff;padding:14px 12px 16px;font-family:'Sarabun','Tahoma',sans-serif;color:#000;">
       ${asOfBox}
       <div style="text-align:center;font-size:17px;line-height:1.5;">${COMPANY[u.dept]}</div>
@@ -366,14 +366,42 @@
   }
 
   // ── แคป element เป็นรูป ──
-  async function capture(el, stamp) {
-    let bar = null;
+  // หากรอบ/ช่องว่างที่มุมขวาบนของการ์ด (เช่น ช่อง input วันที่ที่ html2canvas วาดค่าไม่ออก) แล้วใส่ข้อความวันที่แทนชั่วคราว
+  function fillDateFrame(el, text) {
+    const er = el.getBoundingClientRect();
+    const cands = [...el.querySelectorAll('*')].filter(n => {
+      const r = n.getBoundingClientRect();
+      if (r.width < 60 || r.height < 14 || r.width > 420 || r.height > 70) return false;
+      if (r.top - er.top > 90 || r.right < er.left + er.width * 0.6) return false;
+      const field = /^(INPUT|SELECT|TEXTAREA)$/.test(n.tagName);
+      return field || (!n.children.length && !(n.textContent || '').trim());
+    }).sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right || a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+    const n = cands[0];
+    const span = document.createElement('div');
+    if (n) {
+      const r = n.getBoundingClientRect(), cs = getComputedStyle(n);
+      span.style.cssText = `display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:${Math.round(r.width)}px;height:${Math.round(r.height)}px;padding:0 12px;background:#fff;border:${cs.borderTopWidth !== '0px' ? cs.border : '1px solid rgba(0,0,0,.25)'};border-radius:${cs.borderRadius};color:#1f2d3d;font-weight:700;font-size:14px;white-space:nowrap;`;
+      span.textContent = text;
+      const old = n.style.display;
+      n.parentNode.insertBefore(span, n); n.style.display = 'none';
+      return () => { span.remove(); n.style.display = old; };
+    }
+    // ไม่พบกรอบเดิม → วาดกรอบเองที่มุมขวาบน
+    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+    span.style.cssText = 'position:absolute;top:8px;right:12px;padding:4px 14px;background:#fff;border:1.5px solid #000;border-radius:6px;font-size:14px;font-weight:700;color:#000;white-space:nowrap;z-index:5;';
+    span.textContent = text; el.appendChild(span);
+    return () => span.remove();
+  }
+
+  async function capture(el, stamp, fillDate) {
+    let bar = null, undoFill = null;
     if (stamp) {   // แถบกรอบวันที่มุมขวาบน (ใส่ชั่วคราวระหว่างแคป)
       bar = document.createElement('div');
       bar.style.cssText = 'text-align:right;padding:6px 10px 8px;background:#fff;';
       bar.innerHTML = '<span style="display:inline-block;border:1.5px solid #000;padding:4px 16px;font-size:16px;font-weight:700;color:#000;background:#fff;">' + esc(stamp) + '</span>';
       el.insertBefore(bar, el.firstChild);
     }
+    if (fillDate) undoFill = fillDateFrame(el, fillDate);
     const nodes = [el, ...el.querySelectorAll('.tbl-wrap,.card')];
     const saved = nodes.map(n => [n, n.style.cssText]);
     nodes.forEach(n => { n.style.overflow = 'visible'; });
@@ -392,6 +420,7 @@
     } finally {
       saved.forEach(([n, css]) => { n.style.cssText = css; });
       if (bar) bar.remove();
+      if (undoFill) undoFill();
     }
   }
 
@@ -440,7 +469,8 @@
     byId('lineProgress').innerHTML = '';
     const startTab = (document.querySelector('.tab.active') || {}).id?.replace('tab-', '') || 'booking';
     const dateStr = thDateFull(window._reportDate || new Date());
-    let curTab = null, sent = 0, fail = 0;
+    let curTab = null, sent = 0, fail = 0, prepared = 0;
+    const queue = [];   // ข้อความนำ/ภาพของทุกชุด เรียงตามลำดับที่จะส่ง
     const asOfDate = window._reportDate || new Date();
     const rDateM = monthPick ? new Date(monthPick.y, monthPick.m - 1, 1) : asOfDate;
 
@@ -473,20 +503,31 @@
           targets = u.els();
           if (u.intro) targets.forEach((t, k) => { t.caption = k === 0 ? u.intro(dateStr) : ''; });   // ข้อความนำ ส่งพร้อมภาพแรก
           if (u.stamp) targets.forEach(t => { t.stamp = 'ณ วันที่ ' + dateStr; });
+          if (u.fillDate) targets.forEach(t => { t.fillDate = 'ณ วันที่ ' + dateStr; });
         }
-        for (const t of targets) {
-          if (!t.el) continue;
-          try {
-            const img = await capture(t.el, t.stamp);
-            await postGS({ action: 'lineSendImage', secret, caption: t.caption !== undefined ? t.caption : '📊 ' + t.label + '\nณ วันที่ ' + dateStr, image: img.full, preview: img.prev });
-            sent++; log('✅ ส่งแล้ว: ' + t.label, '#1a7a4a');
-          } finally { if (t.tmp) t.tmp.remove(); }
-          await sleep(700);
-        }
+        // ถ่ายภาพของชุดนี้ แล้วต่อเข้าคิว: ข้อความนำ → ภาพตามหลัง (ยังไม่ส่ง ส่งรวมทุกชุดทีเดียวตอนท้าย)
+        const imgs = [];
+        try {
+          for (const t of targets) { if (t.el) imgs.push(await capture(t.el, t.stamp, t.fillDate)); }
+        } finally { targets.forEach(t => { if (t.tmp) t.tmp.remove(); }); }
+        if (!imgs.length) throw new Error('ไม่พบภาพที่จะส่ง');
+        const lead = targets[0].caption !== undefined ? targets[0].caption : '📊 ' + targets[0].label + '\nณ วันที่ ' + dateStr;
+        if (lead) queue.push({ text: lead });
+        imgs.forEach(i => queue.push({ image: i.full, preview: i.prev }));
+        prepared += imgs.length;
+        log('🖼️ เตรียมภาพแล้ว ' + imgs.length + ' ภาพ: ' + u.label);
       } catch (e) {
         document.querySelectorAll('body > div[style*="-99999px"]').forEach(n => n.remove());
         fail++; log('❌ ' + u.label + ': ' + e.message, '#c0392b');
       }
+    }
+    // ส่งทุกชุด (ข้อความนำ + ภาพตามหลัง) ในคำขอเดียว
+    if (queue.length) {
+      try {
+        log('⏳ กำลังส่งเข้า LINE ' + prepared + ' ภาพ ...');
+        await postGS({ action: 'lineSendBatch', secret, messages: queue });
+        sent = prepared; log('✅ ส่งเข้า LINE แล้ว ' + prepared + ' ภาพ (รวมทุกชุดในครั้งเดียว)', '#1a7a4a');
+      } catch (e) { fail++; log('❌ ส่งเข้า LINE ไม่สำเร็จ: ' + e.message, '#c0392b'); }
     }
     switchTab(startTab);
     window._lineBusy = false;
