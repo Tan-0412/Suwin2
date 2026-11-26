@@ -376,19 +376,28 @@
       const field = /^(INPUT|SELECT|TEXTAREA)$/.test(n.tagName);
       return field || (!n.children.length && !(n.textContent || '').trim());
     }).sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right || a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-    const n = cands[0];
+    let n = cands[0];
     const span = document.createElement('div');
+    const PILL = 'display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:5px 16px;background:#e4eefb;border:0;border-radius:999px;color:#2a4a7f;font-weight:600;font-size:14px;line-height:1.4;white-space:nowrap;';
     if (n) {
-      const r = n.getBoundingClientRect(), cs = getComputedStyle(n);
-      span.style.cssText = `display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:${Math.round(r.width)}px;height:${Math.round(r.height)}px;padding:0 12px;background:#fff;border:${cs.borderTopWidth !== '0px' ? cs.border : '1px solid rgba(0,0,0,.25)'};border-radius:${cs.borderRadius};color:#1f2d3d;font-weight:700;font-size:14px;white-space:nowrap;`;
+      // ขยายขึ้นไปหาตัวกรอบนอกสุด (ขนาดเล็ก อยู่มุมขวาบน) เพื่อซ่อนทั้งกรอบเดิม ไม่ให้เหลือกรอบซ้อนกัน
+      while (n.parentElement && n.parentElement !== el) {
+        const pr = n.parentElement.getBoundingClientRect();
+        if (pr.width > 460 || pr.height > 80) break;
+        n = n.parentElement;
+      }
+      const r = n.getBoundingClientRect();
+      span.style.cssText = PILL + `position:absolute;left:${Math.round(r.left - er.left)}px;top:${Math.round(r.top - er.top + Math.max(0, (r.height - 30) / 2))}px;width:${Math.round(r.width)}px;z-index:5;`;
       span.textContent = text;
-      const old = n.style.display;
-      n.parentNode.insertBefore(span, n); n.style.display = 'none';
-      return () => { span.remove(); n.style.display = old; };
+      if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      const old = n.style.visibility;
+      n.style.visibility = 'hidden';
+      el.appendChild(span);
+      return () => { span.remove(); n.style.visibility = old; };
     }
     // ไม่พบกรอบเดิม → วาดกรอบเองที่มุมขวาบน
     if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
-    span.style.cssText = 'position:absolute;top:8px;right:12px;padding:4px 14px;background:#fff;border:1.5px solid #000;border-radius:6px;font-size:14px;font-weight:700;color:#000;white-space:nowrap;z-index:5;';
+    span.style.cssText = PILL + 'position:absolute;top:8px;right:12px;z-index:5;';
     span.textContent = text; el.appendChild(span);
     return () => span.remove();
   }
@@ -408,8 +417,15 @@
     try {
       const w = Math.ceil(Math.max(el.scrollWidth, el.offsetWidth));
       const h = Math.ceil(el.scrollHeight);
-      const scale = Math.min(2, 3900 / Math.max(w, h)); // LINE จำกัดขนาดภาพราว 4096px
-      const canvas = await html2canvas(el, { scale, backgroundColor: '#ffffff', useCORS: true, width: w, height: h, windowWidth: Math.max(w, 1000), logging: false });
+      const m = Math.max(24, Math.round(w * 0.025));          // ขอบว่างซ้าย-ขวาเท่ากัน (px ของหน้าเว็บ)
+      const scale = Math.min(2, 3900 / Math.max(w + 2 * m, h)); // LINE จำกัดขนาดภาพราว 4096px
+      const inner = await html2canvas(el, { scale, backgroundColor: '#ffffff', useCORS: true, width: w, height: h, windowWidth: Math.max(w, 1000), logging: false });
+      const mp = Math.round(m * scale), vp = Math.round(12 * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = inner.width + 2 * mp; canvas.height = inner.height + 2 * vp;
+      const cx = canvas.getContext('2d');
+      cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, canvas.width, canvas.height);
+      cx.drawImage(inner, mp, vp);
       const full = canvas.toDataURL('image/jpeg', 0.88).split(',')[1];
       const ts = Math.min(1, 600 / Math.max(canvas.width, canvas.height));
       const c2 = document.createElement('canvas');
