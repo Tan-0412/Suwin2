@@ -66,7 +66,7 @@
         <div style="font-size:12px;color:var(--gray);margin-bottom:10px;">เลือกรายงานที่จะส่ง (ระบบจะแคปเป็นรูปแล้วส่งตามลำดับ)</div>
         ${list}
         <div class="dvd"></div>
-        <div class="frow"><label>รหัสผ่านส่ง LINE (ตั้งใน Apps Script)</label><input type="password" id="lineSecret" autocomplete="off"></div>
+        <div class="frow"><label>รหัสผ่านส่ง LINE (ตั้งใน Apps Script)</label><input type="text" id="lineSecret" name="line_share_code" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore style="-webkit-text-security:disc;text-security:disc;"></div>
         <div id="lineProgress" style="margin-top:10px;font-size:12px;line-height:1.7;max-height:150px;overflow-y:auto;"></div>
       </div>
       <div class="modal-footer">
@@ -551,6 +551,18 @@
     log('เสร็จสิ้น: ส่งสำเร็จ ' + sent + ' รูป' + (fail ? ', ผิดพลาด ' + fail + ' รายการ' : ''));
     toast(fail ? '⚠️ ส่งเสร็จ มีบางรายการผิดพลาด' : '✅ ส่งเข้า LINE แล้ว', fail ? 'warn' : 'ok');
   };
+
+  // กันเบราว์เซอร์เติมค่าอัตโนมัติลงช่องค้นหา (ถ้ามีค่าเป็น URL ที่เบราว์เซอร์ใส่มา ให้ล้างทิ้ง)
+  function guardSearch() {
+    ['fSearch', 'r1Search'].forEach(id => {
+      const el = byId(id); if (!el) return;
+      el.setAttribute('autocomplete', 'off');
+      const clr = () => { if (/^https?:\/\//i.test(el.value) && !el._userTyped) { el.value = ''; if (typeof filterBooking === 'function' && id === 'fSearch') filterBooking(); } };
+      el.addEventListener('keydown', () => { el._userTyped = true; }, { once: true });
+      [0, 300, 1000, 2500].forEach(t => setTimeout(clr, t));
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guardSearch); else guardSearch();
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();
