@@ -352,6 +352,51 @@
     return { holder, el: holder.firstElementChild, label: title + ' · ประจำเดือน ' + thMonthYear(ym) };
   }
 
+  // ── รายงานปล่อยรถประจำวัน: สร้างหน้าตาเหมือนรายงานตอนสั่งพิมพ์ (printReleaseReportFromList ใน app.js) แล้วซ่อนไว้นอกจอ ──
+  function buildReleaseDoc(list, rDate) {
+    const dateStr = thDateFull(rDate);
+    const W = 1123;                                         // ≈ A4 แนวนอน ที่ 96 dpi
+    const cols = [['F/N',48],['รุ่นรถ',130],['เลขเครื่อง',88],['เลขแชสซีส์',145],['ชื่อลูกค้า',175],['ป้ายแดง',68],['ใบส่งมอบ',95],['ใบ PO',92],['SC',115]];
+    const tot = cols.reduce((a, c) => a + c[1], 0);
+    const px = pt => Math.round(pt * 4 / 3 * 10) / 10;     // pt → px
+    const td = (v, extra) => `<td style="border:1.5px solid #c8903a;height:44px;padding:0 6px;text-align:center;vertical-align:middle;font-weight:800;font-size:${px(10)}px;white-space:nowrap;overflow:hidden;color:#111;${extra || ''}">${esc(v)}</td>`;
+    const bg = i => `background:${i % 2 === 0 ? '#fff8f0' : '#fff3e0'};`;
+    const data = list.map((b, i) => '<tr>' + [
+      td(b['ไฟแนนซ์'], bg(i) + `font-size:${px(11)}px;`),
+      td(b['ชื่อรุ่นรถ'] || b['รายละเอียดรถ'], bg(i)),
+      td(b['เลขเครื่อง'], bg(i)),
+      td(b['เลขแชสซีส์'], bg(i)),
+      td(b['ลูกค้ารับรถ'] || b['ชื่อลูกค้า'], bg(i) + `font-size:${px(10.5)}px;`),
+      td(b['เลขทะเบียน'], bg(i) + `font-size:${px(11)}px;color:#c0392b;`),
+      td(b['เลขส่งมอบ'], bg(i) + `font-size:${px(10.5)}px;`),
+      td(b['เลข PO'], bg(i) + `font-size:${px(10.5)}px;`),
+      td(b['ที่ปรึกษาการขาย'], bg(i))
+    ].join('') + '</tr>').join('');
+    const empty = Array.from({ length: Math.max(0, 10 - list.length) }, (_, k) =>
+      '<tr>' + cols.map(() => td('', bg(list.length + k))).join('') + '</tr>').join('');
+    const th = c => `<th style="background:#b94a00;color:${c[0] === 'ป้ายแดง' ? '#ffe082' : '#fff'};border:1.5px solid #b94a00;height:48px;padding:0 6px;font-size:${px(10)}px;font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap;width:${(c[1] / tot * 100).toFixed(2)}%;">${c[0]}</th>`;
+    const sig = (name, role) => `<div style="text-align:center;min-width:220px;"><div style="font-size:${px(9.5)}px;color:#555;margin-bottom:10px;">ลงชื่อ.................................................</div><div style="font-size:${px(11)}px;font-weight:800;color:#1a2d45;">${name}</div><div style="font-size:${px(8.5)}px;color:#666;margin-top:4px;">( ${role} )</div></div>`;
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;';
+    holder.innerHTML = `<div style="width:${W}px;box-sizing:border-box;background:#fff;padding:28px 30px 34px;font-family:'Sarabun','Tahoma',sans-serif;color:#1a2d45;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;padding-bottom:12px;border-bottom:2px solid #e8a020;margin-bottom:14px;">
+        <div style="font-size:30px;line-height:1;">🚗</div>
+        <div><div style="font-size:${px(16)}px;font-weight:800;color:#1a3a6b;line-height:1.3;">รายงานการปล่อยรถ</div>
+        <div style="font-size:${px(13)}px;font-weight:600;color:#333;margin-top:2px;">บริษัท อีซูซุคิงส์ยนต์กรุงเทพ จำกัด</div></div>
+      </div>
+      <div style="font-size:${px(12)}px;font-weight:700;line-height:1.75;">ถึง &nbsp;&nbsp;&nbsp; กรรมการผู้จัดการ</div>
+      <div style="font-size:${px(12)}px;font-weight:700;line-height:1.75;">ถึง &nbsp;&nbsp;&nbsp; ฝ่ายสต๊อก &nbsp; รายงานตัวจริง &nbsp; ส่ง ฝ่ายบัญชี คุณอารีรัตน นวลทอง &nbsp;/&nbsp; ประจำวันที่ &nbsp;${esc(dateStr)}</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px;table-layout:fixed;">
+        <thead><tr>${cols.map(th).join('')}</tr></thead>
+        <tbody>${data + empty}</tbody>
+      </table>
+      <div style="display:flex;justify-content:space-between;padding:0 150px;margin-top:64px;">
+        ${sig('คุณรวิวรรณ พันสนิท', 'ผู้จัดทำรายงาน')}${sig('คุณสุรพล จึงวิวัฒนาภรณ์', 'กรรมการผู้จัดการ')}
+      </div></div>`;
+    document.body.appendChild(holder);
+    return { holder, el: holder.firstElementChild };
+  }
+
   // ── รอจนรายงานโหลดเสร็จ ──
   async function waitReady(u) {
     const t0 = Date.now();
@@ -512,7 +557,10 @@
           runReleaseReportPage();
           await sleep(300);
           if (!(window._releaseReportList || []).length) { log('— ไม่มีรถปล่อยวันนี้ ข้าม', '#999'); continue; }
-          targets = [{ el: byId('releaseReportPreviewCard'), label: 'รายงานปล่อยรถ · ' + dateStr }];
+          const relDate = window._releaseReportDate || new Date();
+          const doc = buildReleaseDoc(window._releaseReportList, relDate);
+          targets = [{ el: doc.el, tmp: doc.holder, label: 'รายงานการปล่อยรถ · ' + thDateFull(relDate),
+                       caption: '📊 รายงานการปล่อยรถ ประจำวันที่ ' + thDateFull(relDate) }];
         } else {
           if (curTab !== u.tab) { switchTab(u.tab); curTab = u.tab; }
           await waitReady(u);
