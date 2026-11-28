@@ -786,6 +786,11 @@ function openEditModal(i) {
   document.getElementById('mModelName').value = savedName;
   // เติมข้อมูลที่ว่างจากชีต Model (ค้นแบบตัดช่องว่าง/ไม่สนตัวพิมพ์)
   const foundModel = _findModelByCode(savedCode);
+  if (savedCode && !foundModel) {
+    // วินิจฉัย: บอกให้รู้ว่าโหลดชีต Model มากี่แถว และรหัสที่ค้นหาคืออะไร
+    toast(`⚠️ ไม่พบรหัส "${savedCode}" ในชีต Model (โหลดมา ${(meta.model||[]).length} แถว)`, 'warn');
+    console.warn('model lookup failed', { savedCode, codes: (meta.model||[]).map(m => _getModelField(m,'รหัสรุ่นรถ')) });
+  }
   if (foundModel) {
     if (!savedName) document.getElementById('mModelName').value = _getModelField(foundModel, 'ชื่อรุ่นรถ');
     if (!document.getElementById('mDetail').value) document.getElementById('mDetail').value = _getModelField(foundModel, 'รายละเอียดรถ', 'รายละเอียด');
