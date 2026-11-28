@@ -1654,6 +1654,9 @@ function openReleaseReport(i) {
   const r = filteredBookings[i];
   if (!r) return;
   _releaseRowIdx = i;
+  // รีเซ็ตสถานะปลดล็อกจากครั้งก่อนก่อนใส่ค่า (กันช่องวันที่ยังเป็น type=date แล้วค่า dd/mm/yyyy ถูกล้างทิ้ง)
+  { const rd = document.getElementById('rl-release-date'); rd.type = 'text'; rd.readOnly = true; rd.classList.add('input-readonly');
+    document.getElementById('rl-sc-sel').style.display = 'none'; document.getElementById('rl-sc').style.display = ''; }
   document.getElementById('rl-customer').value     = r['ชื่อลูกค้า']||'';
   document.getElementById('rl-rcv-customer').value = r['ลูกค้ารับรถ']||r['ชื่อลูกค้า']||'';
   document.getElementById('rl-plate').value        = r['เลขทะเบียน']||'';
