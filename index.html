@@ -683,12 +683,12 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
     <div class="modal-hdr"><h3>🚗 บันทึกรายละเอียดการปล่อยรถ</h3><button class="modal-close" onclick="closeReleaseModal()">✕</button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:12px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="frow"><label>ชื่อลูกค้า</label><input type="text" id="rl-customer" readonly class="input-readonly"></div>
+        <div class="frow"><label style="display:flex;align-items:center;justify-content:space-between;">ชื่อลูกค้า <button type="button" class="rl-edit-btn" id="rl-customer-editbtn" onclick="toggleRlEdit('customer')">✏️ แก้ไข</button></label><input type="text" id="rl-customer" readonly class="input-readonly"></div>
         <div class="frow"><label>ลูกค้ารับรถ</label><input type="text" id="rl-rcv-customer"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div class="frow"><label>วันที่ปล่อยรถ</label><input type="text" id="rl-release-date" readonly class="input-readonly"></div>
-        <div class="frow"><label>ที่ปรึกษาการขาย SC</label><input type="text" id="rl-sc" readonly class="input-readonly"></div>
+        <div class="frow"><label style="display:flex;align-items:center;justify-content:space-between;">วันที่ปล่อยรถ <button type="button" class="rl-edit-btn" id="rl-reldate-editbtn" onclick="toggleRlEdit('reldate')">✏️ แก้ไข</button></label><input type="text" id="rl-release-date" readonly class="input-readonly"></div>
+        <div class="frow"><label style="display:flex;align-items:center;justify-content:space-between;">ที่ปรึกษาการขาย SC <button type="button" class="rl-edit-btn" id="rl-sc-editbtn" onclick="toggleRlEdit('sc')">✏️ แก้ไข</button></label><input type="text" id="rl-sc" readonly class="input-readonly"><select id="rl-sc-sel" style="display:none;"></select></div>
       </div>
       <div class="rl-release-box">
         <div class="rl-release-box-hdr"><span>📋 กรอกข้อมูลการปล่อยรถ</span></div>
