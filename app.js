@@ -656,7 +656,8 @@ function _positionModelDropdown() {
 
 // ทำให้รหัสเทียบกันได้: ตัดช่องว่างทุกชนิด (รวม non-breaking / zero-width) + ตัวพิมพ์ใหญ่
 function _normCode(s) {
-  return String(s == null ? '' : s).replace(/[\s ​-‍﻿]+/g, '').toUpperCase();
+  // เก็บเฉพาะ A-Z / 0-9 → ตัดช่องว่าง ตัวอักษรล่องหน เครื่องหมายแปลกๆ ทั้งหมด
+  return String(s == null ? '' : s).normalize('NFKC').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
 function _findModelByCode(code) {
   const c = _normCode(code);
@@ -1664,6 +1665,7 @@ function openReleaseReport(i) {
   document.getElementById('rl-po').value           = r['เลข PO']||'';
   document.getElementById('rl-model').value        = r['รุ่นรถ']||'';
   populateFinanceSelect(r['ไฟแนนซ์']||'');
+  ['finance','po','customer','reldate','sc'].forEach(w => _setRlLocked(w, true));
   populateRlModelDropdown();
   const saved = (r['ชื่อรุ่นรถ']||'').trim();
   const looked = lookupModelPPV(r);
@@ -1678,11 +1680,84 @@ function openReleaseReport(i) {
   } else { sel.value=''; wrap.style.display='none'; customInput.value=''; }
   document.getElementById('releaseModal').classList.add('open');
 }
+// ล็อก/ปลดล็อกช่อง ไฟแนนซ์ และ เลข PO ในฟอร์มปล่อยรถ
+function _setRlLocked(which, locked) {
+  const btn = document.getElementById('rl-' + which + '-editbtn');
+  if (which === 'finance') {
+    const sel = document.getElementById('rl-finance');
+    const cust = document.getElementById('rl-finance-custom');
+    sel.disabled = locked;
+    sel.style.cssText = locked ? 'background:#f5f5f5;color:#555;cursor:not-allowed;' : '';
+    cust.readOnly = locked;
+  } else if (which === 'customer') {
+    const c = document.getElementById('rl-customer');
+    c.readOnly = locked;
+    c.classList.toggle('input-readonly', locked);
+  } else if (which === 'reldate') {
+    const inp = document.getElementById('rl-release-date');
+    if (locked) {
+      if (inp.type === 'date') { const v = inp.value; inp.type = 'text'; inp.value = v ? v.split('-').reverse().join('/') : ''; }
+      inp.readOnly = true; inp.classList.add('input-readonly');
+    } else {
+      const v = inp.value; inp.type = 'date'; inp.value = thToInputDate(v);
+      inp.readOnly = false; inp.classList.remove('input-readonly');
+    }
+  } else if (which === 'sc') {
+    const inp = document.getElementById('rl-sc');
+    const sel = document.getElementById('rl-sc-sel');
+    if (locked) {
+      if (sel.style.display !== 'none' && sel.value) inp.value = sel.value;
+      sel.style.display = 'none'; inp.style.display = '';
+    } else {
+      const cur = inp.value;
+      sel.innerHTML = '';
+      (meta.sc || []).forEach(s => { const n = s['ที่ปรึกษาการขาย']; if (!n) return; const o = document.createElement('option'); o.value = o.textContent = n; sel.appendChild(o); });
+      sel.value = cur;
+      sel.style.display = ''; inp.style.display = 'none';
+    }
+  } else {
+    const po = document.getElementById('rl-po');
+    po.readOnly = locked;
+    po.classList.toggle('input-readonly', locked);
+    po.style.cssText = locked ? 'background:#f0f0f0;color:#555;cursor:default;' : '';
+  }
+  if (btn) { btn.textContent = locked ? '✏️ แก้ไข' : '🔒 ล็อก'; btn.classList.toggle('on', !locked); }
+}
+function _isRlLocked(which) {
+  if (which === 'finance') return document.getElementById('rl-finance').disabled;
+  if (which === 'customer') return document.getElementById('rl-customer').readOnly;
+  if (which === 'reldate') return document.getElementById('rl-release-date').readOnly;
+  if (which === 'sc') return document.getElementById('rl-sc-sel').style.display === 'none';
+  return document.getElementById('rl-po').readOnly;
+}
+function toggleRlEdit(which) {
+  const wasLocked = _isRlLocked(which);
+  _setRlLocked(which, !wasLocked);
+  if (wasLocked) {
+    const id = { finance:'rl-finance', customer:'rl-customer', reldate:'rl-release-date', sc:'rl-sc-sel', po:'rl-po' }[which];
+    const el = document.getElementById(id); if (el) el.focus();
+  }
+}
 function closeReleaseModal() { document.getElementById('releaseModal').classList.remove('open'); _releaseRowIdx = null; }
 async function saveAndPrintRelease() {
   const r = filteredBookings[_releaseRowIdx];
   if (!r) return;
   const extra = { 'สถานะ':'RS', 'เลขเครื่อง':document.getElementById('rl-engine').value.trim(), 'เลขแชสซีส์':document.getElementById('rl-chassis').value.trim(), 'ไฟแนนซ์':getFinanceValue(), 'เลขทะเบียน':document.getElementById('rl-plate').value.trim(), 'เลขส่งมอบ':document.getElementById('rl-delivery').value.trim(), 'เลข PO':document.getElementById('rl-po').value.trim(), 'ลูกค้ารับรถ':document.getElementById('rl-rcv-customer').value.trim(), 'ชื่อรุ่นรถ':getRlModelFullValue() };
+  // ช่องที่ปลดล็อกแก้ไข: ชื่อลูกค้า / วันที่ปล่อยรถ / SC
+  if (!_isRlLocked('customer')) {
+    const nm = document.getElementById('rl-customer').value.trim();
+    if (!nm) { toast('กรุณากรอกชื่อลูกค้า', 'err'); return; }
+    extra['ชื่อลูกค้า'] = nm;
+  }
+  if (!_isRlLocked('reldate')) {
+    const dv = document.getElementById('rl-release-date').value;
+    if (!dv) { toast('กรุณาระบุวันที่ปล่อยรถ', 'err'); return; }
+    extra['วันที่ปล่อย'] = formatThDate(dv);
+  }
+  if (!_isRlLocked('sc')) {
+    const sv = document.getElementById('rl-sc-sel').value;
+    if (sv) extra['ที่ปรึกษาการขาย'] = sv;
+  }
   const saveBtn = document.querySelector('#releaseModal .btn-primary');
   if (saveBtn) { saveBtn.disabled=true; saveBtn.textContent='⏳ กำลังบันทึก...'; }
   try {
