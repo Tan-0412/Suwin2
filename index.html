@@ -233,6 +233,9 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
 .datepick-body input[type=date]{width:100%;padding:9px 11px;border:1.5px solid var(--gray2);border-radius:9px;font-size:14px;font-family:'Sarabun',sans-serif;color:var(--tx);outline:none;}
 .datepick-body input[type=date]:focus{border-color:var(--primary3);}
 .datepick-footer{padding:12px 20px;border-top:1px solid var(--gray2);display:flex;gap:8px;justify-content:flex-end;}
+.rl-edit-btn{background:#fff;border:1px solid #86c9a0;color:#1a5c35;border-radius:6px;font-size:10px;font-weight:700;padding:2px 8px;cursor:pointer;font-family:'Sarabun',sans-serif;text-transform:none;letter-spacing:0;}
+.rl-edit-btn:hover{background:#d4edda;}
+.rl-edit-btn.on{background:#e8a020;border-color:#e8a020;color:#1a3a6b;}
 .input-readonly{background:#f0f3f7 !important;color:var(--tx2) !important;cursor:default !important;border-color:var(--gray2) !important;}
 .input-readonly:focus{border-color:var(--gray2) !important;background:#f0f3f7 !important;}
 .rl-release-box{border:1.5px solid #86c9a0;border-radius:12px;overflow:hidden;}
@@ -693,7 +696,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div class="frow"><label>เลขทะเบียนป้ายแดง</label><input type="text" id="rl-plate"></div>
             <div class="frow">
-              <label>ไฟแนนซ์</label>
+              <label style="display:flex;align-items:center;justify-content:space-between;">ไฟแนนซ์ <button type="button" class="rl-edit-btn" id="rl-finance-editbtn" onclick="toggleRlEdit('finance')">✏️ แก้ไข</button></label>
               <select id="rl-finance" onchange="onFinanceSelectChange()" disabled style="background:#f5f5f5;color:#555;cursor:not-allowed;"><option value="">-- เลือก --</option></select>
               <div id="rl-finance-custom-wrap" style="display:none;margin-top:6px;"><input type="text" id="rl-finance-custom" placeholder="พิมพ์ชื่อไฟแนนซ์เอง..." style="font-size:12px;" readonly></div>
             </div>
@@ -704,7 +707,7 @@ pre.code{background:#0f1d35;color:#7fc5c0;padding:14px;border-radius:10px;font-s
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;">
             <div class="frow"><label>เลขที่ใบส่งมอบ</label><input type="text" id="rl-delivery"></div>
-            <div class="frow"><label>เลขที่ใบ PO</label><input type="text" id="rl-po" readonly class="input-readonly" style="background:#f0f0f0;color:#555;cursor:default;" title="ค่าอัตโนมัติจากรายการจอง"></div>
+            <div class="frow"><label style="display:flex;align-items:center;justify-content:space-between;">เลขที่ใบ PO <button type="button" class="rl-edit-btn" id="rl-po-editbtn" onclick="toggleRlEdit('po')">✏️ แก้ไข</button></label><input type="text" id="rl-po" readonly class="input-readonly" style="background:#f0f0f0;color:#555;cursor:default;" title="ค่าอัตโนมัติจากรายการจอง"></div>
           </div>
         </div>
       </div>
