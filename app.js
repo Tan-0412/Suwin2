@@ -654,9 +654,43 @@ function _positionModelDropdown() {
   dd.style.width = rect.width + 'px';
 }
 
-function onModelCodeInput() { renderModelCodeDropdown(document.getElementById('mModelCode').value.trim().toLowerCase()); }
+// ทำให้รหัสเทียบกันได้: ตัดช่องว่างทุกชนิด (รวม non-breaking / zero-width) + ตัวพิมพ์ใหญ่
+function _normCode(s) {
+  return String(s == null ? '' : s).replace(/[\s ​-‍﻿]+/g, '').toUpperCase();
+}
+function _findModelByCode(code) {
+  const c = _normCode(code);
+  if (!c || !meta.model) return null;
+  return meta.model.find(m => _normCode(_getModelField(m, 'รหัสรุ่นรถ')) === c) || null;
+}
+// เติมข้อมูลอัตโนมัติถ้ารหัสที่พิมพ์ตรงกับชีต Model (คืน true ถ้าเจอ)
+function _autoFillModelByCode(force) {
+  const code = document.getElementById('mModelCode').value;
+  const m = _findModelByCode(code);
+  if (!m) return false;
+  const name = _getModelField(m, 'ชื่อรุ่นรถ');
+  const desc = _getModelField(m, 'รายละเอียดรถ', 'รายละเอียด');
+  const grp  = _getModelField(m, 'รุ่นรถ');
+  document.getElementById('mModelName').value = name;
+  document.getElementById('mDetail').value    = desc;
+  document.getElementById('mModel').value     = grp;
+  return true;
+}
+function onModelCodeInput() {
+  const v = document.getElementById('mModelCode').value;
+  if (!_autoFillModelByCode()) {
+    // ไม่ตรงเป๊ะ → ล้างช่องอัตโนมัติ กันค่าเก่าค้างจากรหัสอื่น
+    ['mModelName','mDetail','mModel'].forEach(id => { document.getElementById(id).value = ''; });
+  }
+  renderModelCodeDropdown(v.trim().toLowerCase());
+}
 function onModelCodeFocus() { renderModelCodeDropdown(document.getElementById('mModelCode').value.trim().toLowerCase()); }
-function onModelCodeBlur()  { _modelCodeBlurTimer = setTimeout(() => { document.getElementById('mModelCodeDropdown').style.display = 'none'; }, 200); }
+function onModelCodeBlur()  {
+  _modelCodeBlurTimer = setTimeout(() => {
+    document.getElementById('mModelCodeDropdown').style.display = 'none';
+    _autoFillModelByCode();
+  }, 200);
+}
 
 function renderModelCodeDropdown(q) {
   const dd = document.getElementById('mModelCodeDropdown');
@@ -749,11 +783,14 @@ function openEditModal(i) {
   const savedCode = r['รหัสรุ่นรถ'] || '';
   document.getElementById('mModelCode').value = savedCode;
   const savedName = r['ชื่อรุ่นรถ'] || '';
-  if (savedName) { document.getElementById('mModelName').value = savedName; }
-  else if (savedCode && meta.model) {
-    const found = meta.model.find(m => m['รหัสรุ่นรถ'] === savedCode);
-    document.getElementById('mModelName').value = found ? (found['ชื่อรุ่นรถ'] || '') : '';
-  } else { document.getElementById('mModelName').value = ''; }
+  document.getElementById('mModelName').value = savedName;
+  // เติมข้อมูลที่ว่างจากชีต Model (ค้นแบบตัดช่องว่าง/ไม่สนตัวพิมพ์)
+  const foundModel = _findModelByCode(savedCode);
+  if (foundModel) {
+    if (!savedName) document.getElementById('mModelName').value = _getModelField(foundModel, 'ชื่อรุ่นรถ');
+    if (!document.getElementById('mDetail').value) document.getElementById('mDetail').value = _getModelField(foundModel, 'รายละเอียดรถ', 'รายละเอียด');
+    if (!document.getElementById('mModel').value)  document.getElementById('mModel').value  = _getModelField(foundModel, 'รุ่นรถ');
+  }
   document.getElementById('mModelCodeDropdown').style.display = 'none';
   setSelectValue('mSC', r['ที่ปรึกษาการขาย'] || '');
   document.getElementById('mPO').value = r['เลข PO'] || '';
@@ -801,6 +838,7 @@ function onRelDateChange() {
 
 async function saveBooking() {
   if (_isSaving) { toast('⏳ กำลังบันทึกข้อมูลอยู่', 'warn'); return; }
+  _autoFillModelByCode(); // กันกรณีพิมพ์รหัสเองแล้วกดบันทึกเลยโดยไม่ได้เลือกจากรายการ
   const date = document.getElementById('mDate').value;
   const name = document.getElementById('mName').value.trim();
   const sc   = document.getElementById('mSC').value;
